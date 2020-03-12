@@ -1,13 +1,19 @@
 package v1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // SpokeCluster represents the current status of spoke cluster.
-// SpokeCluster is cluster scoped resources.
+// SpokeCluster is cluster scoped resources. The name is the cluster UID.
+// The cluster join follows the double opt-in proceess:
+// 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name
+// 2. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name
+// 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace,
+// the spoke agent pushes the credential to hub to use against spoke's kube-apiserver
 type SpokeCluster struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object's metadata.
@@ -23,25 +29,74 @@ type SpokeCluster struct {
 	Status SpokeClusterStatus `json:"status,omitempty"`
 }
 
-// SpokeClusterSpec represents a desired configuration for the agents on the spoke cluster.
-type SpokeClusterSpec struct{}
+// SpokeClusterSpec provides the information to securely connect to a remote server
+// and verify its identity
+type SpokeClusterSpec struct {
+	// SpokeClientConfig represents the apiserver address of the spoke cluster
+	// +optional
+	SpokeClientConfig ClientConfig `json:"spokeClientConfig,omitempty"`
+}
+
+// ClientConfig represents apiserver address of the spoke cluster
+// TODO include credential to connect to spoke cluster kube-apiserver
+type ClientConfig struct {
+	// URL is the url of apiserver endpoint of the spoke cluster
+	// +required
+	URL string `json:"url"`
+	// CABundle is the ca bundle to connect to apiserver of the spoke cluster.
+	// System certs is used if it is not set.
+	// +optional
+	CABundle []byte `json:"caBundle,omitempty"`
+}
 
 // SpokeClusterStatus represents the current status of joined spoke cluster
 type SpokeClusterStatus struct {
 	// Conditions contains the different condition statuses for this spoke cluster.
 	Conditions []StatusCondition `json:"conditions"`
+
+	// Capacity represents the total resource capacity from all nodeStatuses
+	// on the spoke cluster
+	Capacity ResourceList `json:"capacity,omitempty"`
+
+	// Allocatable represents the total allocatable resources on the spoke cluster
+	Allocatable ResourceList `json:"allocatable,omitempty"`
+
+	// Version represents the kubernetes version of the spoke cluster
+	Version SpokeVersion `json:"version,omitempty"`
+}
+
+// SpokeVersion represents the Kubernetes version of spoke cluster
+// TODO add spoke agent versions
+type SpokeVersion struct {
+	// Kubernetes is the kubernetes version of spoke cluster
+	// +optional
+	Kubernetes string `json:"kubernetes,omitempty"`
 }
 
 const (
-	// ClusterOK means that the cluster is "OK".
-	SpokeClusterConditionOK string = "ClusterOK"
-	// ClusterJoined means the spoke cluster has successfully joined the hub
+	// SpokeClusterConditionJoined means the spoke cluster has successfully joined the hub
 	SpokeClusterConditionJoined string = "SpokeClusterJoined"
-	// ClusterJoinApproved means the request to join the cluster is approved by user or controller
+	// SpokeClusterClusterConditionJoinApproved means the request to join the cluster is
+	// approved by cluster-admin on hub
 	SpokeClusterClusterConditionJoinApproved string = "HubApprovedJoin"
-	// ClusterJoinDenied means the request to join the cluster is denied by user or controller
+	// SpokeClusterConditionJoinDenied means the request to join the cluster is denied by
+	// cluster-admin on hub
 	SpokeClusterConditionJoinDenied string = "HubDeniedJoin"
 )
+
+// ResourceName is the name identifying various resources in a ResourceList.
+type ResourceName string
+
+const (
+	// CPU, in cores. (500m = .5 cores)
+	ResourceCPU ResourceName = "cpu"
+	// Memory, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
+	ResourceMemory ResourceName = "memory"
+)
+
+// ResourceList defines a map for the quantity of different resources, the definition
+// matches the ResourceList defined in k8s.io/api/core/v1
+type ResourceList map[ResourceName]resource.Quantity
 
 // StatusCondition contains condition information for a spoke cluster.
 type StatusCondition struct {
