@@ -29,13 +29,16 @@ management:clusterName:agentName"}`.
 5. hub-controller creates a clusterrolebinding on the hub with the identity of
 `system:open-cluster-management:clusterName:agentName`
    - Allows status update of `SpokeCluster`
-6. hub-controller updates condition of `SpokeCluster` to `HubApprovedJoin`.
-7. hub-controller creates a namespace as the name of cluster on hub cluster if it does not exist.
+6. cluster-admin on hub update `spec.accepeSpokeCluster` to `true`.
+  - Only user on hub who has the rbac permision to update subresource of `spokeclusters/accept`
+  can update this field.
+7. hub-controller updates condition of `SpokeCluster` to `HubApprovedJoin`.
+8. hub-controller creates a namespace as the name of cluster on hub cluster if it does not exist.
   - spoke cluster can only join a hub once, and it can join to multiple hubs.
   - The UID of the spoke cluster is identical on each of the hub the spoke agent joins.
-8. hub-controller creates role/rolebinding on the cluster namespace on the hub
+9. hub-controller creates role/rolebinding on the cluster namespace on the hub
   - Allow the access of agent on spoke cluster to the namespace.
-9. agent on spoke cluster gets certificate in CSR status, uses the certificate to create a new kubeconfig
+10. agent on spoke cluster gets certificate in CSR status, uses the certificate to create a new kubeconfig
 and saves it as secret.
 10. agent on spoke cluster connects to hub apiserver using the new kubeconfig.
 11. agent on spoke cluster updates conditions of `SpokeCluster` as `SpokeClusterJoined`.

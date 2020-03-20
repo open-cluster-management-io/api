@@ -27,11 +27,14 @@ message ClientConfig {
 
 // SpokeCluster represents the current status of spoke cluster.
 // SpokeCluster is cluster scoped resources. The name is the cluster UID.
-// The cluster join follows the double opt-in process:
-// 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name
-// 2. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name
-// 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace,
-// the spoke agent pushes the credential to hub to use against spoke's kube-apiserver
+// The cluster join follows the double opt-in proceess:
+// 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name.
+// 2. agent on spoke cluster creates spokecluster on hub.
+// 3. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name.
+// 4. cluster admin set spec.acceptSpokeCluster of spokecluster to true.
+// 5. cluster admin on spoke creates credential of kubeconfig to spoke. Once hub creates the
+// cluster namespace, the spoke agent pushes the credential to hub to use against spoke's
+// kube-apiserver
 message SpokeCluster {
   optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
 
@@ -39,6 +42,7 @@ message SpokeCluster {
   optional SpokeClusterSpec spec = 2;
 
   // Status represents the current status of joined spoke cluster
+  // +optional
   optional SpokeClusterStatus status = 3;
 }
 
@@ -59,6 +63,17 @@ message SpokeClusterSpec {
   // SpokeClientConfig represents the apiserver address of the spoke cluster
   // +optional
   optional ClientConfig spokeClientConfig = 1;
+
+  // AcceptSpokeCluster reprsents that hub accepts the join of spoke agent.
+  // Its default value is false, and can only be set true when the user on hub
+  // has an RBAC rule to UPDATE on the virtual subresource of spokeclusters/accept.
+  // When the vaule is set true, a namespace whose name is same as the name of SpokeCluster
+  // is created on hub representing the spoke cluster, also role/rolebinding is created on
+  // the namespace to grant the permision of access from agent on spoke.
+  // When the value is set false, the namespace representing the spoke cluster is
+  // deleted.
+  // +required
+  optional bool hubAcceptsClient = 2;
 }
 
 // SpokeClusterStatus represents the current status of joined spoke cluster
