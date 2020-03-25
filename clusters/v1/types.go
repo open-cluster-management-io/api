@@ -17,11 +17,7 @@ import (
 // 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace,
 // the spoke agent pushes the credential to hub to use against spoke's kube-apiserver
 type SpokeCluster struct {
-	metav1.TypeMeta `json:",inline"`
-	// Standard object's metadata.
-	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
-	// Cluster name must conform in the definition of DNS label format
-	// +optional
+	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Spec represents a desired configuration for the agent on the spoke cluster.
@@ -45,6 +41,7 @@ type ClientConfig struct {
 	// URL is the url of apiserver endpoint of the spoke cluster
 	// +required
 	URL string `json:"url" protobuf:"bytes,1,opt,name=url"`
+
 	// CABundle is the ca bundle to connect to apiserver of the spoke cluster.
 	// System certs is used if it is not set.
 	// +optional

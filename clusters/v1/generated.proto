@@ -33,10 +33,6 @@ message ClientConfig {
 // 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace,
 // the spoke agent pushes the credential to hub to use against spoke's kube-apiserver
 message SpokeCluster {
-  // Standard object's metadata.
-  // More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
-  // Cluster name must conform in the definition of DNS label format
-  // +optional
   optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
 
   // Spec represents a desired configuration for the agent on the spoke cluster.
