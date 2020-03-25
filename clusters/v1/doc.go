@@ -5,5 +5,5 @@
 // +k8s:openapi-gen=true
 
 // +kubebuilder:validation:Optional
-// +groupName=cluster.open-cluster-management.io
+// +groupName=clusters.open-cluster-management.io
 package v1
