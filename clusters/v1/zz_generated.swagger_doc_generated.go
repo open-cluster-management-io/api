@@ -22,7 +22,7 @@ func (ClientConfig) SwaggerDoc() map[string]string {
 }
 
 var map_SpokeCluster = map[string]string{
-	"":         "SpokeCluster represents the current status of spoke cluster. SpokeCluster is cluster scoped resources. The name is the cluster UID. The cluster join follows the double opt-in proceess: 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name 2. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace, the spoke agent pushes the credential to hub to use against spoke's kube-apiserver",
+	"":         "SpokeCluster represents the current status of spoke cluster. SpokeCluster is cluster scoped resources. The name is the cluster UID. The cluster join follows the double opt-in process: 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name 2. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace, the spoke agent pushes the credential to hub to use against spoke's kube-apiserver",
 	"metadata": "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata Cluster name must conform in the definition of DNS label format",
 	"spec":     "Spec represents a desired configuration for the agent on the spoke cluster.",
 	"status":   "Status represents the current status of joined spoke cluster",

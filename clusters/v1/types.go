@@ -11,7 +11,7 @@ import (
 
 // SpokeCluster represents the current status of spoke cluster.
 // SpokeCluster is cluster scoped resources. The name is the cluster UID.
-// The cluster join follows the double opt-in proceess:
+// The cluster join follows the double opt-in process:
 // 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name
 // 2. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name
 // 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace,
