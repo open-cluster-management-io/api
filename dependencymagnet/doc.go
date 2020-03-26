@@ -10,6 +10,10 @@ import (
 	_ "github.com/gogo/protobuf/sortkeys"
 	_ "github.com/openshift/build-machinery-go"
 	_ "github.com/spf13/pflag"
+	_ "k8s.io/api/core/v1"
+	_ "k8s.io/api/rbac/v1"
+	_ "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
+	_ "k8s.io/apimachinery/pkg/apis/testapigroup/v1"
 	_ "k8s.io/code-generator"
 	_ "k8s.io/code-generator/cmd/go-to-protobuf/protoc-gen-gogo"
 )
