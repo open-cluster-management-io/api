@@ -22,7 +22,7 @@ func (ClientConfig) SwaggerDoc() map[string]string {
 }
 
 var map_SpokeCluster = map[string]string{
-	"":       "SpokeCluster represents the current status of spoke cluster. SpokeCluster is cluster scoped resources. The name is the cluster UID. The cluster join follows the double opt-in process: 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name 2. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace, the spoke agent pushes the credential to hub to use against spoke's kube-apiserver",
+	"":       "SpokeCluster represents the current status of spoke cluster. SpokeCluster is cluster scoped resources. The name is the cluster UID. The cluster join follows the double opt-in proceess: 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name. 2. agent on spoke cluster creates spokecluster on hub. 3. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name. 4. cluster admin set spec.acceptSpokeCluster of spokecluster to true. 5. cluster admin on spoke creates credential of kubeconfig to spoke. Once hub creates the cluster namespace, the spoke agent pushes the credential to hub to use against spoke's kube-apiserver",
 	"spec":   "Spec represents a desired configuration for the agent on the spoke cluster.",
 	"status": "Status represents the current status of joined spoke cluster",
 }
@@ -44,6 +44,7 @@ func (SpokeClusterList) SwaggerDoc() map[string]string {
 var map_SpokeClusterSpec = map[string]string{
 	"":                  "SpokeClusterSpec provides the information to securely connect to a remote server and verify its identity",
 	"spokeClientConfig": "SpokeClientConfig represents the apiserver address of the spoke cluster",
+	"hubAcceptsClient":  "AcceptSpokeCluster reprsents that hub accepts the join of spoke agent. Its default value is false, and can only be set true when the user on hub has an RBAC rule to UPDATE on the virtual subresource of spokeclusters/accept. When the vaule is set true, a namespace whose name is same as the name of SpokeCluster is created on hub representing the spoke cluster, also role/rolebinding is created on the namespace to grant the permision of access from agent on spoke. When the value is set false, the namespace representing the spoke cluster is deleted.",
 }
 
 func (SpokeClusterSpec) SwaggerDoc() map[string]string {

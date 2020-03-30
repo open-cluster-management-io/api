@@ -11,11 +11,14 @@ import (
 
 // SpokeCluster represents the current status of spoke cluster.
 // SpokeCluster is cluster scoped resources. The name is the cluster UID.
-// The cluster join follows the double opt-in process:
-// 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name
-// 2. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name
-// 3. cluster admin on spoke creates credential. Once hub creates the cluster namespace,
-// the spoke agent pushes the credential to hub to use against spoke's kube-apiserver
+// The cluster join follows the double opt-in proceess:
+// 1. agent on spoke cluster creates CSR on hub with cluster UID and agent name.
+// 2. agent on spoke cluster creates spokecluster on hub.
+// 3. cluster admin on hub approves the CSR for the spoke's cluster UID and agent name.
+// 4. cluster admin set spec.acceptSpokeCluster of spokecluster to true.
+// 5. cluster admin on spoke creates credential of kubeconfig to spoke. Once hub creates the
+// cluster namespace, the spoke agent pushes the credential to hub to use against spoke's
+// kube-apiserver
 type SpokeCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
@@ -24,6 +27,7 @@ type SpokeCluster struct {
 	Spec SpokeClusterSpec `json:"spec" protobuf:"bytes,2,opt,name=spec"`
 
 	// Status represents the current status of joined spoke cluster
+	// +optional
 	Status SpokeClusterStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
@@ -33,6 +37,17 @@ type SpokeClusterSpec struct {
 	// SpokeClientConfig represents the apiserver address of the spoke cluster
 	// +optional
 	SpokeClientConfig ClientConfig `json:"spokeClientConfig,omitempty" protobuf:"bytes,1,opt,name=spokeClientConfig"`
+
+	// AcceptSpokeCluster reprsents that hub accepts the join of spoke agent.
+	// Its default value is false, and can only be set true when the user on hub
+	// has an RBAC rule to UPDATE on the virtual subresource of spokeclusters/accept.
+	// When the vaule is set true, a namespace whose name is same as the name of SpokeCluster
+	// is created on hub representing the spoke cluster, also role/rolebinding is created on
+	// the namespace to grant the permision of access from agent on spoke.
+	// When the value is set false, the namespace representing the spoke cluster is
+	// deleted.
+	// +required
+	HubAcceptsClient bool `json:"hubAcceptsClient" protobuf:"bytes,2,opt,name=hubAcceptsClient"`
 }
 
 // ClientConfig represents apiserver address of the spoke cluster
@@ -75,12 +90,12 @@ type SpokeVersion struct {
 const (
 	// SpokeClusterConditionJoined means the spoke cluster has successfully joined the hub
 	SpokeClusterConditionJoined string = "SpokeClusterJoined"
-	// SpokeClusterClusterConditionJoinApproved means the request to join the cluster is
+	// SpokeClusterConditionHubAccepted means the request to join the cluster is
 	// approved by cluster-admin on hub
-	SpokeClusterClusterConditionJoinApproved string = "HubApprovedJoin"
-	// SpokeClusterConditionJoinDenied means the request to join the cluster is denied by
+	SpokeClusterConditionHubAccepted string = "HubAcceptedSpoke"
+	// SpokeClusterConditionHubDenied means the request to join the cluster is denied by
 	// cluster-admin on hub
-	SpokeClusterConditionJoinDenied string = "HubDeniedJoin"
+	SpokeClusterConditionHubDenied string = "HubDeniedSpoke"
 )
 
 // ResourceName is the name identifying various resources in a ResourceList.
