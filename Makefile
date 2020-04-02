@@ -28,6 +28,7 @@ verify-scripts:
 	bash -x hack/verify-protobuf.sh
 	bash -x hack/verify-swagger-docs.sh
 	bash -x hack/verify-crds.sh
+	bash -x hack/verify-codegen.sh
 .PHONY: verify-scripts
 verify: verify-scripts verify-codegen-crds
 
@@ -35,6 +36,7 @@ update-scripts:
 	hack/update-deepcopy.sh
 	hack/update-protobuf.sh
 	hack/update-swagger-docs.sh
+	hack/update-codegen.sh
 .PHONY: update-scripts
 update: update-scripts update-codegen-crds
 
