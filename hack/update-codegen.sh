@@ -28,3 +28,12 @@ for group in cluster; do
     --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
     ${verify}
 done
+
+for group in work; do
+  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
+    github.com/open-cluster-management/api/client/${group} \
+    github.com/open-cluster-management/api \
+    "${group}:v1" \
+    --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
+    ${verify}
+done

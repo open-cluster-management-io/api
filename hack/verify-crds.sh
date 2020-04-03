@@ -7,6 +7,7 @@ if [ ! -f ./_output/tools/bin/yq ]; then
 fi
 
 FILES="cluster/v1/*.crd.yaml
+work/v1/*.crd.yaml
 "
 
 FAILS=false
@@ -26,4 +27,3 @@ done
 if [ "$FAILS" = true ] ; then
     exit 1
 fi
-

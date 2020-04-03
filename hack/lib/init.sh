@@ -10,7 +10,9 @@ set -o nounset
 set -o pipefail
 
 API_GROUP_VERSIONS="\
-cluster/v1"
+cluster/v1 \
+work/v1"
 
 API_PACKAGES="\
-github.com/open-cluster-management/api/cluster/v1"
+github.com/open-cluster-management/api/cluster/v1,\
+github.com/open-cluster-management/api/work/v1"
