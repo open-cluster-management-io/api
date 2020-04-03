@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	GroupName = "cluster.open-cluster-management.io"
+	GroupName = "clusters.open-cluster-management.io"
 )
 
 var (

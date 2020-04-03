@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	GroupName     = "cluster.open-cluster-management.io"
+	GroupName     = "clusters.open-cluster-management.io"
 	GroupVersion  = schema.GroupVersion{Group: GroupName, Version: "v1"}
 	schemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	// Install is a function which adds this version to a scheme
