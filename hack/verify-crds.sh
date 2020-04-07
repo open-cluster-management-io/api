@@ -6,7 +6,7 @@ if [ ! -f ./_output/tools/bin/yq ]; then
     chmod +x ./_output/tools/bin/yq
 fi
 
-FILES="clusters/v1/*.crd.yaml
+FILES="cluster/v1/*.crd.yaml
 "
 
 FAILS=false

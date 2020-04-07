@@ -18,7 +18,7 @@ GO_LD_FLAGS:=
 # $2 - apis
 # $3 - manifests
 # $4 - output
-$(call add-crd-gen,clusters,./clusters/v1,./clusters/v1,./clusters/v1)
+$(call add-crd-gen,cluster,./cluster/v1,./cluster/v1,./cluster/v1)
 
 RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator
