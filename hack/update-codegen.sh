@@ -20,7 +20,7 @@ trap cleanup EXIT
 
 go install ./${CODEGEN_PKG}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
 
-for group in clusters; do
+for group in cluster; do
   bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
     github.com/open-cluster-management/api/client/${group} \
     github.com/open-cluster-management/api \
