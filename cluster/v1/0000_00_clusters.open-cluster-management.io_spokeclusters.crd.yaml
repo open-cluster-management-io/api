@@ -10,6 +10,8 @@ spec:
     plural: spokeclusters
     singular: spokecluster
   scope: "Cluster"
+  subresources:
+    status: {}
   preserveUnknownFields: false
   validation:
     openAPIV3Schema:
