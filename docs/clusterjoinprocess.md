@@ -21,15 +21,14 @@ and deploy the agent on spoke cluster.
   agent will not lose the UID.
 3. agent on spoke cluster creates CSR on hub cluster using bootstrap kubeconfig.
   - The subject in csr is
-`{"Organization": ["system:open-cluster-management:clusterName"], "CommonName":"system:open-cluster
-management:clusterName:agentName"}`.
+`{"Organization": ["system:open-cluster-management:clusterName"], "CommonName":"system:open-cluster-management:clusterName:agentName"}`.
   - The name of the csr is the digest of subject and private key, with a common prefix.
   CSR will specify the signer name as the kube-client one.
 4. cluster-admin on hub-cluster approve the CSR.
 5. hub-controller creates a clusterrolebinding on the hub with the identity of
 `system:open-cluster-management:clusterName:agentName`
    - Allows status update of `SpokeCluster`
-6. cluster-admin on hub update `spec.accepeSpokeCluster` to `true`.
+6. cluster-admin on hub update `spec.acceptSpokeCluster` to `true`.
   - Only user on hub who has the rbac permision to update subresource of `spokeclusters/accept`
   can update this field.
 7. hub-controller updates condition of `SpokeCluster` to `HubApprovedJoin`.
