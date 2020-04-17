@@ -1,38 +1,60 @@
-# api
+<p align="center"><a href="http://35.227.205.240/?job=build_go-repo-template_postsubmit">
+<!-- prow build badge, godoc, and go report card
+<img alt="Build Status" src="http://[prow-website]/badge.svg?jobs=build-open-cluster-management-api-amd64-postsubmit">
+-->
+</a> <a href="https://godoc.org/github.com/open-cluster-management/api"><img src="https://godoc.org/github.com/open-cluster-management/api?status.svg"></a> <a href="https://goreportcard.com/report/github.com/open-cluster-management/api"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/open-cluster-management/api" /></a> <a href="https://codecov.io/github/open-cluster-management/api?branch=master">
+<!--
+<img alt="Code Coverage" src="https://codecov.io/gh/IBM/go-repo-template/branch/master/graphs/badge.svg?branch=master" /></a>
+<a href="https://quay.io/repository/open-cluster-management/go-repo-template-amd64"><img alt="Docker Repository on Quay" src="https://quay.io/repository/open-cluster-management/go-repo-template/status" /></a>
+-->
 
-The canonical location of the Open Cluster Management API definition.  
+</p>
 
-## generating CRD schemas
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-If you make a change to a CRD type in this repo, calling `make update-codegen-crds` should regenerate all CRDs and update the manifests. If yours is not updated, ensure that the path to its API is included in our [calls to the Makefile targets](https://github.com/openshift/api/blob/release-4.5/Makefile#L17-L29).
+- [Top level title](#top-level-title)
+    - [What is the XXX](#what-is-the-xxx)
+    - [Community, discussion, contribution, and support](#community-discussion-contribution-and-support)
+    - [Getting Started](#getting-started)
+        - [Prerequisites](#prerequisites)
+        - [XXXXX](#xxxxx)
+        - [Trouble shooting](#trouble-shooting)
+    - [XXX References](#xxx-references)
 
-To add this generator to another repo:
-1. Vendor `github.com/openshift/library-go` (and ensure that the `alpha-build-machinery` subdirectory is also included in your `vendor`)
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-2. Update your `Makefile` to include the following:
-```
-include $(addprefix ./vendor/github.com/openshift/library-go/alpha-build-machinery/make/, \
-  targets/openshift/crd-schema-gen.mk \
-)
+# open-cluster-management API
 
-$(call add-crd-gen,<TARGET_NAME>,<API_DIRECTORY>,<CRD_MANIFESTS>,<MANIFEST_OUTPUT>)
-```
-The parameters for the call are:
+The `api` repository defines relevant concepts and types for problem domains related to managing 0..* Kubernetes clusters.
 
-1. `TARGET_NAME`: The name of your generated Make target. This can be anything, as long as it does not conflict with another make target. Recommended to be your api name.
-2. `API_DIRECTORY`: The location of your API. For example if your Go types are located under `pkg/apis/myoperator/v1/types.go`, this should be `./pkg/apis/myoperator/v1`.
-3. `CRD_MANIFESTS`: The directory your CRDs are located in. For example, if that is `manifests/my_operator.crd.yaml` then it should be `./manifests`
-4. `MANIFEST_OUTPUT`: This should most likely be the same as `CRD_MANIFESTS`, and is only provided for flexibility to output generated code to a different directory.
+## Community, discussion, contribution, and support
 
-You can include as many calls to different APIs as necessary, or if you have multiple APIs under the same directory (eg, `v1` and `v2beta1`) you can use 1 call to the parent directory pointing to your API.
+Check the [CONTRIBUTING Doc](CONTRIBUTING.md) for how to contribute to the repo.
 
-After this, calling `make update-codegen-crds` should generate a new structural OpenAPIV3 schema for your CRDs.
+<!--
 
-**Notes**
+You can reach the maintainers of this project at:
 
-- This will not generate entire CRDs, only their OpenAPIV3 schemas. If you do not already have a CRD, you will get no output from the generator.
-- Ensure that your API is correctly declared for the generator to pick it up. That means, in your `doc.go`, include the following:
-  1. `// +groupName=<API_GROUP_NAME>`, this should match the `group` in your CRD `spec`
-  2. `// +kubebuilder:validation:Optional`, this tells the operator that fields should be optional unless explicitly marked with `// +kubebuilder:validation:Required`
-  
-For more information on the API markers to add to your Go types, see the [Kubebuilder book](https://book.kubebuilder.io/reference/markers.html)
+- [#xxx on Slack](https://slack.com/signin?redir=%2Fmessages%2Fxxx)
+
+-->
+
+------
+
+## Getting Started
+
+### Prerequisites
+
+TBD Check the [Development Doc](docs/development.md) for how to contribute to the repo.
+
+Security Response
+If you've found a security issue that you'd like to disclose confidentially please contact Red Hat's Product Security team. Details at https://access.redhat.com/security/team/contact
+
+<!--
+## XXX References
+
+If you have any further question about xxx, please refer to
+[XXX help documentation](docs/xxx_help.md) for further information.
+-->
