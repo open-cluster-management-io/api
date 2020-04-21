@@ -10,18 +10,16 @@
 
 </p>
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [Top level title](#top-level-title)
-    - [What is the XXX](#what-is-the-xxx)
+- [open-cluster-management API](#open-cluster-management-api)
     - [Community, discussion, contribution, and support](#community-discussion-contribution-and-support)
     - [Getting Started](#getting-started)
         - [Prerequisites](#prerequisites)
-        - [XXXXX](#xxxxx)
-        - [Trouble shooting](#trouble-shooting)
-    - [XXX References](#xxx-references)
+    - [Security Response](#security-response)
+<!--
+        - [Troubleshooting](#troubleshooting)
+      - [XXX References](#xxx-references)
+  -->
+
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -47,10 +45,7 @@ You can reach the maintainers of this project at:
 
 ### Prerequisites
 
-TBD Check the [Development Doc](docs/development.md) for how to contribute to the repo.
-
-Security Response
-If you've found a security issue that you'd like to disclose confidentially please contact Red Hat's Product Security team. Details at https://access.redhat.com/security/team/contact
+Check the [Development Doc](docs/development.md) for how to contribute to the repo.
 
 <!--
 ## XXX References
@@ -58,3 +53,7 @@ If you've found a security issue that you'd like to disclose confidentially plea
 If you have any further question about xxx, please refer to
 [XXX help documentation](docs/xxx_help.md) for further information.
 -->
+
+## Security Response
+If you've found a security issue that you'd like to disclose confidentially please contact Red Hat's Product Security team. Details at https://access.redhat.com/security/team/contact
+

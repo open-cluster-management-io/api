@@ -15,15 +15,13 @@
 
 ## Contributions
 
-We are in the process of establishing our process for Contribution License Agreements. More coming soon!
-
+All contributions to the repository must be submitted under the terms of the [Apache Public License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## Contributing A Patch
 
 1. Submit an issue describing your proposed change to the repo in question.
 1. The [repo owners](OWNERS) will respond to your issue promptly.
 1. Fork the desired repo, develop and test your code changes.
-1. Commit your changes with DCO
 1. Submit a pull request.
 
 ## Issue and Pull Request Management
