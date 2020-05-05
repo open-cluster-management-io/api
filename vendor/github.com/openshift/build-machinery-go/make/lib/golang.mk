@@ -18,7 +18,7 @@ GOLINT ?=golint
 
 go_version :=$(shell $(GO) version | sed -E -e 's/.*go([0-9]+.[0-9]+.[0-9]+).*/\1/')
 GO_REQUIRED_MIN_VERSION ?=1.13.4
-ifneq "$(GO_REQUIRED_MIN_VERSION)" ""
+ifneq "$(GO_REQUIRED_MIN_VERSION)" "$(go_version)"
 $(call require_minimal_version,$(GO),GO_REQUIRED_MIN_VERSION,$(go_version))
 endif
 
