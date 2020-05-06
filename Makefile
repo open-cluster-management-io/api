@@ -20,6 +20,7 @@ GO_LD_FLAGS:=
 # $4 - output
 $(call add-crd-gen,cluster,./cluster/v1,./cluster/v1,./cluster/v1)
 $(call add-crd-gen,work,./work/v1,./work/v1,./work/v1)
+$(call add-crd-gen,nucleus,./nucleus/v1,./nucleus/v1,./nucleus/v1)
 
 RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator

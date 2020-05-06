@@ -20,16 +20,7 @@ trap cleanup EXIT
 
 go install ./${CODEGEN_PKG}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
 
-for group in cluster; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
-    github.com/open-cluster-management/api/client/${group} \
-    github.com/open-cluster-management/api \
-    "${group}:v1" \
-    --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
-    ${verify}
-done
-
-for group in work; do
+for group in cluster work nucleus; do
   bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
     github.com/open-cluster-management/api/client/${group} \
     github.com/open-cluster-management/api \

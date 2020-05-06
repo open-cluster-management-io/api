@@ -10,6 +10,6 @@ verify="${VERIFY:-}"
 GOFLAGS="" bash ${CODEGEN_PKG}/generate-groups.sh "deepcopy" \
   github.com/open-cluster-management/api/generated \
   github.com/open-cluster-management/api \
-  "cluster:v1 work:v1" \
+  "cluster:v1 work:v1 nucleus:v1" \
   --go-header-file ${SCRIPT_ROOT}/hack/empty.txt \
   ${verify}
