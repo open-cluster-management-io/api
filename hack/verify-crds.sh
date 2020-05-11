@@ -17,6 +17,11 @@ do
         echo "Error: cannot have a metadata description in $f"
         FAILS=true
     fi
+
+    if [[ $(./_output/tools/bin/yq r $f spec.preserveUnknownFields) != "false" ]]; then
+        echo "Error: pruning not enabled (spec.preserveUnknownFields != false) in $f"
+        FAILS=true
+    fi
 done
 
 if [ "$FAILS" = true ] ; then
