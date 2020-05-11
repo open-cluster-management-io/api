@@ -11,7 +11,7 @@ spec:
     plural: manifestworks
     singular: manifestwork
   scope: "Namespaced"
-  preserveUnknownFields: false
+  preserveUnknownFields: true
   subresources:
     status: {}
   validation:
