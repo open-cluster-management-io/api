@@ -11,7 +11,7 @@ import (
 // +kubebuilder:resource:scope=Cluster
 
 // HubCore represents a deployment of nucleus hub core component.
-// HubCore will be only deployed in open-cluster-management namespace.
+// HubCore will be only deployed in open-cluster-management-hub namespace.
 type HubCore struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
@@ -81,7 +81,7 @@ type SpokeCore struct {
 type SpokeCoreSpec struct {
 	// Namespace is the namespace to deploy the agent.
 	// The namespace must have a prefix of "open-cluster-management-", and if it is not set,
-	// the namespace of "open-cluster-management" is used to deploy agent.
+	// the namespace of "open-cluster-management-spoke" is used to deploy agent.
 	// +optional
 	Namespace string `json:"namespace,omitempty" protobuf:"bytes,1,opt,name=namespace"`
 
