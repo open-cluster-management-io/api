@@ -65,7 +65,7 @@ spec:
             namespace:
               description: Namespace is the namespace to deploy the agent. The namespace
                 must have a prefix of "open-cluster-management-", and if it is not
-                set, the namespace of "open-cluster-management" is used to deploy
+                set, the namespace of "open-cluster-management-spoke" is used to deploy
                 agent.
               type: string
             registrationImagePullSpec:

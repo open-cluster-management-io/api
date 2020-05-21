@@ -16,7 +16,7 @@ spec:
   validation:
     openAPIV3Schema:
       description: HubCore represents a deployment of nucleus hub core component.
-        HubCore will be only deployed in open-cluster-management namespace.
+        HubCore will be only deployed in open-cluster-management-hub namespace.
       type: object
       properties:
         apiVersion:

@@ -12,7 +12,7 @@ package v1
 
 // AUTO-GENERATED FUNCTIONS START HERE
 var map_HubCore = map[string]string{
-	"":       "HubCore represents a deployment of nucleus hub core component. HubCore will be only deployed in open-cluster-management namespace.",
+	"":       "HubCore represents a deployment of nucleus hub core component. HubCore will be only deployed in open-cluster-management-hub namespace.",
 	"spec":   "Spec represents a desired deployment configuration of nucleus hub",
 	"status": "Status represents the current status of nucleus hub",
 }
@@ -81,7 +81,7 @@ func (SpokeCoreList) SwaggerDoc() map[string]string {
 
 var map_SpokeCoreSpec = map[string]string{
 	"":                          "SpokeCoreSpec represents the desired deployment configuratioin of nucleus spoke agent.",
-	"namespace":                 "Namespace is the namespace to deploy the agent. The namespace must have a prefix of \"open-cluster-management-\", and if it is not set, the namespace of \"open-cluster-management\" is used to deploy agent.",
+	"namespace":                 "Namespace is the namespace to deploy the agent. The namespace must have a prefix of \"open-cluster-management-\", and if it is not set, the namespace of \"open-cluster-management-spoke\" is used to deploy agent.",
 	"registrationImagePullSpec": "RegistrationImagePullSpec represents the desired image configuration of registration agent.",
 	"workImagePullSpec":         "WorkImagePullSpec represents the desired image configuration of work agent.",
 	"clusterName":               "ClusterName is the name of the spoke cluster to be created on hub. The spoke agent generates a random name if it is not set, or discovers the appropriate cluster name on openshift.",

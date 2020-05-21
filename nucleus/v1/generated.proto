@@ -12,7 +12,7 @@ import "k8s.io/apimachinery/pkg/runtime/schema/generated.proto";
 option go_package = "v1";
 
 // HubCore represents a deployment of nucleus hub core component.
-// HubCore will be only deployed in open-cluster-management namespace.
+// HubCore will be only deployed in open-cluster-management-hub namespace.
 message HubCore {
   optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
 
@@ -94,7 +94,7 @@ message SpokeCoreList {
 message SpokeCoreSpec {
   // Namespace is the namespace to deploy the agent.
   // The namespace must have a prefix of "open-cluster-management-", and if it is not set,
-  // the namespace of "open-cluster-management" is used to deploy agent.
+  // the namespace of "open-cluster-management-spoke" is used to deploy agent.
   // +optional
   optional string namespace = 1;
 
