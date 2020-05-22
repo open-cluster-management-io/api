@@ -12,6 +12,30 @@ import "k8s.io/apimachinery/pkg/runtime/schema/generated.proto";
 // Package-wide variables from generator "generated".
 option go_package = "v1";
 
+// CreatedManifestResourceMeta represents the gvr, name and namespace of a resource
+// Since these resources have been created, they must have valid group, version, resource, namespace, and name
+message CreatedManifestResourceMeta {
+  // Group is the API Group of the kubernetes resource
+  // +required
+  optional string group = 1;
+
+  // Version is the version of the kubernetes resource
+  // +required
+  optional string version = 2;
+
+  // Resource is the resource name of the kubernetes resource
+  // +required
+  optional string resource = 3;
+
+  // Name is the name of the kubernetes resource
+  // +required
+  optional string name = 4;
+
+  // Name is the namespace of the kubernetes resource
+  // +required
+  optional string namespace = 5;
+}
+
 // Manifest represents a resource to be deployed on spoke cluster
 message Manifest {
   // +kubebuilder:validation:EmbeddedResource
@@ -31,7 +55,7 @@ message ManifestCondition {
   repeated StatusCondition conditions = 2;
 }
 
-// ManifestResourceMeta represents the gvk, gvr, name and namespace of a resoure
+// ManifestResourceMeta represents the gvk, gvr, name and namespace of a resource
 message ManifestResourceMeta {
   // Ordinal represents the index of the manifest on spec
   // +required
@@ -123,6 +147,14 @@ message ManifestWorkStatus {
   // spoke cluster. The agent on spoke cluster syncs the condition from spoke to the hub.
   // +optional
   optional ManifestResourceStatus resourceStatus = 2;
+
+  // CreatedResources represents every resource that has been created for this ManifestWork and has not yet been deleted.
+  // This means that only resources with valid GroupVersionResource, namespace, and name are suitable.
+  // After a finalizer or controller deletes an item from this slice, it may be removed.
+  // The deleted resource may still be present until the finalizers for that resource are finished.
+  // However, the resource will not be undeleted, so it can be removed from this list and eventual consistency is preserved.
+  // +optional
+  repeated CreatedManifestResourceMeta createdResources = 3;
 }
 
 // ManifestsTemplate represents the manifest workload to be deployed on spoke cluster
