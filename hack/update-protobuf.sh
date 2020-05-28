@@ -4,8 +4,8 @@ source "$(dirname "${BASH_SOURCE}")/lib/init.sh"
 
 SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
 
-if [[ "$(protoc --version)" != "libprotoc 3.0."* ]]; then
-  echo "Generating protobuf requires protoc 3.0.x. Please download and
+if [[ "$(protoc --version)" != "libprotoc 3."* ]]; then
+  echo "Generating protobuf requires protoc 3.x. Please download and
 install the platform appropriate Protobuf package for your OS:
 
   https://github.com/google/protobuf/releases
