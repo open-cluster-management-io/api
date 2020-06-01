@@ -12,11 +12,11 @@ set -o pipefail
 API_GROUP_VERSIONS="\
 cluster/v1 \
 work/v1 \
-nucleus/v1 \
+operator/v1 \
 "
 
 API_PACKAGES="\
 github.com/open-cluster-management/api/cluster/v1,\
 github.com/open-cluster-management/api/work/v1,\
-github.com/open-cluster-management/api/nucleus/v1\
+github.com/open-cluster-management/api/operator/v1\
 "
