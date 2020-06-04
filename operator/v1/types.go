@@ -33,6 +33,10 @@ type ClusterManagerSpec struct {
 
 // ClusterManagerStatus represents the current status of the registration and work distribution controllers running on the hub.
 type ClusterManagerStatus struct {
+	// ObservedGeneration is the last generation change you've dealt with
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	// Conditions contain the different condition statuses for this ClusterManager.
 	// Valid condition types are:
 	// Applied: components in hub are applied.
@@ -41,6 +45,65 @@ type ClusterManagerStatus struct {
 	// Degraded: components in hub do not match the desired configuration and only provide
 	// degraded service.
 	Conditions []StatusCondition `json:"conditions"`
+
+	// Generations are used to determine when an item needs to be reconciled or has changed in a way that needs a reaction.
+	// +optional
+	Generations []GenerationStatus `json:"generations,omitempty"`
+
+	// RelatedResources are used to track the resources that are related to this ClusterManager
+	// +optional
+	RelatedResources []RelatedResourceMeta `json:"relatedResources,omitempty"`
+}
+
+// RelatedResourceMeta represents the resource that is managed by an operator
+type RelatedResourceMeta struct {
+	// group is the group of the thing you're tracking
+	// +required
+	Group string `json:"group"`
+
+	// version is the version of the thing you're tracking
+	// +required
+	Version string `json:"version"`
+
+	// resource is the resource type of the thing you're tracking
+	// +required
+	Resource string `json:"resource"`
+
+	// namespace is where the thing you're tracking is
+	// +optional
+	Namespace string `json:"namespace"`
+
+	// name is the name of the thing you're tracking
+	// +required
+	Name string `json:"name"`
+}
+
+// GenerationStatus keeps track of the generation for a given resource so that decisions about forced updates can be made.
+// the definition matches the GenerationStatus defined in github.com/openshift/api/v1
+type GenerationStatus struct {
+	// group is the group of the thing you're tracking
+	// +required
+	Group string `json:"group"`
+
+	// version is the version of the thing you're tracking
+	// +required
+	Version string `json:"version"`
+
+	// resource is the resource type of the thing you're tracking
+	// +required
+	Resource string `json:"resource"`
+
+	// namespace is where the thing you're tracking is
+	// +optional
+	Namespace string `json:"namespace"`
+
+	// name is the name of the thing you're tracking
+	// +required
+	Name string `json:"name"`
+
+	// lastGeneration is the last generation of the thing that controller applies
+	// +required
+	LastGeneration int64 `json:"lastGeneration" protobuf:"varint,5,opt,name=lastGeneration"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -118,6 +181,10 @@ type ServerURL struct {
 
 // KlusterletStatus represents the current status of Klusterlet agent.
 type KlusterletStatus struct {
+	// ObservedGeneration is the last generation change you've dealt with
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	// Conditions contain the different condition statuses for this Klusterlet.
 	// Valid condition types are:
 	// Applied: components have been applied in the managed cluster.
@@ -126,6 +193,14 @@ type KlusterletStatus struct {
 	// Degraded: components in the managed cluster do not match the desired configuration and only provide
 	// degraded service.
 	Conditions []StatusCondition `json:"conditions"`
+
+	// Generations are used to determine when an item needs to be reconciled or has changed in a way that needs a reaction.
+	// +optional
+	Generations []GenerationStatus `json:"generations,omitempty"`
+
+	// RelatedResources are used to track the resources that are related to this Klusterlet
+	// +optional
+	RelatedResources []RelatedResourceMeta `json:"relatedResources,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
