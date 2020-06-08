@@ -14,21 +14,21 @@ import (
 // ClusterManager will be only deployed in open-cluster-management-hub namespace.
 type ClusterManager struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents a desired deployment configuration of controllers that govern registration and work distribution for attached Klusterlets.
-	Spec ClusterManagerSpec `json:"spec" protobuf:"bytes,2,opt,name=spec"`
+	Spec ClusterManagerSpec `json:"spec"`
 
 	// Status represents the current status of controllers that govern the lifecycle of managed clusters.
 	// +optional
-	Status ClusterManagerStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
+	Status ClusterManagerStatus `json:"status,omitempty"`
 }
 
 // ClusterManagerSpec represents a desired deployment configuration of controllers that govern registration and work distribution for attached Klusterlets.
 type ClusterManagerSpec struct {
 	// RegistrationImagePullSpec represents the desired image of registration controller installed on hub.
 	// +required
-	RegistrationImagePullSpec string `json:"registrationImagePullSpec" protobuf:"bytes,1,opt,name=registrationImagePullSpec"`
+	RegistrationImagePullSpec string `json:"registrationImagePullSpec"`
 }
 
 // ClusterManagerStatus represents the current status of the registration and work distribution controllers running on the hub.
@@ -40,7 +40,7 @@ type ClusterManagerStatus struct {
 	// Progressing: components in hub are in a transitioning state.
 	// Degraded: components in hub do not match the desired configuration and only provide
 	// degraded service.
-	Conditions []StatusCondition `json:"conditions" protobuf:"bytes,1,opt,name=conditions"`
+	Conditions []StatusCondition `json:"conditions"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -51,10 +51,10 @@ type ClusterManagerList struct {
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
 	// +optional
-	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 
 	// Items is a list of deployment configurations for registration and work distribution controllers.
-	Items []ClusterManager `json:"items" protobuf:"bytes,2,rep,name=items"`
+	Items []ClusterManager `json:"items"`
 }
 
 // +genclient
@@ -68,13 +68,13 @@ type ClusterManagerList struct {
 // same namespace to allow API requests to the hub for the registration protocol.
 type Klusterlet struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents the desired deployment configuration of Klusterlet agent.
-	Spec KlusterletSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
+	Spec KlusterletSpec `json:"spec,omitempty"`
 
 	// Status represents the current status of Klusterlet agent.
-	Status KlusterletStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
+	Status KlusterletStatus `json:"status,omitempty"`
 }
 
 // KlusterletSpec represents the desired deployment configuration of Klusterlet agent.
@@ -83,37 +83,37 @@ type KlusterletSpec struct {
 	// The namespace must have a prefix of "open-cluster-management-", and if it is not set,
 	// the namespace of "open-cluster-management-agent" is used to deploy agent.
 	// +optional
-	Namespace string `json:"namespace,omitempty" protobuf:"bytes,1,opt,name=namespace"`
+	Namespace string `json:"namespace,omitempty"`
 
 	// RegistrationImagePullSpec represents the desired image configuration of registration agent.
 	// +required
-	RegistrationImagePullSpec string `json:"registrationImagePullSpec" protobuf:"bytes,2,opt,name=registrationImagePullSpec"`
+	RegistrationImagePullSpec string `json:"registrationImagePullSpec"`
 
 	// WorkImagePullSpec represents the desired image configuration of work agent.
 	// +required
-	WorkImagePullSpec string `json:"workImagePullSpec,omitempty" protobuf:"bytes,3,opt,name=workImagePullSpec"`
+	WorkImagePullSpec string `json:"workImagePullSpec,omitempty"`
 
 	// ClusterName is the name of the managed cluster to be created on hub.
 	// The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on openshift.
 	// +optional
-	ClusterName string `json:"clusterName,omitempty" protobuf:"bytes,4,opt,name=clusterName"`
+	ClusterName string `json:"clusterName,omitempty"`
 
 	// ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally
 	// If it is set empty, managed cluster has no externally accessible url that hub cluster can visit.
 	// +optional
-	ExternalServerURLs []ServerURL `json:"externalServerURLs,omitempty" protobuf:"bytes,5,opt,name=externalServerURLs"`
+	ExternalServerURLs []ServerURL `json:"externalServerURLs,omitempty"`
 }
 
 // ServerURL represents the apiserver url and ca bundle that is accessible externally
 type ServerURL struct {
 	// URL is the url of apiserver endpoint of the managed cluster.
 	// +required
-	URL string `json:"url" protobuf:"bytes,1,opt,name=url"`
+	URL string `json:"url"`
 
 	// CABundle is the ca bundle to connect to apiserver of the managed cluster.
 	// System certs are used if it is not set.
 	// +optional
-	CABundle []byte `json:"caBundle,omitempty" protobuf:"bytes,2,opt,name=caBundle"`
+	CABundle []byte `json:"caBundle,omitempty"`
 }
 
 // KlusterletStatus represents the current status of Klusterlet agent.
@@ -125,7 +125,7 @@ type KlusterletStatus struct {
 	// Progressing: components in the managed cluster are in a transitioning state.
 	// Degraded: components in the managed cluster do not match the desired configuration and only provide
 	// degraded service.
-	Conditions []StatusCondition `json:"conditions" protobuf:"bytes,1,opt,name=conditions"`
+	Conditions []StatusCondition `json:"conditions"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -136,31 +136,31 @@ type KlusterletList struct {
 	// Standard list metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
 	// +optional
-	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 
 	// Items is a list of Klusterlet agent.
-	Items []Klusterlet `json:"items" protobuf:"bytes,2,rep,name=items"`
+	Items []Klusterlet `json:"items"`
 }
 
 // StatusCondition contains condition information.
 type StatusCondition struct {
 	// Type is the type of the cluster condition.
 	// +required
-	Type string `json:"type" protobuf:"bytes,1,opt,name=type"`
+	Type string `json:"type"`
 
 	// Status is the status of the condition. One of True, False, Unknown.
 	// +required
-	Status metav1.ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=k8s.io/apimachinery/pkg/apis/meta/v1.ConditionStatus"`
+	Status metav1.ConditionStatus `json:"status"`
 
 	// LastTransitionTime is the last time the condition changed from one status to another.
 	// +required
-	LastTransitionTime metav1.Time `json:"lastTransitionTime" protobuf:"bytes,3,opt,name=lastTransitionTime"`
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 
 	// Reason is a (brief) reason for the condition's last status change.
 	// +required
-	Reason string `json:"reason" protobuf:"bytes,4,opt,name=reason"`
+	Reason string `json:"reason"`
 
 	// Message is a human-readable message indicating details about the last status change.
 	// +required
-	Message string `json:"message" protobuf:"bytes,5,opt,name=message"`
+	Message string `json:"message"`
 }
