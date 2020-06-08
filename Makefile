@@ -27,7 +27,6 @@ RUNTIME_IMAGE_NAME ?= openshift-api-generator
 
 verify-scripts:
 	bash -x hack/verify-deepcopy.sh
-	bash -x hack/verify-protobuf.sh
 	bash -x hack/verify-swagger-docs.sh
 	bash -x hack/verify-crds.sh
 	bash -x hack/verify-codegen.sh
@@ -36,7 +35,6 @@ verify: verify-scripts verify-codegen-crds
 
 update-scripts:
 	hack/update-deepcopy.sh
-	hack/update-protobuf.sh
 	hack/update-swagger-docs.sh
 	hack/update-codegen.sh
 .PHONY: update-scripts
