@@ -12,12 +12,13 @@ package v1
 
 // AUTO-GENERATED FUNCTIONS START HERE
 var map_AppliedManifestResourceMeta = map[string]string{
-	"":          "AppliedManifestResourceMeta represents the gvr, name and namespace of a resource. Since these resources have been created, they must have valid group, version, resource, namespace, and name.",
-	"group":     "Group is the API Group of the kubernetes resource",
-	"version":   "Version is the version of the kubernetes resource",
-	"resource":  "Resource is the resource name of the kubernetes resource",
-	"name":      "Name is the name of the kubernetes resource",
-	"namespace": "Name is the namespace of the kubernetes resource, empty string indicates it is a cluster scoped resource.",
+	"":                  "AppliedManifestResourceMeta represents the gvr, name and namespace of a resource. Since these resources have been created, they must have valid group, version, resource, namespace, and name.",
+	"group":             "Group is the API Group of the kubernetes resource",
+	"version":           "Version is the version of the kubernetes resource",
+	"resource":          "Resource is the resource name of the kubernetes resource",
+	"name":              "Name is the name of the kubernetes resource",
+	"namespace":         "Name is the namespace of the kubernetes resource, empty string indicates it is a cluster scoped resource.",
+	"deletionTimestamp": "DeletionTimestamp is set by the controller once it calls the deletion api on the resource successfully. The resource might be still visible on the managed cluster after this field is set. It is not directly settable by a client.",
 }
 
 func (AppliedManifestResourceMeta) SwaggerDoc() map[string]string {

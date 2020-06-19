@@ -123,6 +123,12 @@ type AppliedManifestResourceMeta struct {
 	// it is a cluster scoped resource.
 	// +required
 	Namespace string `json:"namespace"`
+
+	// DeletionTimestamp is set by the controller once it calls the deletion api on the resource successfully.
+	// The resource might be still visible on the managed cluster after this field is set.
+	// It is not directly settable by a client.
+	// +optional
+	DeletionTimestamp *metav1.Time `json:"deletionTimestamp"`
 }
 
 // ManifestWorkStatus represents the current status of managed cluster ManifestWork
