@@ -76,6 +76,13 @@ spec:
                   they must have valid group, version, resource, namespace, and name.
                 type: object
                 properties:
+                  deletionTimestamp:
+                    description: DeletionTimestamp is set by the controller once it
+                      calls the deletion api on the resource successfully. The resource
+                      might be still visible on the managed cluster after this field
+                      is set. It is not directly settable by a client.
+                    type: string
+                    format: date-time
                   group:
                     description: Group is the API Group of the kubernetes resource
                     type: string
