@@ -124,11 +124,11 @@ type AppliedManifestResourceMeta struct {
 	// +required
 	Namespace string `json:"namespace"`
 
-	// DeletionTimestamp is set by the controller once it calls the deletion api on the resource successfully.
-	// The resource might be still visible on the managed cluster after this field is set.
+	// UID is set on successful deletion of the kubernetes resource by controller. The
+	// resource might be still visible on the managed cluster after this field is set.
 	// It is not directly settable by a client.
 	// +optional
-	DeletionTimestamp *metav1.Time `json:"deletionTimestamp"`
+	UID string `json:"uid,omitempty"`
 }
 
 // ManifestWorkStatus represents the current status of managed cluster ManifestWork
