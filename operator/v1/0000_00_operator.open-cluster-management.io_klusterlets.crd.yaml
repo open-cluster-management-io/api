@@ -62,6 +62,10 @@ spec:
                     description: URL is the url of apiserver endpoint of the managed
                       cluster.
                     type: string
+            imagePullSecret:
+              description: ImagePullSecret represents the secret to pull images of
+                klusterlet.
+              type: string
             namespace:
               description: Namespace is the namespace to deploy the agent. The namespace
                 must have a prefix of "open-cluster-management-", and if it is not
