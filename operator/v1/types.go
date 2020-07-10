@@ -29,6 +29,10 @@ type ClusterManagerSpec struct {
 	// RegistrationImagePullSpec represents the desired image of registration controller installed on hub.
 	// +required
 	RegistrationImagePullSpec string `json:"registrationImagePullSpec"`
+
+	// ImagePullSecret represents the secret to pull images of hub controller.
+	// +optional
+	ImagePullSecret string `json:"imagePullSecret,omitempty"`
 }
 
 // ClusterManagerStatus represents the current status of the registration and work distribution controllers running on the hub.
@@ -155,6 +159,10 @@ type KlusterletSpec struct {
 	// WorkImagePullSpec represents the desired image configuration of work agent.
 	// +required
 	WorkImagePullSpec string `json:"workImagePullSpec,omitempty"`
+
+	// ImagePullSecret represents the secret to pull images of klusterlet.
+	// +optional
+	ImagePullSecret string `json:"imagePullSecret,omitempty"`
 
 	// ClusterName is the name of the managed cluster to be created on hub.
 	// The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on openshift.

@@ -34,6 +34,7 @@ func (ClusterManagerList) SwaggerDoc() map[string]string {
 var map_ClusterManagerSpec = map[string]string{
 	"":                          "ClusterManagerSpec represents a desired deployment configuration of controllers that govern registration and work distribution for attached Klusterlets.",
 	"registrationImagePullSpec": "RegistrationImagePullSpec represents the desired image of registration controller installed on hub.",
+	"imagePullSecret":           "ImagePullSecret represents the secret to pull images of hub controller.",
 }
 
 func (ClusterManagerSpec) SwaggerDoc() map[string]string {
@@ -91,6 +92,7 @@ var map_KlusterletSpec = map[string]string{
 	"namespace":                 "Namespace is the namespace to deploy the agent. The namespace must have a prefix of \"open-cluster-management-\", and if it is not set, the namespace of \"open-cluster-management-agent\" is used to deploy agent.",
 	"registrationImagePullSpec": "RegistrationImagePullSpec represents the desired image configuration of registration agent.",
 	"workImagePullSpec":         "WorkImagePullSpec represents the desired image configuration of work agent.",
+	"imagePullSecret":           "ImagePullSecret represents the secret to pull images of klusterlet.",
 	"clusterName":               "ClusterName is the name of the managed cluster to be created on hub. The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on openshift.",
 	"externalServerURLs":        "ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally If it is set empty, managed cluster has no externally accessible url that hub cluster can visit.",
 }
