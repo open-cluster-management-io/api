@@ -32,9 +32,9 @@ func (ManagedCluster) SwaggerDoc() map[string]string {
 }
 
 var map_ManagedClusterList = map[string]string{
-	"":         "ManagedClusterList is a collection of managed cluster.",
+	"":         "ManagedClusterList is a collection of managed clusters.",
 	"metadata": "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
-	"items":    "Items is a list of managed cluster.",
+	"items":    "Items is a list of managed clusters.",
 }
 
 func (ManagedClusterList) SwaggerDoc() map[string]string {
@@ -45,7 +45,7 @@ var map_ManagedClusterSpec = map[string]string{
 	"":                            "ManagedClusterSpec provides the information to securely connect to a remote server and verify its identity.",
 	"managedClusterClientConfigs": "ManagedClusterClientConfigs represents a list of the apiserver address of the managed cluster. If it is empty, managed cluster has no accessible address to be visited from hub.",
 	"hubAcceptsClient":            "hubAcceptsClient represents that hub accepts the join of Klusterlet agent on the managed cluster to the hub. The default value is false, and can only be set true when the user on hub has an RBAC rule to UPDATE on the virtual subresource of managedclusters/accept. When the value is set true, a namespace whose name is same as the name of ManagedCluster is created on hub representing the managed cluster, also role/rolebinding is created on the namespace to grant the permision of access from agent on managed cluster. When the value is set false, the namespace representing the managed cluster is deleted.",
-	"leaseDurationSeconds":        "LeaseDurationSeconds is used to coordinate the lease update time of Klusterlet agents on the managed cluster. If its value is zero, the Klusterlet agent will update its lease every 60s by default",
+	"leaseDurationSeconds":        "LeaseDurationSeconds is used to coordinate the lease update time of Klusterlet agents on the managed cluster. If its value is zero, the Klusterlet agent will update its lease every 60 seconds by default.",
 }
 
 func (ManagedClusterSpec) SwaggerDoc() map[string]string {
@@ -76,9 +76,9 @@ func (ManagedClusterVersion) SwaggerDoc() map[string]string {
 var map_StatusCondition = map[string]string{
 	"":                   "StatusCondition contains condition information for a managed cluster.",
 	"type":               "Type is the type of the cluster condition.",
-	"status":             "Status is the status of the condition. One of True, False, Unknown.",
+	"status":             "Status is the status of the condition. The allowed values are True, False, or Unknown.",
 	"lastTransitionTime": "LastTransitionTime is the last time the condition changed from one status to another.",
-	"reason":             "Reason is a (brief) reason for the condition's last status change.",
+	"reason":             "Reason is a brief reason for the condition's last status change.",
 	"message":            "Message is a human-readable message indicating details about the last status change.",
 }
 
