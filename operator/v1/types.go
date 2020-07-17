@@ -11,7 +11,7 @@ import (
 // +kubebuilder:resource:scope=Cluster
 
 // ClusterManager configures the controllers on the hub that govern registration and work distribution for attached Klusterlets.
-// ClusterManager will be only deployed in open-cluster-management-hub namespace.
+// ClusterManager will only be deployed in open-cluster-management-hub namespace.
 type ClusterManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -37,16 +37,16 @@ type ClusterManagerSpec struct {
 
 // ClusterManagerStatus represents the current status of the registration and work distribution controllers running on the hub.
 type ClusterManagerStatus struct {
-	// ObservedGeneration is the last generation change you've dealt with
+	// ObservedGeneration is the last generation change.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// Conditions contain the different condition statuses for this ClusterManager.
 	// Valid condition types are:
-	// Applied: components in hub are applied.
-	// Available: components in hub are available and ready to serve.
-	// Progressing: components in hub are in a transitioning state.
-	// Degraded: components in hub do not match the desired configuration and only provide
+	// Applied: Components in hub are applied.
+	// Available: Components in hub are available and ready to serve.
+	// Progressing: Components in hub are in a transitioning state.
+	// Degraded: Components in hub do not match the desired configuration and only provide
 	// degraded service.
 	Conditions []StatusCondition `json:"conditions"`
 
@@ -54,58 +54,58 @@ type ClusterManagerStatus struct {
 	// +optional
 	Generations []GenerationStatus `json:"generations,omitempty"`
 
-	// RelatedResources are used to track the resources that are related to this ClusterManager
+	// RelatedResources are used to track the resources that are related to this ClusterManager.
 	// +optional
 	RelatedResources []RelatedResourceMeta `json:"relatedResources,omitempty"`
 }
 
-// RelatedResourceMeta represents the resource that is managed by an operator
+// RelatedResourceMeta represents the resource that is managed by an operator.
 type RelatedResourceMeta struct {
-	// group is the group of the thing you're tracking
+	// The group value is the group of the resource that you're tracking.
 	// +required
 	Group string `json:"group"`
 
-	// version is the version of the thing you're tracking
+	// The version value is the version of the resource that you're tracking.
 	// +required
 	Version string `json:"version"`
 
-	// resource is the resource type of the thing you're tracking
+	// The resource value is the resource type of the resource that you're tracking.
 	// +required
 	Resource string `json:"resource"`
 
-	// namespace is where the thing you're tracking is
+	// The namespace value is the location of the resource that you're tracking.
 	// +optional
 	Namespace string `json:"namespace"`
 
-	// name is the name of the thing you're tracking
+	// The name value is the name of the resource that you're tracking.
 	// +required
 	Name string `json:"name"`
 }
 
 // GenerationStatus keeps track of the generation for a given resource so that decisions about forced updates can be made.
-// the definition matches the GenerationStatus defined in github.com/openshift/api/v1
+// The definition matches the GenerationStatus defined in github.com/openshift/api/v1.
 type GenerationStatus struct {
-	// group is the group of the thing you're tracking
+	// The group value is the group of the resource that you're tracking.
 	// +required
 	Group string `json:"group"`
 
-	// version is the version of the thing you're tracking
+	// The version value is the version of the resource that you're tracking.
 	// +required
 	Version string `json:"version"`
 
-	// resource is the resource type of the thing you're tracking
+	// The resource value is the resource type of the resource that you're tracking.
 	// +required
 	Resource string `json:"resource"`
 
-	// namespace is where the thing you're tracking is
+	// The namespace value is the location of the resource that you're tracking.
 	// +optional
 	Namespace string `json:"namespace"`
 
-	// name is the name of the thing you're tracking
+	// The name value is the name of the resource that you're tracking.
 	// +required
 	Name string `json:"name"`
 
-	// lastGeneration is the last generation of the thing that controller applies
+	// The lastGeneration value is the last generation of the thing that the controller applies.
 	// +required
 	LastGeneration int64 `json:"lastGeneration" protobuf:"varint,5,opt,name=lastGeneration"`
 }
@@ -161,19 +161,19 @@ type KlusterletSpec struct {
 	WorkImagePullSpec string `json:"workImagePullSpec,omitempty"`
 
 	// ClusterName is the name of the managed cluster to be created on hub.
-	// The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on openshift.
+	// The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on OpenShift.
 	// +optional
 	ClusterName string `json:"clusterName,omitempty"`
 
-	// ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally
-	// If it is set empty, managed cluster has no externally accessible url that hub cluster can visit.
+	// ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally.
+	// If it is set empty, managed cluster has no externally accessible URL that the hub cluster can visit.
 	// +optional
 	ExternalServerURLs []ServerURL `json:"externalServerURLs,omitempty"`
 }
 
-// ServerURL represents the apiserver url and ca bundle that is accessible externally
+// ServerURL represents the apiserver URL and ca bundle that is accessible externally
 type ServerURL struct {
-	// URL is the url of apiserver endpoint of the managed cluster.
+	// URL is the URL of apiserver endpoint of the managed cluster.
 	// +required
 	URL string `json:"url"`
 
@@ -185,16 +185,16 @@ type ServerURL struct {
 
 // KlusterletStatus represents the current status of Klusterlet agent.
 type KlusterletStatus struct {
-	// ObservedGeneration is the last generation change you've dealt with
+	// ObservedGeneration is the last generation change.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// Conditions contain the different condition statuses for this Klusterlet.
 	// Valid condition types are:
-	// Applied: components have been applied in the managed cluster.
-	// Available: components in the managed cluster are available and ready to serve.
-	// Progressing: components in the managed cluster are in a transitioning state.
-	// Degraded: components in the managed cluster do not match the desired configuration and only provide
+	// Applied: Components have been applied in the managed cluster.
+	// Available: Components in the managed cluster are available and ready to serve.
+	// Progressing: Components in the managed cluster are in a transitioning state.
+	// Degraded: Components in the managed cluster do not match the desired configuration and only provide
 	// degraded service.
 	Conditions []StatusCondition `json:"conditions"`
 
@@ -202,7 +202,7 @@ type KlusterletStatus struct {
 	// +optional
 	Generations []GenerationStatus `json:"generations,omitempty"`
 
-	// RelatedResources are used to track the resources that are related to this Klusterlet
+	// RelatedResources are used to track the resources that are related to this Klusterlet.
 	// +optional
 	RelatedResources []RelatedResourceMeta `json:"relatedResources,omitempty"`
 }
@@ -217,7 +217,7 @@ type KlusterletList struct {
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	// Items is a list of Klusterlet agent.
+	// Items is a list of Klusterlet agents.
 	Items []Klusterlet `json:"items"`
 }
 
@@ -227,7 +227,7 @@ type StatusCondition struct {
 	// +required
 	Type string `json:"type"`
 
-	// Status is the status of the condition. One of True, False, Unknown.
+	// Status is the status of the condition. Valid values are True, False, or Unknown.
 	// +required
 	Status metav1.ConditionStatus `json:"status"`
 
@@ -235,7 +235,7 @@ type StatusCondition struct {
 	// +required
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 
-	// Reason is a (brief) reason for the condition's last status change.
+	// Reason is a brief reason for the condition's last status change.
 	// +required
 	Reason string `json:"reason"`
 
