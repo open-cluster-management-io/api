@@ -30,19 +30,19 @@ spec:
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            object represents. Servers may infer this from the endpoint to which the client
+            submits requests. This value cannot be updated, and is formatted in CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         spec:
-          description: Spec represents a desired configuration of work to be deployed
+          description: Spec represents a desired configuration of work to be deployed.
             on the managed cluster.
           type: object
           properties:
             workload:
               description: Workload represents the manifest workload to be deployed
-                on managed cluster
+                on a managed cluster.
               type: object
               properties:
                 manifests:
@@ -50,7 +50,7 @@ spec:
                     to be deployed on the managed cluster.
                   type: array
                   items:
-                    description: Manifest represents a resource to be deployed on
+                    description: Manifest represents a resource to be deployed on a 
                       managed cluster
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
@@ -83,12 +83,12 @@ spec:
                       about the last status change.
                     type: string
                   reason:
-                    description: Reason is a (brief) reason for the condition's last
+                    description: Reason is a brief reason for the condition's last
                       status change.
                     type: string
                   status:
-                    description: Status is the status of the condition. One of True,
-                      False, Unknown.
+                    description: Status is the status of the condition. Valid values are True,
+                      False, or Unknown.
                     type: string
                   type:
                     description: Type is the type of the ManifestWork condition.
@@ -96,7 +96,7 @@ spec:
             resourceStatus:
               description: ResourceStatus represents the status of each resource in
                 manifestwork deployed on managed cluster. The Klusterlet agent on
-                managed cluster syncs the condition from managed to the hub.
+                managed cluster syncs the condition from the managed cluster to the hub.
               type: object
               properties:
                 manifests:
@@ -110,12 +110,12 @@ spec:
                   type: array
                   items:
                     description: ManifestCondition represents the conditions of the
-                      resources deployed on managed cluster
+                      resources deployed on a managed cluster.
                     type: object
                     properties:
                       conditions:
                         description: Conditions represents the conditions of this
-                          resource on managed cluster
+                          resource on a managed cluster.
                         type: array
                         items:
                           description: StatusCondition contains condition information
@@ -132,46 +132,46 @@ spec:
                                 details about the last status change.
                               type: string
                             reason:
-                              description: Reason is a (brief) reason for the condition's
+                              description: Reason is a brief reason for the condition's
                                 last status change.
                               type: string
                             status:
-                              description: Status is the status of the condition.
-                                One of True, False, Unknown.
+                              description: Status is the status of the condition. Valid values are
+                                True, False, or Unknown.
                               type: string
                             type:
                               description: Type is the type of the ManifestWork condition.
                               type: string
                       resourceMeta:
                         description: ResourceMeta represents the gvk, name and namespace
-                          of a resoure
+                          of a resoure.
                         type: object
                         properties:
                           group:
-                            description: Group is the API Group of the kubernetes
-                              resource
+                            description: Group is the API Group of the Kubernetes
+                              resource.
                             type: string
                           kind:
-                            description: Kind is the kind of the kubernetes resource
+                            description: Kind is the kind of the Kubernetes resource.
                             type: string
                           name:
-                            description: Name is the name of the kubernetes resource
+                            description: Name is the name of the Kubernetes resource.
                             type: string
                           namespace:
-                            description: Name is the namespace of the kubernetes resource
+                            description: Name is the namespace of the Kubernetes resource.
                             type: string
                           ordinal:
                             description: Ordinal represents the index of the manifest
-                              on spec
+                              on spec.
                             type: integer
                             format: int32
                           resource:
-                            description: Resource is the resource name of the kubernetes
-                              resource
+                            description: Resource is the resource name of the Kubernetes
+                              resource.
                             type: string
                           version:
-                            description: Version is the version of the kubernetes
-                              resource
+                            description: Version is the version of the Kubernetes
+                              resource.
                             type: string
   version: v1
   versions:
