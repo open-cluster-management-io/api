@@ -41,15 +41,16 @@ spec:
             clusterName:
               description: ClusterName is the name of the managed cluster to be created
                 on hub. The Klusterlet agent generates a random name if it is not
-                set, or discovers the appropriate cluster name on openshift.
+                set, or discovers the appropriate cluster name on OpenShift.
               type: string
             externalServerURLs:
               description: ExternalServerURLs represents the a list of apiserver urls
-                and ca bundles that is accessible externally If it is set empty, managed
-                cluster has no externally accessible url that hub cluster can visit.
+                and ca bundles that is accessible externally. If it is set empty,
+                managed cluster has no externally accessible URL that the hub cluster
+                can visit.
               type: array
               items:
-                description: ServerURL represents the apiserver url and ca bundle
+                description: ServerURL represents the apiserver URL and ca bundle
                   that is accessible externally
                 type: object
                 properties:
@@ -59,7 +60,7 @@ spec:
                     type: string
                     format: byte
                   url:
-                    description: URL is the url of apiserver endpoint of the managed
+                    description: URL is the URL of apiserver endpoint of the managed
                       cluster.
                     type: string
             namespace:
@@ -82,10 +83,10 @@ spec:
           properties:
             conditions:
               description: 'Conditions contain the different condition statuses for
-                this Klusterlet. Valid condition types are: Applied: components have
-                been applied in the managed cluster. Available: components in the
-                managed cluster are available and ready to serve. Progressing: components
-                in the managed cluster are in a transitioning state. Degraded: components
+                this Klusterlet. Valid condition types are: Applied: Components have
+                been applied in the managed cluster. Available: Components in the
+                managed cluster are available and ready to serve. Progressing: Components
+                in the managed cluster are in a transitioning state. Degraded: Components
                 in the managed cluster do not match the desired configuration and
                 only provide degraded service.'
               type: array
@@ -103,12 +104,12 @@ spec:
                       about the last status change.
                     type: string
                   reason:
-                    description: Reason is a (brief) reason for the condition's last
+                    description: Reason is a brief reason for the condition's last
                       status change.
                     type: string
                   status:
-                    description: Status is the status of the condition. One of True,
-                      False, Unknown.
+                    description: Status is the status of the condition. Valid values
+                      are True, False, or Unknown.
                     type: string
                   type:
                     description: Type is the type of the cluster condition.
@@ -120,59 +121,66 @@ spec:
               items:
                 description: GenerationStatus keeps track of the generation for a
                   given resource so that decisions about forced updates can be made.
-                  the definition matches the GenerationStatus defined in github.com/openshift/api/v1
+                  The definition matches the GenerationStatus defined in github.com/openshift/api/v1.
                 type: object
                 properties:
                   group:
-                    description: group is the group of the thing you're tracking
+                    description: The group value is the group of the resource that
+                      you're tracking.
                     type: string
                   lastGeneration:
-                    description: lastGeneration is the last generation of the thing
-                      that controller applies
+                    description: The lastGeneration value is the last generation of
+                      the thing that the controller applies.
                     type: integer
                     format: int64
                   name:
-                    description: name is the name of the thing you're tracking
+                    description: The name value is the name of the resource that you're
+                      tracking.
                     type: string
                   namespace:
-                    description: namespace is where the thing you're tracking is
+                    description: The namespace value is the location of the resource
+                      that you're tracking.
                     type: string
                   resource:
-                    description: resource is the resource type of the thing you're
-                      tracking
+                    description: The resource value is the resource type of the resource
+                      that you're tracking.
                     type: string
                   version:
-                    description: version is the version of the thing you're tracking
+                    description: The version value is the version of the resource
+                      that you're tracking.
                     type: string
             observedGeneration:
-              description: ObservedGeneration is the last generation change you've
-                dealt with
+              description: ObservedGeneration is the last generation change.
               type: integer
               format: int64
             relatedResources:
               description: RelatedResources are used to track the resources that are
-                related to this Klusterlet
+                related to this Klusterlet.
               type: array
               items:
                 description: RelatedResourceMeta represents the resource that is managed
-                  by an operator
+                  by an operator.
                 type: object
                 properties:
                   group:
-                    description: group is the group of the thing you're tracking
+                    description: The group value is the group of the resource that
+                      you're tracking.
                     type: string
                   name:
-                    description: name is the name of the thing you're tracking
+                    description: The name value is the name of the resource that you're
+                      tracking.
                     type: string
                   namespace:
-                    description: namespace is where the thing you're tracking is
+                    description: The namespace value is the location of the resource
+                      that you're tracking.
                     type: string
                   resource:
-                    description: resource is the resource type of the thing you're
-                      tracking
+                    description: The resource value is the resource type of the resource
+                      that you're tracking.
                     type: string
                   version:
-                    description: version is the version of the thing you're tracking
+                    description: The version value is the version of the resource
+                      that you're tracking.
                     type: string
   version: v1
   versions:

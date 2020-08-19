@@ -12,7 +12,7 @@ package v1
 
 // AUTO-GENERATED FUNCTIONS START HERE
 var map_ClusterManager = map[string]string{
-	"":       "ClusterManager configures the controllers on the hub that govern registration and work distribution for attached Klusterlets. ClusterManager will be only deployed in open-cluster-management-hub namespace.",
+	"":       "ClusterManager configures the controllers on the hub that govern registration and work distribution for attached Klusterlets. ClusterManager will only be deployed in open-cluster-management-hub namespace.",
 	"spec":   "Spec represents a desired deployment configuration of controllers that govern registration and work distribution for attached Klusterlets.",
 	"status": "Status represents the current status of controllers that govern the lifecycle of managed clusters.",
 }
@@ -43,10 +43,10 @@ func (ClusterManagerSpec) SwaggerDoc() map[string]string {
 
 var map_ClusterManagerStatus = map[string]string{
 	"":                   "ClusterManagerStatus represents the current status of the registration and work distribution controllers running on the hub.",
-	"observedGeneration": "ObservedGeneration is the last generation change you've dealt with",
-	"conditions":         "Conditions contain the different condition statuses for this ClusterManager. Valid condition types are: Applied: components in hub are applied. Available: components in hub are available and ready to serve. Progressing: components in hub are in a transitioning state. Degraded: components in hub do not match the desired configuration and only provide degraded service.",
+	"observedGeneration": "ObservedGeneration is the last generation change.",
+	"conditions":         "Conditions contain the different condition statuses for this ClusterManager. Valid condition types are: Applied: Components in hub are applied. Available: Components in hub are available and ready to serve. Progressing: Components in hub are in a transitioning state. Degraded: Components in hub do not match the desired configuration and only provide degraded service.",
 	"generations":        "Generations are used to determine when an item needs to be reconciled or has changed in a way that needs a reaction.",
-	"relatedResources":   "RelatedResources are used to track the resources that are related to this ClusterManager",
+	"relatedResources":   "RelatedResources are used to track the resources that are related to this ClusterManager.",
 }
 
 func (ClusterManagerStatus) SwaggerDoc() map[string]string {
@@ -54,13 +54,13 @@ func (ClusterManagerStatus) SwaggerDoc() map[string]string {
 }
 
 var map_GenerationStatus = map[string]string{
-	"":               "GenerationStatus keeps track of the generation for a given resource so that decisions about forced updates can be made. the definition matches the GenerationStatus defined in github.com/openshift/api/v1",
-	"group":          "group is the group of the thing you're tracking",
-	"version":        "version is the version of the thing you're tracking",
-	"resource":       "resource is the resource type of the thing you're tracking",
-	"namespace":      "namespace is where the thing you're tracking is",
-	"name":           "name is the name of the thing you're tracking",
-	"lastGeneration": "lastGeneration is the last generation of the thing that controller applies",
+	"":               "GenerationStatus keeps track of the generation for a given resource so that decisions about forced updates can be made. The definition matches the GenerationStatus defined in github.com/openshift/api/v1.",
+	"group":          "The group value is the group of the resource that you're tracking.",
+	"version":        "The version value is the version of the resource that you're tracking.",
+	"resource":       "The resource value is the resource type of the resource that you're tracking.",
+	"namespace":      "The namespace value is the location of the resource that you're tracking.",
+	"name":           "The name value is the name of the resource that you're tracking.",
+	"lastGeneration": "The lastGeneration value is the last generation of the thing that the controller applies.",
 }
 
 func (GenerationStatus) SwaggerDoc() map[string]string {
@@ -80,7 +80,7 @@ func (Klusterlet) SwaggerDoc() map[string]string {
 var map_KlusterletList = map[string]string{
 	"":         "KlusterletList is a collection of Klusterlet agents.",
 	"metadata": "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
-	"items":    "Items is a list of Klusterlet agent.",
+	"items":    "Items is a list of Klusterlet agents.",
 }
 
 func (KlusterletList) SwaggerDoc() map[string]string {
@@ -92,8 +92,8 @@ var map_KlusterletSpec = map[string]string{
 	"namespace":                 "Namespace is the namespace to deploy the agent. The namespace must have a prefix of \"open-cluster-management-\", and if it is not set, the namespace of \"open-cluster-management-agent\" is used to deploy agent.",
 	"registrationImagePullSpec": "RegistrationImagePullSpec represents the desired image configuration of registration agent.",
 	"workImagePullSpec":         "WorkImagePullSpec represents the desired image configuration of work agent.",
-	"clusterName":               "ClusterName is the name of the managed cluster to be created on hub. The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on openshift.",
-	"externalServerURLs":        "ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally If it is set empty, managed cluster has no externally accessible url that hub cluster can visit.",
+	"clusterName":               "ClusterName is the name of the managed cluster to be created on hub. The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on OpenShift.",
+	"externalServerURLs":        "ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally. If it is set empty, managed cluster has no externally accessible URL that the hub cluster can visit.",
 }
 
 func (KlusterletSpec) SwaggerDoc() map[string]string {
@@ -102,10 +102,10 @@ func (KlusterletSpec) SwaggerDoc() map[string]string {
 
 var map_KlusterletStatus = map[string]string{
 	"":                   "KlusterletStatus represents the current status of Klusterlet agent.",
-	"observedGeneration": "ObservedGeneration is the last generation change you've dealt with",
-	"conditions":         "Conditions contain the different condition statuses for this Klusterlet. Valid condition types are: Applied: components have been applied in the managed cluster. Available: components in the managed cluster are available and ready to serve. Progressing: components in the managed cluster are in a transitioning state. Degraded: components in the managed cluster do not match the desired configuration and only provide degraded service.",
+	"observedGeneration": "ObservedGeneration is the last generation change.",
+	"conditions":         "Conditions contain the different condition statuses for this Klusterlet. Valid condition types are: Applied: Components have been applied in the managed cluster. Available: Components in the managed cluster are available and ready to serve. Progressing: Components in the managed cluster are in a transitioning state. Degraded: Components in the managed cluster do not match the desired configuration and only provide degraded service.",
 	"generations":        "Generations are used to determine when an item needs to be reconciled or has changed in a way that needs a reaction.",
-	"relatedResources":   "RelatedResources are used to track the resources that are related to this Klusterlet",
+	"relatedResources":   "RelatedResources are used to track the resources that are related to this Klusterlet.",
 }
 
 func (KlusterletStatus) SwaggerDoc() map[string]string {
@@ -113,12 +113,12 @@ func (KlusterletStatus) SwaggerDoc() map[string]string {
 }
 
 var map_RelatedResourceMeta = map[string]string{
-	"":          "RelatedResourceMeta represents the resource that is managed by an operator",
-	"group":     "group is the group of the thing you're tracking",
-	"version":   "version is the version of the thing you're tracking",
-	"resource":  "resource is the resource type of the thing you're tracking",
-	"namespace": "namespace is where the thing you're tracking is",
-	"name":      "name is the name of the thing you're tracking",
+	"":          "RelatedResourceMeta represents the resource that is managed by an operator.",
+	"group":     "The group value is the group of the resource that you're tracking.",
+	"version":   "The version value is the version of the resource that you're tracking.",
+	"resource":  "The resource value is the resource type of the resource that you're tracking.",
+	"namespace": "The namespace value is the location of the resource that you're tracking.",
+	"name":      "The name value is the name of the resource that you're tracking.",
 }
 
 func (RelatedResourceMeta) SwaggerDoc() map[string]string {
@@ -126,8 +126,8 @@ func (RelatedResourceMeta) SwaggerDoc() map[string]string {
 }
 
 var map_ServerURL = map[string]string{
-	"":         "ServerURL represents the apiserver url and ca bundle that is accessible externally",
-	"url":      "URL is the url of apiserver endpoint of the managed cluster.",
+	"":         "ServerURL represents the apiserver URL and ca bundle that is accessible externally",
+	"url":      "URL is the URL of apiserver endpoint of the managed cluster.",
 	"caBundle": "CABundle is the ca bundle to connect to apiserver of the managed cluster. System certs are used if it is not set.",
 }
 
@@ -138,9 +138,9 @@ func (ServerURL) SwaggerDoc() map[string]string {
 var map_StatusCondition = map[string]string{
 	"":                   "StatusCondition contains condition information.",
 	"type":               "Type is the type of the cluster condition.",
-	"status":             "Status is the status of the condition. One of True, False, Unknown.",
+	"status":             "Status is the status of the condition. Valid values are True, False, or Unknown.",
 	"lastTransitionTime": "LastTransitionTime is the last time the condition changed from one status to another.",
-	"reason":             "Reason is a (brief) reason for the condition's last status change.",
+	"reason":             "Reason is a brief reason for the condition's last status change.",
 	"message":            "Message is a human-readable message indicating details about the last status change.",
 }
 

@@ -142,13 +142,13 @@ type ManifestWorkStatus struct {
 	// state for a certain period.
 	Conditions []StatusCondition `json:"conditions"`
 
-	// ResourceStatus represents the status of each resource in manifestwork deployed on a 
+	// ResourceStatus represents the status of each resource in manifestwork deployed on a
 	// managed cluster. The Klusterlet agent on managed cluster syncs the condition from the managed cluster to the hub.
 	// +optional
 	ResourceStatus ManifestResourceStatus `json:"resourceStatus,omitempty"`
 }
 
-// ManifestResourceStatus represents the status of each resource in manifest work deployed on a 
+// ManifestResourceStatus represents the status of each resource in manifest work deployed on a
 // managed cluster.
 type ManifestResourceStatus struct {
 	// Manifests represents the condition of manifests deployed on managed cluster.
@@ -179,7 +179,7 @@ const (
 	WorkDegraded WorkStatusConditionType = "Degraded"
 )
 
-// ManifestCondition represents the conditions of the resources deployed on a 
+// ManifestCondition represents the conditions of the resources deployed on a
 // managed cluster.
 type ManifestCondition struct {
 	// ResourceMeta represents the group, version, resource, name, and namespace of a resoure.

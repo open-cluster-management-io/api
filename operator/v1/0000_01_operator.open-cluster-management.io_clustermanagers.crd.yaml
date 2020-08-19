@@ -17,7 +17,7 @@ spec:
     openAPIV3Schema:
       description: ClusterManager configures the controllers on the hub that govern
         registration and work distribution for attached Klusterlets. ClusterManager
-        will be only deployed in open-cluster-management-hub namespace.
+        will only be deployed in open-cluster-management-hub namespace.
       type: object
       properties:
         apiVersion:
@@ -52,10 +52,10 @@ spec:
           properties:
             conditions:
               description: 'Conditions contain the different condition statuses for
-                this ClusterManager. Valid condition types are: Applied: components
-                in hub are applied. Available: components in hub are available and
-                ready to serve. Progressing: components in hub are in a transitioning
-                state. Degraded: components in hub do not match the desired configuration
+                this ClusterManager. Valid condition types are: Applied: Components
+                in hub are applied. Available: Components in hub are available and
+                ready to serve. Progressing: Components in hub are in a transitioning
+                state. Degraded: Components in hub do not match the desired configuration
                 and only provide degraded service.'
               type: array
               items:
@@ -72,12 +72,12 @@ spec:
                       about the last status change.
                     type: string
                   reason:
-                    description: Reason is a (brief) reason for the condition's last
+                    description: Reason is a brief reason for the condition's last
                       status change.
                     type: string
                   status:
-                    description: Status is the status of the condition. One of True,
-                      False, Unknown.
+                    description: Status is the status of the condition. Valid values
+                      are True, False, or Unknown.
                     type: string
                   type:
                     description: Type is the type of the cluster condition.
@@ -89,59 +89,66 @@ spec:
               items:
                 description: GenerationStatus keeps track of the generation for a
                   given resource so that decisions about forced updates can be made.
-                  the definition matches the GenerationStatus defined in github.com/openshift/api/v1
+                  The definition matches the GenerationStatus defined in github.com/openshift/api/v1.
                 type: object
                 properties:
                   group:
-                    description: group is the group of the thing you're tracking
+                    description: The group value is the group of the resource that
+                      you're tracking.
                     type: string
                   lastGeneration:
-                    description: lastGeneration is the last generation of the thing
-                      that controller applies
+                    description: The lastGeneration value is the last generation of
+                      the thing that the controller applies.
                     type: integer
                     format: int64
                   name:
-                    description: name is the name of the thing you're tracking
+                    description: The name value is the name of the resource that you're
+                      tracking.
                     type: string
                   namespace:
-                    description: namespace is where the thing you're tracking is
+                    description: The namespace value is the location of the resource
+                      that you're tracking.
                     type: string
                   resource:
-                    description: resource is the resource type of the thing you're
-                      tracking
+                    description: The resource value is the resource type of the resource
+                      that you're tracking.
                     type: string
                   version:
-                    description: version is the version of the thing you're tracking
+                    description: The version value is the version of the resource
+                      that you're tracking.
                     type: string
             observedGeneration:
-              description: ObservedGeneration is the last generation change you've
-                dealt with
+              description: ObservedGeneration is the last generation change.
               type: integer
               format: int64
             relatedResources:
               description: RelatedResources are used to track the resources that are
-                related to this ClusterManager
+                related to this ClusterManager.
               type: array
               items:
                 description: RelatedResourceMeta represents the resource that is managed
-                  by an operator
+                  by an operator.
                 type: object
                 properties:
                   group:
-                    description: group is the group of the thing you're tracking
+                    description: The group value is the group of the resource that
+                      you're tracking.
                     type: string
                   name:
-                    description: name is the name of the thing you're tracking
+                    description: The name value is the name of the resource that you're
+                      tracking.
                     type: string
                   namespace:
-                    description: namespace is where the thing you're tracking is
+                    description: The namespace value is the location of the resource
+                      that you're tracking.
                     type: string
                   resource:
-                    description: resource is the resource type of the thing you're
-                      tracking
+                    description: The resource value is the resource type of the resource
+                      that you're tracking.
                     type: string
                   version:
-                    description: version is the version of the thing you're tracking
+                    description: The version value is the version of the resource
+                      that you're tracking.
                     type: string
   version: v1
   versions:
