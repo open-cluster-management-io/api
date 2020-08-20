@@ -12,13 +12,13 @@ package v1
 
 // AUTO-GENERATED FUNCTIONS START HERE
 var map_AppliedManifestResourceMeta = map[string]string{
-	"":          "AppliedManifestResourceMeta represents the group, version, resource, name and namespace of a resource. Since these resources have been created, they must have valid group, version, resource, namespace, and name.",
-	"group":     "Group is the API Group of the Kubernetes resource.",
-	"version":   "Version is the version of the Kubernetes resource.",
-	"resource":  "Resource is the resource name of the Kubernetes resource.",
-	"name":      "Name is the name of the Kubernetes resource.",
-	"namespace": "Name is the namespace of the Kubernetes resource. Empty string indicates it is a cluster-scoped resource.",
-	"uid":       "UID is set on successful deletion of the Kubernetes resource by controller. The resource might be still visible on the managed cluster after this field is set. It is not directly settable by a client.",
+	"":          "AppliedManifestResourceMeta represents the gvr, name and namespace of a resource. Since these resources have been created, they must have valid group, version, resource, namespace, and name.",
+	"group":     "Group is the API Group of the kubernetes resource",
+	"version":   "Version is the version of the kubernetes resource",
+	"resource":  "Resource is the resource name of the kubernetes resource",
+	"name":      "Name is the name of the kubernetes resource",
+	"namespace": "Name is the namespace of the kubernetes resource, empty string indicates it is a cluster scoped resource.",
+	"uid":       "UID is set on successful deletion of the kubernetes resource by controller. The resource might be still visible on the managed cluster after this field is set. It is not directly settable by a client.",
 }
 
 func (AppliedManifestResourceMeta) SwaggerDoc() map[string]string {
@@ -26,9 +26,9 @@ func (AppliedManifestResourceMeta) SwaggerDoc() map[string]string {
 }
 
 var map_AppliedManifestWork = map[string]string{
-	"":       "AppliedManifestWork represents an applied manifestwork that is placed on a managed cluster. An AppliedManifestWork links to a manifestwork on a hub recording resources deployed in the managed cluster. When the agent is removed from managed cluster, cluster-admin on managed cluster can delete appliedmanifestwork to remove resources deployed by the agent. The name of the appliedmanifestwork must be in the format of {hash of hub's first kube-apiserver url}-{manifestwork name}",
+	"":       "AppliedManifestWork represents an applied manifestwork on managed cluster. It is placed on managed cluster. An AppliedManifestWork links to a manifestwork on a hub recording resources deployed in the managed cluster. When the agent is removed from managed cluster, cluster-admin on managed cluster can delete appliedmanifestwork to remove resources deployed by the agent. The name of the appliedmanifestwork must be in the format of {hash of hub's first kube-apiserver url}-{manifestwork name}",
 	"spec":   "Spec represents the desired configuration of AppliedManifestWork",
-	"status": "Status represents the current status of AppliedManifestWork.",
+	"status": "Status represents the current status of AppliedManifestWork",
 }
 
 func (AppliedManifestWork) SwaggerDoc() map[string]string {
@@ -46,9 +46,9 @@ func (AppliedManifestWorkList) SwaggerDoc() map[string]string {
 }
 
 var map_AppliedManifestWorkSpec = map[string]string{
-	"":                 "AppliedManifestWorkSpec represents the desired configuration of AppliedManifestWork.",
+	"":                 "AppliedManifestWorkSpec represents the desired configuration of AppliedManifestWork",
 	"hubHash":          "HubHash represents the hash of the first hub kube apiserver to identify which hub this AppliedManifestWork links to.",
-	"manifestWorkName": "ManifestWorkName represents the name of the related manifestwork on a hub.",
+	"manifestWorkName": "ManifestWorkName represents the name of the related manifestwork on hub.",
 }
 
 func (AppliedManifestWorkSpec) SwaggerDoc() map[string]string {
@@ -56,8 +56,8 @@ func (AppliedManifestWorkSpec) SwaggerDoc() map[string]string {
 }
 
 var map_AppliedManifestWorkStatus = map[string]string{
-	"":                 "AppliedManifestWorkStatus represents the current status of AppliedManifestWork.",
-	"appliedResources": "AppliedResources represents a list of resources defined within the manifestwork that are applied. Only resources with valid GroupVersionResource, namespace, and name are valid. An item in this slice is deleted when there is no mapped manifest in manifestwork.Spec or by finalizer. The resource relating to the item will also be removed from managed cluster. The deleted resource may still be present until the finalizers for that resource are finished. However, the resource will not be undeleted, so it can be removed from this list and eventual consistency is preserved.",
+	"":                 "AppliedManifestWorkStatus represents the current status of AppliedManifestWork",
+	"appliedResources": "AppliedResources represents a list of resources defined within the manifestwork that are applied. Only resources with valid GroupVersionResource, namespace, and name are suitable. An item in this slice is deleted when there is no mapped manifest in manifestwork.Spec or by finalizer. The resource relating to the item will also be removed from managed cluster. The deleted resource may still be present until the finalizers for that resource are finished. However, the resource will not be undeleted, so it can be removed from this list and eventual consistency is preserved.",
 }
 
 func (AppliedManifestWorkStatus) SwaggerDoc() map[string]string {
@@ -65,7 +65,7 @@ func (AppliedManifestWorkStatus) SwaggerDoc() map[string]string {
 }
 
 var map_Manifest = map[string]string{
-	"": "Manifest represents a resource to be deployed on a managed cluster.",
+	"": "Manifest represents a resource to be deployed on managed cluster",
 }
 
 func (Manifest) SwaggerDoc() map[string]string {
@@ -73,9 +73,9 @@ func (Manifest) SwaggerDoc() map[string]string {
 }
 
 var map_ManifestCondition = map[string]string{
-	"":             "ManifestCondition represents the conditions of the resources deployed on a managed cluster.",
-	"resourceMeta": "ResourceMeta represents the group, version, resource, name, and namespace of a resoure.",
-	"conditions":   "Conditions represents the conditions of this resource on a managed cluster.",
+	"":             "ManifestCondition represents the conditions of the resources deployed on managed cluster",
+	"resourceMeta": "ResourceMeta represents the gvk, name and namespace of a resoure",
+	"conditions":   "Conditions represents the conditions of this resource on managed cluster",
 }
 
 func (ManifestCondition) SwaggerDoc() map[string]string {
@@ -83,14 +83,14 @@ func (ManifestCondition) SwaggerDoc() map[string]string {
 }
 
 var map_ManifestResourceMeta = map[string]string{
-	"":          "ManifestResourceMeta represents the group, version, kind, as well as the group, version, resource, name, and namespace of a resoure.",
-	"ordinal":   "Ordinal represents the index of the manifest on spec.",
-	"group":     "Group is the API Group of the Kubernetes resource.",
-	"version":   "Version is the version of the Kubernetes resource.",
-	"kind":      "Kind is the kind of the Kubernetes resource.",
-	"resource":  "Resource is the resource name of the Kubernetes resource.",
-	"name":      "Name is the name of the Kubernetes resource.",
-	"namespace": "Name is the namespace of the Kubernetes resource.",
+	"":          "ManifestResourceMeta represents the gvk, gvr, name and namespace of a resoure",
+	"ordinal":   "Ordinal represents the index of the manifest on spec",
+	"group":     "Group is the API Group of the kubernetes resource",
+	"version":   "Version is the version of the kubernetes resource",
+	"kind":      "Kind is the kind of the kubernetes resource",
+	"resource":  "Resource is the resource name of the kubernetes resource",
+	"name":      "Name is the name of the kubernetes resource",
+	"namespace": "Name is the namespace of the kubernetes resource",
 }
 
 func (ManifestResourceMeta) SwaggerDoc() map[string]string {
@@ -98,7 +98,7 @@ func (ManifestResourceMeta) SwaggerDoc() map[string]string {
 }
 
 var map_ManifestResourceStatus = map[string]string{
-	"":          "ManifestResourceStatus represents the status of each resource in manifest work deployed on a managed cluster.",
+	"":          "ManifestResourceStatus represents the status of each resource in manifest work deployed on managed cluster",
 	"manifests": "Manifests represents the condition of manifests deployed on managed cluster. Valid condition types are: 1. Progressing represents the resource is being applied on managed cluster. 2. Applied represents the resource is applied successfully on managed cluster. 3. Available represents the resource exists on the managed cluster. 4. Degraded represents the current state of resource does not match the desired state for a certain period.",
 }
 
@@ -107,9 +107,9 @@ func (ManifestResourceStatus) SwaggerDoc() map[string]string {
 }
 
 var map_ManifestWork = map[string]string{
-	"":       "ManifestWork represents a manifests workload that hub wants to deploy on the managed cluster. A manifest workload is defined as a set of Kubernetes resources. ManifestWork must be created in the cluster namespace on the hub, so that agent on the corresponding managed cluster can access this resource and deploy on the managed cluster.",
+	"":       "ManifestWork represents a manifests workload that hub wants to deploy on the managed cluster. A manifest workload is defined as a set of kubernetes resources. ManifestWork must be created in the cluster namespace on the hub, so that agent on the corresponding managed cluster can access this resource and deploy on the managed cluster.",
 	"spec":   "Spec represents a desired configuration of work to be deployed on the managed cluster.",
-	"status": "Status represents the current status of work.",
+	"status": "Status represents the current status of work",
 }
 
 func (ManifestWork) SwaggerDoc() map[string]string {
@@ -128,7 +128,7 @@ func (ManifestWorkList) SwaggerDoc() map[string]string {
 
 var map_ManifestWorkSpec = map[string]string{
 	"":         "ManifestWorkSpec represents a desired configuration of manifests to be deployed on the managed cluster.",
-	"workload": "Workload represents the manifest workload to be deployed on managed cluster.",
+	"workload": "Workload represents the manifest workload to be deployed on managed cluster",
 }
 
 func (ManifestWorkSpec) SwaggerDoc() map[string]string {
@@ -136,9 +136,9 @@ func (ManifestWorkSpec) SwaggerDoc() map[string]string {
 }
 
 var map_ManifestWorkStatus = map[string]string{
-	"":               "ManifestWorkStatus represents the current status of managed cluster ManifestWork.",
+	"":               "ManifestWorkStatus represents the current status of managed cluster ManifestWork",
 	"conditions":     "Conditions contains the different condition statuses for this work. Valid condition types are: 1. Applied represents workload in ManifestWork is applied successfully on managed cluster. 2. Progressing represents workload in ManifestWork is being applied on managed cluster. 3. Available represents workload in ManifestWork exists on the managed cluster. 4. Degraded represents the current state of workload does not match the desired state for a certain period.",
-	"resourceStatus": "ResourceStatus represents the status of each resource in manifestwork deployed on a managed cluster. The Klusterlet agent on managed cluster syncs the condition from the managed cluster to the hub.",
+	"resourceStatus": "ResourceStatus represents the status of each resource in manifestwork deployed on managed cluster. The Klusterlet agent on managed cluster syncs the condition from managed to the hub.",
 }
 
 func (ManifestWorkStatus) SwaggerDoc() map[string]string {
@@ -146,8 +146,8 @@ func (ManifestWorkStatus) SwaggerDoc() map[string]string {
 }
 
 var map_ManifestsTemplate = map[string]string{
-	"":          "ManifestsTemplate represents the manifest workload to be deployed on a managed cluster.",
-	"manifests": "Manifests represents a list of Kuberenetes resources to be deployed on the managed cluster.",
+	"":          "ManifestsTemplate represents the manifest workload to be deployed on managed cluster",
+	"manifests": "Manifests represents a list of kuberenetes resources to be deployed on the managed cluster.",
 }
 
 func (ManifestsTemplate) SwaggerDoc() map[string]string {
@@ -157,9 +157,9 @@ func (ManifestsTemplate) SwaggerDoc() map[string]string {
 var map_StatusCondition = map[string]string{
 	"":                   "StatusCondition contains condition information for a ManifestWork applied to a managed cluster.",
 	"type":               "Type is the type of the ManifestWork condition.",
-	"status":             "Status is the status of the condition. Valid values are True, False, or Unknown.",
+	"status":             "Status is the status of the condition. One of True, False, Unknown.",
 	"lastTransitionTime": "LastTransitionTime is the last time the condition changed from one status to another.",
-	"reason":             "Reason is a brief reason for the condition's last status change.",
+	"reason":             "Reason is a (brief) reason for the condition's last status change.",
 	"message":            "Message is a human-readable message indicating details about the last status change.",
 }
 
