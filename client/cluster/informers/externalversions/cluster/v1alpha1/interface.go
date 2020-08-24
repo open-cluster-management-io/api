@@ -10,6 +10,8 @@ import (
 type Interface interface {
 	// ManagedClusterSets returns a ManagedClusterSetInformer.
 	ManagedClusterSets() ManagedClusterSetInformer
+	// ManagedClusterSetBindings returns a ManagedClusterSetBindingInformer.
+	ManagedClusterSetBindings() ManagedClusterSetBindingInformer
 }
 
 type version struct {
@@ -26,4 +28,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ManagedClusterSets returns a ManagedClusterSetInformer.
 func (v *version) ManagedClusterSets() ManagedClusterSetInformer {
 	return &managedClusterSetInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
+}
+
+// ManagedClusterSetBindings returns a ManagedClusterSetBindingInformer.
+func (v *version) ManagedClusterSetBindings() ManagedClusterSetBindingInformer {
+	return &managedClusterSetBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

@@ -11,6 +11,7 @@ import (
 type ClusterV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ManagedClusterSetsGetter
+	ManagedClusterSetBindingsGetter
 }
 
 // ClusterV1alpha1Client is used to interact with features provided by the cluster.open-cluster-management.io group.
@@ -20,6 +21,10 @@ type ClusterV1alpha1Client struct {
 
 func (c *ClusterV1alpha1Client) ManagedClusterSets() ManagedClusterSetInterface {
 	return newManagedClusterSets(c)
+}
+
+func (c *ClusterV1alpha1Client) ManagedClusterSetBindings(namespace string) ManagedClusterSetBindingInterface {
+	return newManagedClusterSetBindings(c, namespace)
 }
 
 // NewForConfig creates a new ClusterV1alpha1Client for the given config.

@@ -16,6 +16,10 @@ func (c *FakeClusterV1alpha1) ManagedClusterSets() v1alpha1.ManagedClusterSetInt
 	return &FakeManagedClusterSets{c}
 }
 
+func (c *FakeClusterV1alpha1) ManagedClusterSetBindings(namespace string) v1alpha1.ManagedClusterSetBindingInterface {
+	return &FakeManagedClusterSetBindings{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeClusterV1alpha1) RESTClient() rest.Interface {
