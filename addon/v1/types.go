@@ -28,6 +28,8 @@ type ManagedClusterAddon struct {
 
 // ManagedClusterAddonSpec is empty for now, but you could imagine holding information like "pause".
 type ManagedClusterAddonSpec struct {
+	// UpdateApproved ...
+	UpdateApproved bool `json:"updateApproved"`
 }
 
 // ManagedClusterAddonStatus provides information about the status of the operator.
@@ -39,16 +41,15 @@ type ManagedClusterAddonStatus struct {
 	// +optional
 	Conditions []AddonStatusCondition `json:"conditions,omitempty"  patchStrategy:"merge" patchMergeKey:"type"`
 
-	// version indicates which version of a particular operand is currently being managed.  It must always match the Available
-	// operand.  If 1.0.0 is Available, then this must indicate 1.0.0 even if the operator is trying to rollout
-	// 1.1.0
-	// +kubebuilder:validation:Required
-	// +required
-	Version string `json:"version,omitempty"`
-
-	// relatedObject is a reference to the detail resource driving the operator
+	// relatedObjects is a reference to the configuration resource that drives the operator
 	// +optional
-	RelatedObject ObjectReference `json:"relatedObjects,omitempty"`
+	RelatedObject ObjectReference `json:"relatedObject,omitempty"`
+
+	// LatestRelease indicates the latest available release for the addon
+	LatestRelease Release `json:"availableUpdate,omitempty"`
+
+	// CurrentRelease ...
+	CurrentRelease Release `json:"currentVersion,omitempty"`
 
 	// extension contains any additional status information specific to the
 	// operator which owns this status object.
@@ -115,19 +116,38 @@ type AddonStatusCondition struct {
 	Message string `json:"message,omitempty"`
 }
 
+// Release represents an OpenShift release image and associated metadata.
+// +k8s:deepcopy-gen=true
+type Release struct {
+	// version is a semantic versioning identifying the update version. When this
+	// field is part of spec, version is optional if image is specified.
+	// +required
+	Version string `json:"version"`
+
+	// imageManifest is list of images will be used for the specific version
+	// this will be use for backward compatability (i.e hub upgraded but agent have not)
+	// +required
+	ImageManifest []Image `json:"imageManifest"`
+}
+
+type Image struct {
+	Name  string `json: "name"`
+	Image string `json: "image"`
+}
+
 // AddonStatusConditionType is an aspect of operator state.
 type AddonStatusConditionType string
 
 const (
 	// Available indicates that the operand (eg: openshift-apiserver for the
 	// openshift-apiserver-operator), is functional and available in the cluster.
-	AddonAvailable AddonStatusConditionType = "Available"
+	Available AddonStatusConditionType = "Available"
 
 	// Progressing indicates that the operator is actively rolling out new code,
 	// propagating config changes, or otherwise moving from one steady state to
 	// another.  Operators should not report progressing when they are reconciling
 	// a previously known state.
-	AddonProgressing AddonStatusConditionType = "Progressing"
+	Progressing AddonStatusConditionType = "Progressing"
 
 	// Degraded indicates that the operator's current state does not match its
 	// desired state over a period of time resulting in a lower quality of service.
@@ -145,13 +165,7 @@ const (
 	// and must be replaced.  An operator should report Degraded if unexpected
 	// errors occur over a period, but the expectation is that all unexpected errors
 	// are handled as operators mature.
-	AddonDegraded AddonStatusConditionType = "Degraded"
-
-	// Upgradeable indicates whether the operator is in a state that is safe to upgrade. When status is `False`
-	// administrators should not upgrade their cluster and the message field should contain a human readable description
-	// of what the administrator should do to allow the operator to successfully update.  A missing condition, True,
-	// and Unknown are all treated by the CVO as allowing an upgrade.
-	AddonUpgradeable AddonStatusConditionType = "Upgradeable"
+	Degraded AddonStatusConditionType = "Degraded"
 )
 
 // ManagedClusterAddonList is a list of OperatorStatus resources.
