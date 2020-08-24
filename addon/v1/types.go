@@ -28,7 +28,13 @@ type ManagedClusterAddon struct {
 
 // ManagedClusterAddonSpec is empty for now, but you could imagine holding information like "pause".
 type ManagedClusterAddonSpec struct {
-	// UpdateApproved ...
+	// UpdateApproved represents that user has approved the update of the particular addon for a specific
+	// the managed cluster on the hub.
+	// The default value is false, it can only be set to true when the latestVersion and currentVersion
+	// is on different version.
+	// When the value is set true, the controller/operator that manages the addon will proceed to update the addon.
+	// The value will be set to false by mutating webhook when latestVersion matches currentVersion.
+	// +required
 	UpdateApproved bool `json:"updateApproved"`
 }
 
@@ -41,15 +47,16 @@ type ManagedClusterAddonStatus struct {
 	// +optional
 	Conditions []AddonStatusCondition `json:"conditions,omitempty"  patchStrategy:"merge" patchMergeKey:"type"`
 
-	// relatedObjects is a reference to the configuration resource that drives the operator
-	// +optional
-	RelatedObject ObjectReference `json:"relatedObject,omitempty"`
+	// addonResource is a reference  to an object that contain the configuration of the addon
+	// +required
+	AddonResource ObjectReference `json:"addonResource"`
 
-	// LatestRelease indicates the latest available release for the addon
-	LatestRelease Release `json:"availableUpdate,omitempty"`
+	// LatestVersion indicates the latest available Version for the addon
+	LatestVersion Release `json:"latestVersion,omitempty"`
 
-	// CurrentRelease ...
-	CurrentRelease Release `json:"currentVersion,omitempty"`
+	// CurrentVersion indicates the current Version of the addon
+	// During the agent update process this field will be set to same value as latestVersion after the update has been completed
+	CurrentVersion Release `json:"currentVersion,omitempty"`
 
 	// extension contains any additional status information specific to the
 	// operator which owns this status object.
@@ -75,19 +82,7 @@ type ObjectReference struct {
 	Name string `json:"name"`
 }
 
-type ConditionStatus string
-
-// These are valid condition statuses. "ConditionTrue" means a resource is in the condition.
-// "ConditionFalse" means a resource is not in the condition. "ConditionUnknown" means kubernetes
-// can't decide if a resource is in the condition or not. In the future, we could add other
-// intermediate conditions, e.g. ConditionDegraded.
-const (
-	ConditionTrue    ConditionStatus = "True"
-	ConditionFalse   ConditionStatus = "False"
-	ConditionUnknown ConditionStatus = "Unknown"
-)
-
-// AddonStatusCondition represents the state of the operator's
+// AddonStatusCondition represents the state of the addon's
 // managed and monitored components.
 // +k8s:deepcopy-gen=true
 type AddonStatusCondition struct {
@@ -99,7 +94,7 @@ type AddonStatusCondition struct {
 	// status of the condition, one of True, False, Unknown.
 	// +kubebuilder:validation:Required
 	// +required
-	Status ConditionStatus `json:"status"`
+	Status metav1.ConditionStatus `json:"status"`
 
 	// lastTransitionTime is the time of the last update to the current status property.
 	// +kubebuilder:validation:Required
@@ -116,7 +111,7 @@ type AddonStatusCondition struct {
 	Message string `json:"message,omitempty"`
 }
 
-// Release represents an OpenShift release image and associated metadata.
+// Release represents an agent release version and it's related images.
 // +k8s:deepcopy-gen=true
 type Release struct {
 	// version is a semantic versioning identifying the update version. When this
@@ -124,23 +119,31 @@ type Release struct {
 	// +required
 	Version string `json:"version"`
 
-	// imageManifest is list of images will be used for the specific version
-	// this will be use for backward compatability (i.e hub upgraded but agent have not)
+	// RelatedImages is list of images will be used for the specific version
+	// this will be use for backward compatability (i.e hub updated but agent have not)
 	// +required
-	ImageManifest []Image `json:"imageManifest"`
+	RelatedImages []RelatedImage `json:"relatedImages"`
 }
 
-type Image struct {
-	Name  string `json: "name"`
-	Image string `json: "image"`
+// RelatedImage represents information for one of the images that the agent uses its associated key.
+// +k8s:deepcopy-gen=true
+type RelatedImage struct {
+	// ImageKey is the unique identifier to link the image to specific deployment for the agent
+	// this will be use for backward compatability, i.e if the hub updated but agent have not the agent
+	// controller can use this information to continue to manage the agent.
+	// +required
+	ImageKey string `json:"imageKey"`
+
+	// ImagePullSpec represents the desired image of the component for the addon agent.
+	// +required
+	ImagePullSpec string `json:"image"`
 }
 
-// AddonStatusConditionType is an aspect of operator state.
+// AddonStatusConditionType is an aspect of agent state.
 type AddonStatusConditionType string
 
 const (
-	// Available indicates that the operand (eg: openshift-apiserver for the
-	// openshift-apiserver-operator), is functional and available in the cluster.
+	// Available indicates that the agent is functional and available in the cluster.
 	Available AddonStatusConditionType = "Available"
 
 	// Progressing indicates that the operator is actively rolling out new code,
@@ -168,7 +171,7 @@ const (
 	Degraded AddonStatusConditionType = "Degraded"
 )
 
-// ManagedClusterAddonList is a list of OperatorStatus resources.
+// ManagedClusterAddonList is a list of ManagedClusterAddon resources.
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type ManagedClusterAddonList struct {
 	metav1.TypeMeta `json:",inline"`

@@ -22,7 +22,7 @@ $(call add-crd-gen,clusterv1,./cluster/v1,./cluster/v1,./cluster/v1)
 $(call add-crd-gen,clusterv1alpha1,./cluster/v1alpha1,./cluster/v1alpha1,./cluster/v1alpha1)
 $(call add-crd-gen,work,./work/v1,./work/v1,./work/v1)
 $(call add-crd-gen,operator,./operator/v1,./operator/v1,./operator/v1)
-
+$(call add-crd-gen,addon,./addon/v1,./addon/v1,./addon/v1)
 RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator
 
