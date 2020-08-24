@@ -3,3 +3,5 @@
 package v1alpha1
 
 type ManagedClusterSetExpansion interface{}
+
+type ManagedClusterSetBindingExpansion interface{}

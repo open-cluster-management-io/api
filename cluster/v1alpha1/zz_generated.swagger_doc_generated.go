@@ -31,6 +31,34 @@ func (ManagedClusterSet) SwaggerDoc() map[string]string {
 	return map_ManagedClusterSet
 }
 
+var map_ManagedClusterSetBinding = map[string]string{
+	"":     "ManagedClusterSetBinding projects a ManagedClusterSet into a certain namespace. User is able to create a ManagedClusterSetBinding in a namespace and bind it to a ManagedClusterSet if they have an RBAC rule to GET on the virtual subresource of managedclustersets/bind. Workloads created in the same namespace can only be distributed to ManagedClusters in ManagedClustersets bound in this namespace by higher level controllers.",
+	"spec": "Spec defines the attributes of ManagedClusterSetBinding.",
+}
+
+func (ManagedClusterSetBinding) SwaggerDoc() map[string]string {
+	return map_ManagedClusterSetBinding
+}
+
+var map_ManagedClusterSetBindingList = map[string]string{
+	"":         "ManagedClusterSetBindingList is a collection of ManagedClusterSetBinding.",
+	"metadata": "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+	"items":    "Items is a list of ManagedClusterSetBinding.",
+}
+
+func (ManagedClusterSetBindingList) SwaggerDoc() map[string]string {
+	return map_ManagedClusterSetBindingList
+}
+
+var map_ManagedClusterSetBindingSpec = map[string]string{
+	"":           "ManagedClusterSetBindingSpec defines the attributes of ManagedClusterSetBinding.",
+	"clusterSet": "ClusterSet is the name of the ManagedClusterSet to bind. User is allowed to set or update this field if they have an RBAC rule to GET on the virtual subresource of managedclustersets/bind.",
+}
+
+func (ManagedClusterSetBindingSpec) SwaggerDoc() map[string]string {
+	return map_ManagedClusterSetBindingSpec
+}
+
 var map_ManagedClusterSetList = map[string]string{
 	"":         "ManagedClusterSetList is a collection of ManagedClusterSet.",
 	"metadata": "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",

@@ -5,3 +5,11 @@ package v1alpha1
 // ManagedClusterSetListerExpansion allows custom methods to be added to
 // ManagedClusterSetLister.
 type ManagedClusterSetListerExpansion interface{}
+
+// ManagedClusterSetBindingListerExpansion allows custom methods to be added to
+// ManagedClusterSetBindingLister.
+type ManagedClusterSetBindingListerExpansion interface{}
+
+// ManagedClusterSetBindingNamespaceListerExpansion allows custom methods to be added to
+// ManagedClusterSetBindingNamespaceLister.
+type ManagedClusterSetBindingNamespaceListerExpansion interface{}
