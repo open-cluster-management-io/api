@@ -18,7 +18,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-go install ./${CODEGEN_PKG}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
+go install -mod=vendor ./${CODEGEN_PKG}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
 
 for group in cluster; do
   bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
