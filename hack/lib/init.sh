@@ -14,11 +14,13 @@ cluster/v1 \
 cluster/v1alpha1 \
 work/v1 \
 operator/v1 \
+addon/v1alpha1 \
 "
 
 API_PACKAGES="\
 github.com/open-cluster-management/api/cluster/v1,\
 github.com/open-cluster-management/api/cluster/v1alpha1,\
 github.com/open-cluster-management/api/work/v1,\
-github.com/open-cluster-management/api/operator/v1\
+github.com/open-cluster-management/api/operator/v1,\
+github.com/open-cluster-management/api/addon/v1alpha1\
 "

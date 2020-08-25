@@ -10,6 +10,7 @@ FILES="cluster/v1/*.crd.yaml
 cluster/v1alpha1/*.crd.yaml
 work/v1/*.crd.yaml
 operator/v1/*.crd.yaml
+addon/v1alpha1/*.crd.yaml
 "
 
 FAILS=false
