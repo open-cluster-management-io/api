@@ -50,7 +50,7 @@ shift 4
   # To support running this script from anywhere, we have to first cd into this directory
   # so we can install the tools.
   cd "$(dirname "${0}")"
- #go install ./cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
+  go install ./cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
 )
 # Go installs the above commands to get installed in $GOBIN if defined, and $GOPATH/bin otherwise:
 GOBIN="$(go env GOBIN)"
