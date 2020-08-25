@@ -2,15 +2,14 @@ package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ManagedClusterAddOn is the Custom Resource object which holds the current state
-// of an operator. This object is used by operators to convey their state to
-// the rest of the cluster.
+// of an addon. This object is used by addon operators to convey their state.
+// The resource should be created in the ManagedCluster's cluster namespace.
 type ManagedClusterAddOn struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -52,18 +51,19 @@ type ManagedClusterAddOnStatus struct {
 	AddOnResource ObjectReference `json:"addonResource"`
 
 	// LatestVersion indicates the latest available Version for the addon
+	// +optional
 	LatestVersion Release `json:"latestVersion,omitempty"`
 
 	// CurrentVersion indicates the current Version of the addon
 	// During the agent update process this field will be set to same value as latestVersion after the update has been completed
+	// +optional
 	CurrentVersion Release `json:"currentVersion,omitempty"`
 
-	// extension contains any additional status information specific to the
-	// operator which owns this status object.
-	// +nullable
+	// UpdateAvailable indicates if there is an version update that is available for the addon
+	// it will be set to false if currentVersion.version != latestVersion.version
+	// it will be set to true if currentVersion.version == latestVersion.version
 	// +optional
-	// +kubebuilder:pruning:PreserveUnknownFields
-	Extension runtime.RawExtension `json:"extension"`
+	UpdateAvailable boolean `json:"updateAvailable,omitempty"`
 }
 
 // ObjectReference contains enough information to let you inspect or modify the referred object.
@@ -128,7 +128,7 @@ type Release struct {
 // RelatedImage represents information for one of the images that the agent uses its associated key.
 // +k8s:deepcopy-gen=true
 type RelatedImage struct {
-	// ImageKey is the unique identifier to link the image to specific deployment for the agent
+	// ImageKey is the key to link the image to specific deployment for the agent
 	// this will be use for backward compatability, i.e if the hub updated but agent have not the agent
 	// controller can use this information to continue to manage the agent.
 	// +required
