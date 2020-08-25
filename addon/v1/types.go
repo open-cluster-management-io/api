@@ -8,26 +8,26 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ManagedClusterAddon is the Custom Resource object which holds the current state
+// ManagedClusterAddOn is the Custom Resource object which holds the current state
 // of an operator. This object is used by operators to convey their state to
 // the rest of the cluster.
-type ManagedClusterAddon struct {
+type ManagedClusterAddOn struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
 	// spec holds configuration that could apply to any operator.
 	// +kubebuilder:validation:Required
 	// +required
-	Spec ManagedClusterAddonSpec `json:"spec"`
+	Spec ManagedClusterAddOnSpec `json:"spec"`
 
 	// status holds the information about the state of an operator.  It is consistent with status information across
 	// the Kubernetes ecosystem.
 	// +optional
-	Status ManagedClusterAddonStatus `json:"status"`
+	Status ManagedClusterAddOnStatus `json:"status"`
 }
 
-// ManagedClusterAddonSpec is empty for now, but you could imagine holding information like "pause".
-type ManagedClusterAddonSpec struct {
+// ManagedClusterAddOnSpec is empty for now, but you could imagine holding information like "pause".
+type ManagedClusterAddOnSpec struct {
 	// UpdateApproved represents that user has approved the update of the particular addon for a specific
 	// the managed cluster on the hub.
 	// The default value is false, it can only be set to true when the latestVersion and currentVersion
@@ -38,18 +38,18 @@ type ManagedClusterAddonSpec struct {
 	UpdateApproved bool `json:"updateApproved"`
 }
 
-// ManagedClusterAddonStatus provides information about the status of the operator.
+// ManagedClusterAddOnStatus provides information about the status of the operator.
 // +k8s:deepcopy-gen=true
-type ManagedClusterAddonStatus struct {
+type ManagedClusterAddOnStatus struct {
 	// conditions describes the state of the operator's managed and monitored components.
 	// +patchMergeKey=type
 	// +patchStrategy=merge
 	// +optional
-	Conditions []AddonStatusCondition `json:"conditions,omitempty"  patchStrategy:"merge" patchMergeKey:"type"`
+	Conditions []AddOnStatusCondition `json:"conditions,omitempty"  patchStrategy:"merge" patchMergeKey:"type"`
 
 	// addonResource is a reference  to an object that contain the configuration of the addon
 	// +required
-	AddonResource ObjectReference `json:"addonResource"`
+	AddOnResource ObjectReference `json:"addonResource"`
 
 	// LatestVersion indicates the latest available Version for the addon
 	LatestVersion Release `json:"latestVersion,omitempty"`
@@ -82,14 +82,14 @@ type ObjectReference struct {
 	Name string `json:"name"`
 }
 
-// AddonStatusCondition represents the state of the addon's
+// AddOnStatusCondition represents the state of the addon's
 // managed and monitored components.
 // +k8s:deepcopy-gen=true
-type AddonStatusCondition struct {
+type AddOnStatusCondition struct {
 	// type specifies the aspect reported by this condition.
 	// +kubebuilder:validation:Required
 	// +required
-	Type AddonStatusConditionType `json:"type"`
+	Type AddOnStatusConditionType `json:"type"`
 
 	// status of the condition, one of True, False, Unknown.
 	// +kubebuilder:validation:Required
@@ -139,18 +139,18 @@ type RelatedImage struct {
 	ImagePullSpec string `json:"image"`
 }
 
-// AddonStatusConditionType is an aspect of agent state.
-type AddonStatusConditionType string
+// AddOnStatusConditionType is an aspect of agent state.
+type AddOnStatusConditionType string
 
 const (
 	// Available indicates that the agent is functional and available in the cluster.
-	Available AddonStatusConditionType = "Available"
+	Available AddOnStatusConditionType = "Available"
 
 	// Progressing indicates that the operator is actively rolling out new code,
 	// propagating config changes, or otherwise moving from one steady state to
 	// another.  Operators should not report progressing when they are reconciling
 	// a previously known state.
-	Progressing AddonStatusConditionType = "Progressing"
+	Progressing AddOnStatusConditionType = "Progressing"
 
 	// Degraded indicates that the operator's current state does not match its
 	// desired state over a period of time resulting in a lower quality of service.
@@ -168,14 +168,14 @@ const (
 	// and must be replaced.  An operator should report Degraded if unexpected
 	// errors occur over a period, but the expectation is that all unexpected errors
 	// are handled as operators mature.
-	Degraded AddonStatusConditionType = "Degraded"
+	Degraded AddOnStatusConditionType = "Degraded"
 )
 
-// ManagedClusterAddonList is a list of ManagedClusterAddon resources.
+// ManagedClusterAddOnList is a list of ManagedClusterAddOn resources.
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ManagedClusterAddonList struct {
+type ManagedClusterAddOnList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []ManagedClusterAddon `json:"items"`
+	Items []ManagedClusterAddOn `json:"items"`
 }
