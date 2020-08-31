@@ -42,14 +42,14 @@ spec:
           properties:
             clusterSelectors:
               description: ClusterSelectors represents a slice of selectors to select
-                ManagedClusters If empty, the ManagedClusterSet will include all ManagedClusters
+                ManagedClusters If empty, the ManagedClusterSet will include no ManagedCluster.
                 If more than one ClusterSelector are specified in the slice, OR operation
                 will be used between them.
               type: array
               items:
                 description: ClusterSelector represents a selector of ManagedClusters
                   ClusterNames and LabelSelector are mutually exclusive. They cannot
-                  be set at the same time. If none of them is set, all ManagedClusters
+                  be set at the same time. If none of them is set, no ManagedCluster
                   will be selected
                 type: object
                 properties:
