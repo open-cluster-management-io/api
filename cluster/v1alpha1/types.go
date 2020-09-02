@@ -54,30 +54,7 @@ type ClusterSelector struct {
 // ManagedClusterSetStatus represents the current status of the ManagedClusterSet.
 type ManagedClusterSetStatus struct {
 	// Conditions contains the different condition statuses for this ManagedClusterSet.
-	Conditions []StatusCondition `json:"conditions"`
-}
-
-// StatusCondition contains condition information for a ManagedClusterSet.
-type StatusCondition struct {
-	// Type is the type of the ManagedClusterSet condition.
-	// +required
-	Type string `json:"type"`
-
-	// Status is the status of the condition. One of True, False, Unknown.
-	// +required
-	Status metav1.ConditionStatus `json:"status"`
-
-	// LastTransitionTime is the last time the condition changed from one status to another.
-	// +required
-	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
-
-	// Reason is a (brief) reason for the condition's last status change.
-	// +required
-	Reason string `json:"reason"`
-
-	// Message is a human-readable message indicating details about the last status change.
-	// +required
-	Message string `json:"message"`
+	Conditions []metav1.Condition `json:"conditions"`
 }
 
 const (
