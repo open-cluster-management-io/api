@@ -5,10 +5,10 @@ metadata:
   name: clustermanagementaddons.addon.open-cluster-management.io
 spec:
   additionalPrinterColumns:
-  - JSONPath: .spec.displayName
+  - JSONPath: .spec.addOnMeta.displayName
     name: DISPLAY NAME
     type: string
-  - JSONPath: .spec.addOnConfigCRD
+  - JSONPath: .spec.addOnConfiguration.crdName
     name: CRD NAME
     type: string
   group: addon.open-cluster-management.io
