@@ -18,7 +18,7 @@ spec:
     openAPIV3Schema:
       description: ManifestWork represents a manifests workload that hub wants to
         deploy on the managed cluster. A manifest workload is defined as a set of
-        kubernetes resources. ManifestWork must be created in the cluster namespace
+        Kubernetes resources. ManifestWork must be created in the cluster namespace
         on the hub, so that agent on the corresponding managed cluster can access
         this resource and deploy on the managed cluster.
       type: object
@@ -42,21 +42,21 @@ spec:
           properties:
             workload:
               description: Workload represents the manifest workload to be deployed
-                on managed cluster
+                on a managed cluster.
               type: object
               properties:
                 manifests:
                   description: Manifests represents a list of kuberenetes resources
-                    to be deployed on the managed cluster.
+                    to be deployed on a managed cluster.
                   type: array
                   items:
                     description: Manifest represents a resource to be deployed on
-                      managed cluster
+                      managed cluster.
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
                     x-kubernetes-embedded-resource: true
         status:
-          description: Status represents the current status of work
+          description: Status represents the current status of work.
           type: object
           properties:
             conditions:
@@ -137,8 +137,9 @@ spec:
                     pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
             resourceStatus:
               description: ResourceStatus represents the status of each resource in
-                manifestwork deployed on managed cluster. The Klusterlet agent on
-                managed cluster syncs the condition from managed to the hub.
+                manifestwork deployed on a managed cluster. The Klusterlet agent on
+                managed cluster syncs the condition from the managed cluster to the
+                hub.
               type: object
               properties:
                 manifests:
@@ -152,12 +153,12 @@ spec:
                   type: array
                   items:
                     description: ManifestCondition represents the conditions of the
-                      resources deployed on managed cluster
+                      resources deployed on a managed cluster.
                     type: object
                     properties:
                       conditions:
                         description: Conditions represents the conditions of this
-                          resource on managed cluster
+                          resource on a managed cluster.
                         type: array
                         items:
                           description: "Condition contains details for one aspect
@@ -233,35 +234,35 @@ spec:
                               maxLength: 316
                               pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       resourceMeta:
-                        description: ResourceMeta represents the gvk, name and namespace
-                          of a resoure
+                        description: ResourceMeta represents the group, version, kind,
+                          name and namespace of a resoure.
                         type: object
                         properties:
                           group:
-                            description: Group is the API Group of the kubernetes
-                              resource
+                            description: Group is the API Group of the Kubernetes
+                              resource.
                             type: string
                           kind:
-                            description: Kind is the kind of the kubernetes resource
+                            description: Kind is the kind of the Kubernetes resource.
                             type: string
                           name:
-                            description: Name is the name of the kubernetes resource
+                            description: Name is the name of the Kubernetes resource.
                             type: string
                           namespace:
-                            description: Name is the namespace of the kubernetes resource
+                            description: Name is the namespace of the Kubernetes resource.
                             type: string
                           ordinal:
                             description: Ordinal represents the index of the manifest
-                              on spec
+                              on spec.
                             type: integer
                             format: int32
                           resource:
-                            description: Resource is the resource name of the kubernetes
-                              resource
+                            description: Resource is the resource name of the Kubernetes
+                              resource.
                             type: string
                           version:
-                            description: Version is the version of the kubernetes
-                              resource
+                            description: Version is the version of the Kubernetes
+                              resource.
                             type: string
   version: v1
   versions:

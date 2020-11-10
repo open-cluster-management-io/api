@@ -34,14 +34,14 @@ spec:
       description: "ManagedCluster represents the desired state and current status
         of managed cluster. ManagedCluster is a cluster scoped resource. The name
         is the cluster UID. \n The cluster join process follows a double opt-in process:
-        \n 1. agent on managed cluster creates CSR on hub with cluster UID and agent
-        name. 2. agent on managed cluster creates ManagedCluster on hub. 3. cluster
-        admin on hub approves the CSR for the ManagedCluster's UID and agent name.
-        4. cluster admin sets spec.acceptClient of ManagedCluster to true. 5. cluster
+        \n 1. Agent on managed cluster creates CSR on hub with cluster UID and agent
+        name. 2. Agent on managed cluster creates ManagedCluster on hub. 3. Cluster
+        admin on hub approves the CSR for UID and agent name of the ManagedCluster.
+        4. Cluster admin sets spec.acceptClient of ManagedCluster to true. 5. Cluster
         admin on managed cluster creates credential of kubeconfig to hub. \n Once
-        the hub creates the cluster namespace, the Klusterlet agent on the Managed
-        Cluster pushes the credential to the hub to use against the managed cluster's
-        kube-apiserver."
+        the hub creates the cluster namespace, the Klusterlet agent on the ManagedCluster
+        pushes the credential to the hub to use against the kube-apiserver of the
+        ManagedCluster."
       type: object
       properties:
         apiVersion:
@@ -62,26 +62,28 @@ spec:
           type: object
           properties:
             hubAcceptsClient:
-              description: hubAcceptsClient represents that hub accepts the join of
-                Klusterlet agent on the managed cluster to the hub. The default value
-                is false, and can only be set true when the user on hub has an RBAC
-                rule to UPDATE on the virtual subresource of managedclusters/accept.
-                When the value is set true, a namespace whose name is same as the
-                name of ManagedCluster is created on hub representing the managed
-                cluster, also role/rolebinding is created on the namespace to grant
-                the permision of access from agent on managed cluster. When the value
-                is set false, the namespace representing the managed cluster is deleted.
+              description: hubAcceptsClient represents that hub accepts the joining
+                of Klusterlet agent on the managed cluster with the hub. The default
+                value is false, and can only be set true when the user on hub has
+                an RBAC rule to UPDATE on the virtual subresource of managedclusters/accept.
+                When the value is set true, a namespace whose name is the same as
+                the name of ManagedCluster is created on the hub. This namespace represents
+                the managed cluster, also role/rolebinding is created on the namespace
+                to grant the permision of access from the agent on the managed cluster.
+                When the value is set to false, the namespace representing the managed
+                cluster is deleted.
               type: boolean
             leaseDurationSeconds:
               description: LeaseDurationSeconds is used to coordinate the lease update
                 time of Klusterlet agents on the managed cluster. If its value is
-                zero, the Klusterlet agent will update its lease every 60s by default
+                zero, the Klusterlet agent will update its lease every 60 seconds
+                by default
               type: integer
               format: int32
             managedClusterClientConfigs:
               description: ManagedClusterClientConfigs represents a list of the apiserver
-                address of the managed cluster. If it is empty, managed cluster has
-                no accessible address to be visited from hub.
+                address of the managed cluster. If it is empty, the managed cluster
+                has no accessible address for the hub to connect with it.
               type: array
               items:
                 description: ClientConfig represents the apiserver address of the
@@ -95,7 +97,7 @@ spec:
                     type: string
                     format: byte
                   url:
-                    description: URL is the url of apiserver endpoint of the managed
+                    description: URL is the URL of apiserver endpoint of the managed
                       cluster.
                     type: string
         status:
