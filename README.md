@@ -25,7 +25,7 @@
 
 # open-cluster-management API
 
-The `api` repository defines relevant concepts and types for problem domains related to managing 0..* Kubernetes clusters.
+The `api` repository defines relevant concepts and types for problem domains related to managing multiple Kubernetes clusters.
 
 ## Community, discussion, contribution, and support
 
