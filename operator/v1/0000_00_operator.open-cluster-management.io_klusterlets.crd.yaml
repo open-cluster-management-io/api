@@ -41,7 +41,7 @@ spec:
             clusterName:
               description: ClusterName is the name of the managed cluster to be created
                 on hub. The Klusterlet agent generates a random name if it is not
-                set, or discovers the appropriate cluster name on openshift.
+                set, or discovers the appropriate cluster name on OpenShift.
               type: string
             externalServerURLs:
               description: ExternalServerURLs represents the a list of apiserver urls
@@ -82,10 +82,10 @@ spec:
           properties:
             conditions:
               description: 'Conditions contain the different condition statuses for
-                this Klusterlet. Valid condition types are: Applied: components have
-                been applied in the managed cluster. Available: components in the
-                managed cluster are available and ready to serve. Progressing: components
-                in the managed cluster are in a transitioning state. Degraded: components
+                this Klusterlet. Valid condition types are: Applied: Components have
+                been applied in the managed cluster. Available: Components in the
+                managed cluster are available and ready to serve. Progressing: Components
+                in the managed cluster are in a transitioning state. Degraded: Components
                 in the managed cluster do not match the desired configuration and
                 only provide degraded service.'
               type: array
@@ -163,29 +163,31 @@ spec:
               items:
                 description: GenerationStatus keeps track of the generation for a
                   given resource so that decisions about forced updates can be made.
-                  the definition matches the GenerationStatus defined in github.com/openshift/api/v1
+                  The definition matches the GenerationStatus defined in github.com/openshift/api/v1
                 type: object
                 properties:
                   group:
-                    description: group is the group of the thing you're tracking
+                    description: group is the group of the resource that you're tracking
                     type: string
                   lastGeneration:
-                    description: lastGeneration is the last generation of the thing
+                    description: lastGeneration is the last generation of the resource
                       that controller applies
                     type: integer
                     format: int64
                   name:
-                    description: name is the name of the thing you're tracking
+                    description: name is the name of the resource that you're tracking
                     type: string
                   namespace:
-                    description: namespace is where the thing you're tracking is
+                    description: namespace is where the resource that you're tracking
+                      is
                     type: string
                   resource:
-                    description: resource is the resource type of the thing you're
-                      tracking
+                    description: resource is the resource type of the resource that
+                      you're tracking
                     type: string
                   version:
-                    description: version is the version of the thing you're tracking
+                    description: version is the version of the resource that you're
+                      tracking
                     type: string
             observedGeneration:
               description: ObservedGeneration is the last generation change you've
@@ -194,7 +196,7 @@ spec:
               format: int64
             relatedResources:
               description: RelatedResources are used to track the resources that are
-                related to this Klusterlet
+                related to this Klusterlet.
               type: array
               items:
                 description: RelatedResourceMeta represents the resource that is managed
@@ -202,17 +204,17 @@ spec:
                 type: object
                 properties:
                   group:
-                    description: group is the group of the thing you're tracking
+                    description: group is the group of the resource that you're tracking
                     type: string
                   name:
-                    description: name is the name of the thing you're tracking
+                    description: name is the name of the resource that you're tracking
                     type: string
                   namespace:
                     description: namespace is where the thing you're tracking is
                     type: string
                   resource:
-                    description: resource is the resource type of the thing you're
-                      tracking
+                    description: resource is the resource type of the resource that
+                      you're tracking
                     type: string
                   version:
                     description: version is the version of the thing you're tracking
