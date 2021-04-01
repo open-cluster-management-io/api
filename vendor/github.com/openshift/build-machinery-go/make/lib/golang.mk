@@ -17,7 +17,7 @@ GOFMT_FLAGS ?=-s -l
 GOLINT ?=golint
 
 go_version :=$(shell $(GO) version | sed -E -e 's/.*go([0-9]+.[0-9]+.[0-9]+).*/\1/')
-GO_REQUIRED_MIN_VERSION ?=1.14.4
+GO_REQUIRED_MIN_VERSION ?=1.15.2
 ifneq "$(GO_REQUIRED_MIN_VERSION)" ""
 $(call require_minimal_version,$(GO),GO_REQUIRED_MIN_VERSION,$(go_version))
 endif
@@ -60,4 +60,4 @@ define version-ldflags
 -X $(1).gitTreeState="$(SOURCE_GIT_TREE_STATE)" \
 -X $(1).buildDate="$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')"
 endef
-GO_LD_FLAGS ?=-ldflags "-s -w $(call version-ldflags,$(GO_PACKAGE)/pkg/version) $(GO_LD_EXTRAFLAGS)"
+GO_LD_FLAGS ?=-ldflags "$(call version-ldflags,$(GO_PACKAGE)/pkg/version) $(GO_LD_EXTRAFLAGS)"
