@@ -35,6 +35,8 @@ type ManagedCluster struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents a desired configuration for the agent on the managed cluster.
+	// +kubebuilder:validation:Required
+	// +required
 	Spec ManagedClusterSpec `json:"spec"`
 
 	// Status represents the current status of joined managed cluster
@@ -59,11 +61,13 @@ type ManagedClusterSpec struct {
 	// the namespace to grant the permision of access from the agent on the managed cluster.
 	// When the value is set to false, the namespace representing the managed cluster is
 	// deleted.
+	// +kubebuilder:validation:Required
 	// +required
 	HubAcceptsClient bool `json:"hubAcceptsClient"`
 
 	// LeaseDurationSeconds is used to coordinate the lease update time of Klusterlet agents on the managed cluster.
 	// If its value is zero, the Klusterlet agent will update its lease every 60 seconds by default
+	// +kubebuilder:default:=60
 	// +optional
 	LeaseDurationSeconds int32 `json:"leaseDurationSeconds,omitempty"`
 }

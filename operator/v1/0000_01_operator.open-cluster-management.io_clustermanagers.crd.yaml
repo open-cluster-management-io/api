@@ -19,6 +19,8 @@ spec:
           registration and work distribution for attached Klusterlets. ClusterManager
           will only be deployed in open-cluster-management-hub namespace.
         type: object
+        required:
+        - spec
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

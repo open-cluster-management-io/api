@@ -18,6 +18,8 @@ spec:
         a unique identifier for the cluster.   2. clusterset.k8s.io, it contains an
         identifier that relates the cluster      to the ClusterSet in which it belongs.
       type: object
+      required:
+      - spec
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -34,6 +36,8 @@ spec:
         spec:
           description: Spec defines the attributes of the ClusterClaim.
           type: object
+          required:
+          - value
           properties:
             value:
               description: Value is a claim-dependent string
