@@ -15,14 +15,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: "PlacementDecision indicates a decision from a placement PlacementDecision
+        description: PlacementDecision indicates a decision from a placement PlacementDecision
           should has a label cluster.open-cluster-management.io/placement={placement
-          name} to reference a certain placement. \n If a placement has spec.numberOfClusters
-          specified, the total number of decisions contained in status.decisions of
-          PlacementDecisions should always be NumberOfClusters; otherwise, the total
-          number of decisions should be the number of ManagedClusters which match
-          the placement requirements. \n Some of the decisions might be empty when
-          there are no enough ManagedClusters meet the placement requirements."
+          name} to reference a certain placement.
         type: object
         properties:
           apiVersion:
@@ -45,8 +40,10 @@ spec:
             properties:
               decisions:
                 description: Decisions is a slice of decisions according to a placement
-                  The number of decisions should not be larger than 100
+                  The number of decisions should not be larger than 100. The slice
+                  should not include any empty ClusterDecision.
                 type: array
+                maxItems: 100
                 items:
                   description: ClusterDecision represents a decision from a placement
                     An empty ClusterDecision indicates it is not scheduled yet.
@@ -57,8 +54,8 @@ spec:
                   properties:
                     clusterName:
                       description: ClusterName is the name of the ManagedCluster.
-                        If it is not empty, its value should be unique cross all placement
-                        decisions for the Placement.
+                        Its value should be unique cross all placement decisions for
+                        a certian Placement.
                       type: string
                     reason:
                       description: Reason represents the reason why the ManagedCluster
