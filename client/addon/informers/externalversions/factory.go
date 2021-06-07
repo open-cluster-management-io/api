@@ -7,13 +7,13 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/open-cluster-management/api/client/addon/clientset/versioned"
-	addon "github.com/open-cluster-management/api/client/addon/informers/externalversions/addon"
-	internalinterfaces "github.com/open-cluster-management/api/client/addon/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
+	versioned "open-cluster-management.io/api/client/addon/clientset/versioned"
+	addon "open-cluster-management.io/api/client/addon/informers/externalversions/addon"
+	internalinterfaces "open-cluster-management.io/api/client/addon/informers/externalversions/internalinterfaces"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.

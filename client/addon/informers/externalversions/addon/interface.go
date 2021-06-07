@@ -3,8 +3,8 @@
 package addon
 
 import (
-	v1alpha1 "github.com/open-cluster-management/api/client/addon/informers/externalversions/addon/v1alpha1"
-	internalinterfaces "github.com/open-cluster-management/api/client/addon/informers/externalversions/internalinterfaces"
+	v1alpha1 "open-cluster-management.io/api/client/addon/informers/externalversions/addon/v1alpha1"
+	internalinterfaces "open-cluster-management.io/api/client/addon/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

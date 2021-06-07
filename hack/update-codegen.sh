@@ -22,8 +22,8 @@ go install -mod=vendor ./${CODEGEN_PKG}/cmd/{defaulter-gen,client-gen,lister-gen
 
 for group in cluster; do
   bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
-    github.com/open-cluster-management/api/client/${group} \
-    github.com/open-cluster-management/api \
+    open-cluster-management.io/api/client/${group} \
+    open-cluster-management.io/api \
     "${group}:v1,v1alpha1" \
     --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
     ${verify}
@@ -31,8 +31,8 @@ done
 
 for group in work operator; do
   bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
-    github.com/open-cluster-management/api/client/${group} \
-    github.com/open-cluster-management/api \
+    open-cluster-management.io/api/client/${group} \
+    open-cluster-management.io/api \
     "${group}:v1" \
     --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
     ${verify}
@@ -40,8 +40,8 @@ done
 
 for group in addon; do
   bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
-    github.com/open-cluster-management/api/client/${group} \
-    github.com/open-cluster-management/api \
+    open-cluster-management.io/api/client/${group} \
+    open-cluster-management.io/api \
     "${group}:v1alpha1" \
     --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
     ${verify}

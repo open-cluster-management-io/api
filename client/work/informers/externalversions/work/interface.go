@@ -3,8 +3,8 @@
 package work
 
 import (
-	internalinterfaces "github.com/open-cluster-management/api/client/work/informers/externalversions/internalinterfaces"
-	v1 "github.com/open-cluster-management/api/client/work/informers/externalversions/work/v1"
+	internalinterfaces "open-cluster-management.io/api/client/work/informers/externalversions/internalinterfaces"
+	v1 "open-cluster-management.io/api/client/work/informers/externalversions/work/v1"
 )
 
 // Interface provides access to each of this group's versions.

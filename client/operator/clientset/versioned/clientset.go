@@ -5,10 +5,10 @@ package versioned
 import (
 	"fmt"
 
-	operatorv1 "github.com/open-cluster-management/api/client/operator/clientset/versioned/typed/operator/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
+	operatorv1 "open-cluster-management.io/api/client/operator/clientset/versioned/typed/operator/v1"
 )
 
 type Interface interface {

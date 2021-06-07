@@ -6,12 +6,12 @@ import (
 	"context"
 	"time"
 
-	v1alpha1 "github.com/open-cluster-management/api/addon/v1alpha1"
-	scheme "github.com/open-cluster-management/api/client/addon/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
+	v1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
+	scheme "open-cluster-management.io/api/client/addon/clientset/versioned/scheme"
 )
 
 // ClusterManagementAddOnsGetter has a method to return a ClusterManagementAddOnInterface.

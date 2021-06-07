@@ -3,12 +3,12 @@
 package fake
 
 import (
-	workv1 "github.com/open-cluster-management/api/work/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	workv1 "open-cluster-management.io/api/work/v1"
 )
 
 var scheme = runtime.NewScheme()

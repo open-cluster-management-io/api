@@ -5,10 +5,10 @@ package externalversions
 import (
 	"fmt"
 
-	v1 "github.com/open-cluster-management/api/cluster/v1"
-	v1alpha1 "github.com/open-cluster-management/api/cluster/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
+	v1 "open-cluster-management.io/api/cluster/v1"
+	v1alpha1 "open-cluster-management.io/api/cluster/v1alpha1"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other

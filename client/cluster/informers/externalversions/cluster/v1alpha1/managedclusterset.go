@@ -6,14 +6,14 @@ import (
 	"context"
 	time "time"
 
-	versioned "github.com/open-cluster-management/api/client/cluster/clientset/versioned"
-	internalinterfaces "github.com/open-cluster-management/api/client/cluster/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/open-cluster-management/api/client/cluster/listers/cluster/v1alpha1"
-	clusterv1alpha1 "github.com/open-cluster-management/api/cluster/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
+	versioned "open-cluster-management.io/api/client/cluster/clientset/versioned"
+	internalinterfaces "open-cluster-management.io/api/client/cluster/informers/externalversions/internalinterfaces"
+	v1alpha1 "open-cluster-management.io/api/client/cluster/listers/cluster/v1alpha1"
+	clusterv1alpha1 "open-cluster-management.io/api/cluster/v1alpha1"
 )
 
 // ManagedClusterSetInformer provides access to a shared informer and lister for

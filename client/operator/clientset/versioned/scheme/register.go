@@ -3,12 +3,12 @@
 package scheme
 
 import (
-	operatorv1 "github.com/open-cluster-management/api/operator/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	operatorv1 "open-cluster-management.io/api/operator/v1"
 )
 
 var Scheme = runtime.NewScheme()

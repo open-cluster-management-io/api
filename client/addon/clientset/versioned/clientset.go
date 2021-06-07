@@ -5,10 +5,10 @@ package versioned
 import (
 	"fmt"
 
-	addonv1alpha1 "github.com/open-cluster-management/api/client/addon/clientset/versioned/typed/addon/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
+	addonv1alpha1 "open-cluster-management.io/api/client/addon/clientset/versioned/typed/addon/v1alpha1"
 )
 
 type Interface interface {

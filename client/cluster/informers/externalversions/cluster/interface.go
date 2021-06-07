@@ -3,9 +3,9 @@
 package cluster
 
 import (
-	v1 "github.com/open-cluster-management/api/client/cluster/informers/externalversions/cluster/v1"
-	v1alpha1 "github.com/open-cluster-management/api/client/cluster/informers/externalversions/cluster/v1alpha1"
-	internalinterfaces "github.com/open-cluster-management/api/client/cluster/informers/externalversions/internalinterfaces"
+	v1 "open-cluster-management.io/api/client/cluster/informers/externalversions/cluster/v1"
+	v1alpha1 "open-cluster-management.io/api/client/cluster/informers/externalversions/cluster/v1alpha1"
+	internalinterfaces "open-cluster-management.io/api/client/cluster/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

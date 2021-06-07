@@ -3,7 +3,7 @@
 package v1
 
 import (
-	internalinterfaces "github.com/open-cluster-management/api/client/work/informers/externalversions/internalinterfaces"
+	internalinterfaces "open-cluster-management.io/api/client/work/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.
