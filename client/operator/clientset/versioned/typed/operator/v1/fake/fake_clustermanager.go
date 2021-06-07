@@ -5,13 +5,13 @@ package fake
 import (
 	"context"
 
-	operatorv1 "github.com/open-cluster-management/api/operator/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
+	operatorv1 "open-cluster-management.io/api/operator/v1"
 )
 
 // FakeClusterManagers implements ClusterManagerInterface

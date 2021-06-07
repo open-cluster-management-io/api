@@ -18,9 +18,9 @@ addon/v1alpha1 \
 "
 
 API_PACKAGES="\
-github.com/open-cluster-management/api/cluster/v1,\
-github.com/open-cluster-management/api/cluster/v1alpha1,\
-github.com/open-cluster-management/api/work/v1,\
-github.com/open-cluster-management/api/operator/v1,\
-github.com/open-cluster-management/api/addon/v1alpha1\
+open-cluster-management.io/api/cluster/v1,\
+open-cluster-management.io/api/cluster/v1alpha1,\
+open-cluster-management.io/api/work/v1,\
+open-cluster-management.io/api/operator/v1,\
+open-cluster-management.io/api/addon/v1alpha1\
 "

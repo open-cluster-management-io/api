@@ -3,10 +3,10 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/open-cluster-management/api/cluster/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	v1alpha1 "open-cluster-management.io/api/cluster/v1alpha1"
 )
 
 // ManagedClusterSetLister helps list ManagedClusterSets.

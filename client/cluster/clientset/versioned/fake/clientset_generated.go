@@ -3,16 +3,16 @@
 package fake
 
 import (
-	clientset "github.com/open-cluster-management/api/client/cluster/clientset/versioned"
-	clusterv1 "github.com/open-cluster-management/api/client/cluster/clientset/versioned/typed/cluster/v1"
-	fakeclusterv1 "github.com/open-cluster-management/api/client/cluster/clientset/versioned/typed/cluster/v1/fake"
-	clusterv1alpha1 "github.com/open-cluster-management/api/client/cluster/clientset/versioned/typed/cluster/v1alpha1"
-	fakeclusterv1alpha1 "github.com/open-cluster-management/api/client/cluster/clientset/versioned/typed/cluster/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
+	clientset "open-cluster-management.io/api/client/cluster/clientset/versioned"
+	clusterv1 "open-cluster-management.io/api/client/cluster/clientset/versioned/typed/cluster/v1"
+	fakeclusterv1 "open-cluster-management.io/api/client/cluster/clientset/versioned/typed/cluster/v1/fake"
+	clusterv1alpha1 "open-cluster-management.io/api/client/cluster/clientset/versioned/typed/cluster/v1alpha1"
+	fakeclusterv1alpha1 "open-cluster-management.io/api/client/cluster/clientset/versioned/typed/cluster/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.

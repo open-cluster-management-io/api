@@ -3,9 +3,9 @@
 package fake
 
 import (
-	v1alpha1 "github.com/open-cluster-management/api/client/cluster/clientset/versioned/typed/cluster/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
+	v1alpha1 "open-cluster-management.io/api/client/cluster/clientset/versioned/typed/cluster/v1alpha1"
 )
 
 type FakeClusterV1alpha1 struct {

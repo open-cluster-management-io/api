@@ -6,14 +6,14 @@ import (
 	"context"
 	time "time"
 
-	addonv1alpha1 "github.com/open-cluster-management/api/addon/v1alpha1"
-	versioned "github.com/open-cluster-management/api/client/addon/clientset/versioned"
-	internalinterfaces "github.com/open-cluster-management/api/client/addon/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/open-cluster-management/api/client/addon/listers/addon/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
+	addonv1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
+	versioned "open-cluster-management.io/api/client/addon/clientset/versioned"
+	internalinterfaces "open-cluster-management.io/api/client/addon/informers/externalversions/internalinterfaces"
+	v1alpha1 "open-cluster-management.io/api/client/addon/listers/addon/v1alpha1"
 )
 
 // ManagedClusterAddOnInformer provides access to a shared informer and lister for

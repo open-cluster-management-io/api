@@ -3,9 +3,9 @@
 package v1
 
 import (
-	"github.com/open-cluster-management/api/client/operator/clientset/versioned/scheme"
-	v1 "github.com/open-cluster-management/api/operator/v1"
 	rest "k8s.io/client-go/rest"
+	"open-cluster-management.io/api/client/operator/clientset/versioned/scheme"
+	v1 "open-cluster-management.io/api/operator/v1"
 )
 
 type OperatorV1Interface interface {

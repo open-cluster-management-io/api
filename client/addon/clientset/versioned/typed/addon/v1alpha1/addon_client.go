@@ -3,9 +3,9 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/open-cluster-management/api/addon/v1alpha1"
-	"github.com/open-cluster-management/api/client/addon/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
+	v1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
+	"open-cluster-management.io/api/client/addon/clientset/versioned/scheme"
 )
 
 type AddonV1alpha1Interface interface {

@@ -3,10 +3,10 @@
 package v1
 
 import (
-	v1 "github.com/open-cluster-management/api/operator/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	v1 "open-cluster-management.io/api/operator/v1"
 )
 
 // ClusterManagerLister helps list ClusterManagers.

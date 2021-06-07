@@ -6,12 +6,12 @@ import (
 	"context"
 	"time"
 
-	scheme "github.com/open-cluster-management/api/client/work/clientset/versioned/scheme"
-	v1 "github.com/open-cluster-management/api/work/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
+	scheme "open-cluster-management.io/api/client/work/clientset/versioned/scheme"
+	v1 "open-cluster-management.io/api/work/v1"
 )
 
 // ManifestWorksGetter has a method to return a ManifestWorkInterface.
