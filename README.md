@@ -23,9 +23,9 @@ Various projects under [Open Cluster Management](https://github.com/open-cluster
 * [placement](https://github.com/open-cluster-management-io/placement): implements `Placement` for cluster selection with various policies to deploy workloads.
 * [registration-operator](https://github.com/open-cluster-management-io/registration-operator): implements `ClusterManager`, `Klusterlet` as an operator to deploy registration, work and placement.   
 
-## Architecutre
+## Use case
 
-The following diagram illustrates how the Open Cluster Management API and components can be used to bootstrap a control plane for multicluster management.
+With the Open Cluster Management API and components, you can use the [clusteradm CLI](https://github.com/open-cluster-management-io/clusteradm) to bootstrap a control plane for multicluster management. The following diagram illustrates the deployment architecture for the Open Cluster Management.
 
 ![Architecture diagram](https://github.com/open-cluster-management/community/raw/main/assets/ocm-arch.png)
 
