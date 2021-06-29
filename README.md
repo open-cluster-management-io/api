@@ -15,7 +15,13 @@ This library is the canonical location of the Open Cluster Management API defini
 
 ## Consumers
 
-Various projects under [Open Cluster Management](https://github.com/open-cluster-management-io) leverage this `api` library. For example, see [registration-operator](https://github.com/open-cluster-management-io/registration-operator) for how the `api` is being consumed.
+Various projects under [Open Cluster Management](https://github.com/open-cluster-management-io) leverage this `api` library. 
+
+* [registration](https://github.com/open-cluster-management-io/registration): implements `ManagedCluster`, `ManagedClusterSet`,`ClusterClaim` for cluster registration and lifecycling.
+* [work](https://github.com/open-cluster-management-io/work): implements `Manifestwork` for native kubernetes resource distribution to multiple clusters.
+* [addon-framework](https://github.com/open-cluster-management-io/addon-framework): implements `ClusterManagementAddOn`, `ManagedClusterAddOn` for addon management.
+* [placement](https://github.com/open-cluster-management-io/placement): implements `Placement` for cluster selection with various policies to deploy workloads.
+* [registration-operator](https://github.com/open-cluster-management-io/registration-operator): implements `ClusterManager`, `Klusterlet` as an operator to deploy registration, work and placement.   
 
 ## Architecutre
 
