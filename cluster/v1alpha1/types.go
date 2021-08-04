@@ -230,7 +230,47 @@ type PlacementSpec struct {
 	// Predicates represent a slice of predicates to select ManagedClusters. The predicates are ORed.
 	// +optional
 	Predicates []ClusterPredicate `json:"predicates,omitempty"`
+
+	// ResourceUsagePreferences represent a slice of cluster resources
+	// whose usage data will be considered during scheduling.
+	// This field is ignored when NumberOfClusters in spec is not
+	// specified.
+	// +optional
+	ResourceUsagePreferences []ResourceUsagePreference `json:"resourceUsagePreferences,omitempty"`
+
+	// ChurningPolicy contains configuration of churning policy.
+	// +optional
+	ChurningPolicy ChurningPolicy `json:"churningPolicy,omitempty"`
 }
+
+type ResourceUsagePreference struct {
+	// ResourceName represents the name of the preferred cluster resource
+	ResourceName ResourceName `json:"resourceName"`
+}
+
+type ResourceName string
+
+const (
+	ResourceNameCPU    ResourceName = "cpu"
+	ResourceNameMemory ResourceName = "memory"
+)
+
+type ChurningPolicy struct {
+	// PolicyType represents the type of the churning policy
+	PolicyType PolicyType `json:"policyType"`
+}
+
+type PolicyType string
+
+const (
+	// PolicyTypeSteady indicates the placement favors the managed
+	// clusters which have already been selected in the placement decisions.
+	PolicyTypeSteady PolicyType = "Steady"
+	// PolicyTypeNotSteady indicates the previous selection is not
+	// considered during scheduling. The placement decisions will be
+	// updated based on the latest facts of clusters and environments.
+	PolicyTypeNotSteady PolicyType = "NotSteady"
+)
 
 // ClusterPredicate represents a predicate to select ManagedClusters.
 type ClusterPredicate struct {
