@@ -231,45 +231,47 @@ type PlacementSpec struct {
 	// +optional
 	Predicates []ClusterPredicate `json:"predicates,omitempty"`
 
-	// ResourceUsagePreferences represent a slice of cluster resources
-	// whose usage data will be considered during scheduling.
-	// This field is ignored when NumberOfClusters in spec is not
-	// specified.
+	// ClusterResourcePreference represents the cluster resource preference configuration for
+	// the placement.
+	// This field is ignored when NumberOfClusters in spec is not specified.
 	// +optional
-	ResourceUsagePreferences []ResourceUsagePreference `json:"resourceUsagePreferences,omitempty"`
-
-	// ChurningPolicy contains configuration of churning policy.
-	// +optional
-	ChurningPolicy ChurningPolicy `json:"churningPolicy,omitempty"`
+	ClusterResourcePreference *ClusterResourcePreference `json:"clusterResourcePreference,omitempty"`
 }
 
-type ResourceUsagePreference struct {
-	// ResourceName represents the name of the preferred cluster resource
-	ResourceName ResourceName `json:"resourceName"`
+type ClusterResourcePreference struct {
+	// PolicyType represents the type of the resource preference policy
+	// +kubebuilder:default="MostAllocatableToCapacityRatio"
+	// +required
+	Type ClusterResourcePreferenceType `json:"type"`
+
+	// ResourcePreferences represent a slice of cluster resources whose usage/allocatable will
+	// be considered during scheduling.
+	// +kubebuilder:validation:MinItems:=1
+	// +required
+	ClusterResources []ClusterResource `json:"clusterResources"`
 }
 
-type ResourceName string
+type ClusterResourcePreferenceType string
 
 const (
-	ResourceNameCPU    ResourceName = "cpu"
-	ResourceNameMemory ResourceName = "memory"
+	// ClusterResourcePreferenceTypeMostAllocatableToCapacityRatio, the placement favors clusters
+	// with larger allocatable to capacity ratio of a set of cluster resources;
+	ClusterResourcePreferenceTypeMostAllocatableToCapacityRatio ClusterResourcePreferenceType = "MostAllocatableToCapacityRatio"
+	// ResourcePreferencePolicyTypeMostAllocatable, the placement favors clusters with larger
+	// amount of allocatable resources;
+	ClusterResourcePreferenceTypeMostAllocatable ClusterResourcePreferenceType = "MostAllocatable"
 )
 
-type ChurningPolicy struct {
-	// PolicyType represents the type of the churning policy
-	PolicyType PolicyType `json:"policyType"`
+type ClusterResource struct {
+	// ResourceName represents the name of the cluster resource
+	ResourceName ClusterResourceName `json:"resourceName"`
 }
 
-type PolicyType string
+type ClusterResourceName string
 
 const (
-	// PolicyTypeSteady indicates the placement favors the managed
-	// clusters which have already been selected in the placement decisions.
-	PolicyTypeSteady PolicyType = "Steady"
-	// PolicyTypeNotSteady indicates the previous selection is not
-	// considered during scheduling. The placement decisions will be
-	// updated based on the latest facts of clusters and environments.
-	PolicyTypeNotSteady PolicyType = "NotSteady"
+	ClusterResourceNameNameCPU ClusterResourceName = "cpu"
+	ClusterResourceNameMemory  ClusterResourceName = "memory"
 )
 
 // ClusterPredicate represents a predicate to select ManagedClusters.
