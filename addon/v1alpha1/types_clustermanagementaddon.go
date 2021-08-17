@@ -28,20 +28,20 @@ type ClusterManagementAddOn struct {
 
 	// status represents the current status of cluster management add-on.
 	// +optional
-	Status ClusterManagementAddOnStatus `json:"status,omitempty"`
+	Status ClusterManagementAddOnStatus `json:"status"`
 }
 
 // ClusterManagementAddOnSpec provides information for the add-on.
 type ClusterManagementAddOnSpec struct {
 	// addOnMeta is a reference to the metadata information for the add-on.
 	// +optional
-	AddOnMeta AddOnMeta `json:"addOnMeta"`
+	AddOnMeta *AddOnMeta `json:"addOnMeta,omitempty"`
 
 	// addOnConfiguration is a reference to configuration information for the add-on.
 	// In scenario where a multiple add-ons share the same add-on CRD,
 	// multiple ClusterManagementAddOn resources need to be created and reference the same AddOnConfiguration.
 	// +optional
-	AddOnConfiguration ConfigCoordinates `json:"addOnConfiguration"`
+	AddOnConfiguration *ConfigCoordinates `json:"addOnConfiguration,omitempty"`
 }
 
 // AddOnMeta represents a collection of metadata information for the add-on.

@@ -57,12 +57,13 @@ type RegistrationConfig struct {
 	// }
 	//
 	// +optional
-	Subject Subject `json:"subject,omitempty"`
+	Subject *Subject `json:"subject,omitempty"`
 }
 
 // Subject is the user subject of the addon agent to be registered to the hub.
 type Subject struct {
 	// user is the user name of the addon agent.
+	// +required
 	User string `json:"user"`
 
 	// groups is the user group of the addon agent.
@@ -94,12 +95,12 @@ type ManagedClusterAddOnStatus struct {
 	// addOnMeta is a reference to the metadata information for the add-on.
 	// This should be same as the addOnMeta for the corresponding ClusterManagementAddOn resource.
 	// +optional
-	AddOnMeta AddOnMeta `json:"addOnMeta"`
+	AddOnMeta *AddOnMeta `json:"addOnMeta,omitempty"`
 
 	// addOnConfiguration is a reference to configuration information for the add-on.
 	// This resource is use to locate the configuration resource for the add-on.
 	// +optional
-	AddOnConfiguration ConfigCoordinates `json:"addOnConfiguration"`
+	AddOnConfiguration *ConfigCoordinates `json:"addOnConfiguration,omitempty"`
 
 	// registrations is the conifigurations for the addon agent to register to hub. It should be set by each addon controller
 	// on hub to define how the addon agent on managedcluster is registered. With the registration defined,
