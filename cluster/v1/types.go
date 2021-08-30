@@ -150,7 +150,7 @@ const (
 	ResourceCPU ResourceName = "cpu"
 	// ResourceMemory defines the amount of memory in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 	ResourceMemory ResourceName = "memory"
-	// ResourceGPU defines the number of GPUs on a node
+	// ResourceNvidiaGPU defines the number of GPUs on a node
 	ResourceNvidiaGPU ResourceName = "nvidia.com/gpu"
 )
 
