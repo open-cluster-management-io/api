@@ -23,6 +23,7 @@ type ClusterManagementAddOn struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec represents a desired configuration for the agent on the cluster management add-on.
+	// +kubebuilder:validation:Required
 	// +required
 	Spec ClusterManagementAddOnSpec `json:"spec"`
 

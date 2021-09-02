@@ -20,6 +20,8 @@ spec:
         in the same namespace to allow API requests to the hub for the registration
         protocol.
       type: object
+      required:
+      - spec
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -43,6 +45,8 @@ spec:
                 on hub. The Klusterlet agent generates a random name if it is not
                 set, or discovers the appropriate cluster name on OpenShift.
               type: string
+              maxLength: 63
+              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
             externalServerURLs:
               description: ExternalServerURLs represents the a list of apiserver urls
                 and ca bundles that is accessible externally If it is set empty, managed
@@ -68,6 +72,8 @@ spec:
                 set, the namespace of "open-cluster-management-agent" is used to deploy
                 agent.
               type: string
+              maxLength: 63
+              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
             registrationImagePullSpec:
               description: RegistrationImagePullSpec represents the desired image
                 configuration of registration agent.

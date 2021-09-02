@@ -17,6 +17,8 @@ type ClusterManager struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents a desired deployment configuration of controllers that govern registration and work distribution for attached Klusterlets.
+	// +kubebuilder:validation:Required
+	// +required
 	Spec ClusterManagerSpec `json:"spec"`
 
 	// Status represents the current status of controllers that govern the lifecycle of managed clusters.
@@ -145,7 +147,9 @@ type Klusterlet struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents the desired deployment configuration of Klusterlet agent.
-	Spec KlusterletSpec `json:"spec,omitempty"`
+	// +kubebuilder:validation:Required
+	// +required
+	Spec KlusterletSpec `json:"spec"`
 
 	// Status represents the current status of Klusterlet agent.
 	Status KlusterletStatus `json:"status,omitempty"`
@@ -157,6 +161,8 @@ type KlusterletSpec struct {
 	// The namespace must have a prefix of "open-cluster-management-", and if it is not set,
 	// the namespace of "open-cluster-management-agent" is used to deploy agent.
 	// +optional
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 	Namespace string `json:"namespace,omitempty"`
 
 	// RegistrationImagePullSpec represents the desired image configuration of registration agent.
@@ -170,6 +176,8 @@ type KlusterletSpec struct {
 	// ClusterName is the name of the managed cluster to be created on hub.
 	// The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on OpenShift.
 	// +optional
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 	ClusterName string `json:"clusterName,omitempty"`
 
 	// ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally

@@ -21,6 +21,8 @@ spec:
           on the hub, so that agent on the corresponding managed cluster can access
           this resource and deploy on the managed cluster.
         type: object
+        required:
+        - spec
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -203,6 +205,9 @@ spec:
                       description: ManifestCondition represents the conditions of
                         the resources deployed on a managed cluster.
                       type: object
+                      required:
+                      - conditions
+                      - resourceMeta
                       properties:
                         conditions:
                           description: Conditions represents the conditions of this

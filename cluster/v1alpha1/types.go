@@ -26,6 +26,8 @@ type ManagedClusterSet struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the attributes of the ManagedClusterSet
+	// +kubebuilder:validation:Required
+	// +required
 	Spec ManagedClusterSetSpec `json:"spec"`
 
 	// Status represents the current status of the ManagedClusterSet
@@ -78,6 +80,8 @@ type ManagedClusterSetBinding struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the attributes of ManagedClusterSetBinding.
+	// +kubebuilder:validation:Required
+	// +required
 	Spec ManagedClusterSetBindingSpec `json:"spec"`
 }
 
@@ -88,6 +92,8 @@ type ManagedClusterSetBindingSpec struct {
 	// User is allowed to set this field if they have an RBAC rule to CREATE on the
 	// virtual subresource of managedclustersets/bind.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	// +required
 	ClusterSet string `json:"clusterSet"`
 }
 
@@ -122,14 +128,18 @@ type ClusterClaim struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the attributes of the ClusterClaim.
-	Spec ClusterClaimSpec `json:"spec,omitempty"`
+	// +kubebuilder:validation:Required
+	// +required
+	Spec ClusterClaimSpec `json:"spec"`
 }
 
 type ClusterClaimSpec struct {
 	// Value is a claim-dependent string
 	// +kubebuilder:validation:MaxLength=1024
 	// +kubebuilder:validation:MinLength=1
-	Value string `json:"value,omitempty"`
+	// +kubebuilder:validation:Required
+	// +required
+	Value string `json:"value"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

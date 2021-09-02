@@ -25,6 +25,8 @@ spec:
           created in the same namespace can only be distributed to ManagedClusters
           in ManagedClusterSets bound in this namespace by higher level controllers.
         type: object
+        required:
+        - spec
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -41,6 +43,8 @@ spec:
           spec:
             description: Spec defines the attributes of ManagedClusterSetBinding.
             type: object
+            required:
+            - clusterSet
             properties:
               clusterSet:
                 description: ClusterSet is the name of the ManagedClusterSet to bind.

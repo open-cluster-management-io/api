@@ -19,6 +19,8 @@ type ManifestWork struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents a desired configuration of work to be deployed on the managed cluster.
+	// +kubebuilder:validation:Required
+	// +required
 	Spec ManifestWorkSpec `json:"spec"`
 
 	// Status represents the current status of work.
@@ -215,10 +217,12 @@ const (
 // managed cluster.
 type ManifestCondition struct {
 	// ResourceMeta represents the group, version, kind, name and namespace of a resoure.
+	// +kubebuilder:validation:Required
 	// +required
 	ResourceMeta ManifestResourceMeta `json:"resourceMeta"`
 
 	// Conditions represents the conditions of this resource on a managed cluster.
+	// +kubebuilder:validation:Required
 	// +required
 	Conditions []metav1.Condition `json:"conditions"`
 }
@@ -272,7 +276,9 @@ type AppliedManifestWork struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec represents the desired configuration of AppliedManifestWork.
-	Spec AppliedManifestWorkSpec `json:"spec,omitempty"`
+	// +kubebuilder:validation:Required
+	// +required
+	Spec AppliedManifestWorkSpec `json:"spec"`
 
 	// Status represents the current status of AppliedManifestWork.
 	// +optional
@@ -283,10 +289,12 @@ type AppliedManifestWork struct {
 type AppliedManifestWorkSpec struct {
 	// HubHash represents the hash of the first hub kube apiserver to identify which hub
 	// this AppliedManifestWork links to.
+	// +kubebuilder:validation:Required
 	// +required
 	HubHash string `json:"hubHash"`
 
 	// ManifestWorkName represents the name of the related manifestwork on the hub.
+	// +kubebuilder:validation:Required
 	// +required
 	ManifestWorkName string `json:"manifestWorkName"`
 }

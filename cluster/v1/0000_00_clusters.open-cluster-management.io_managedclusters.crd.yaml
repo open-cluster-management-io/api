@@ -46,6 +46,8 @@ spec:
           on the ManagedCluster pushes the credential to the hub to use against the
           kube-apiserver of the ManagedCluster."
         type: object
+        required:
+        - spec
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -63,6 +65,8 @@ spec:
             description: Spec represents a desired configuration for the agent on
               the managed cluster.
             type: object
+            required:
+            - hubAcceptsClient
             properties:
               hubAcceptsClient:
                 description: hubAcceptsClient represents that hub accepts the joining
@@ -83,6 +87,7 @@ spec:
                   60 seconds by default
                 type: integer
                 format: int32
+                default: 60
               managedClusterClientConfigs:
                 description: ManagedClusterClientConfigs represents a list of the
                   apiserver address of the managed cluster. If it is empty, the managed
