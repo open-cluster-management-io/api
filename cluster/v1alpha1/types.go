@@ -322,6 +322,11 @@ type PlacementDecision struct {
 	Status PlacementDecisionStatus `json:"status,omitempty"`
 }
 
+//The placementDecsion label name holding the placement name
+const (
+	PlacementLabel string = "cluster.open-cluster-management.io/placement"
+)
+
 // PlacementDecisionStatus represents the current status of the PlacementDecision.
 type PlacementDecisionStatus struct {
 	// Decisions is a slice of decisions according to a placement
