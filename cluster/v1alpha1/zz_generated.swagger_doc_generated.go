@@ -221,8 +221,9 @@ func (PrioritizerConfig) SwaggerDoc() map[string]string {
 }
 
 var map_PrioritizerPolicy = map[string]string{
-	"":     "PrioritizerPolicy represents the policy of prioritizer",
-	"mode": "Mode is either Exact, Additive, \"\" where \"\" is Additive by default. In Additive mode, any prioritizer not explicitly enumerated is enabled in its default Configurations, in which Steady and Balance prioritizers have the weight of 1 while other prioritizers have the weight of 0. Additive doesn't require configuring all prioritizers. The default Configurations may change in the future, and additional prioritization will happen. In Exact mode, any prioritizer not explicitly enumerated is weighted as zero. Exact requires knowing the full set of prioritizers you want, but avoids behavior changes between releases.",
+	"":               "PrioritizerPolicy represents the policy of prioritizer",
+	"mode":           "Mode is either Exact, Additive, \"\" where \"\" is Additive by default. In Additive mode, any prioritizer not explicitly enumerated is enabled in its default Configurations, in which Steady and Balance prioritizers have the weight of 1 while other prioritizers have the weight of 0. Additive doesn't require configuring all prioritizers. The default Configurations may change in the future, and additional prioritization will happen. In Exact mode, any prioritizer not explicitly enumerated is weighted as zero. Exact requires knowing the full set of prioritizers you want, but avoids behavior changes between releases.",
+	"configurations": "Configurations deinfes a list of prioritizer configurations",
 }
 
 func (PrioritizerPolicy) SwaggerDoc() map[string]string {

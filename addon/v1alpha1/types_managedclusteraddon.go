@@ -78,10 +78,10 @@ type Subject struct {
 // +k8s:deepcopy-gen=true
 type ManagedClusterAddOnStatus struct {
 	// conditions describe the state of the managed and monitored components for the operator.
-	// +patchMergeKey=type
-	// +patchStrategy=merge
+	// +listMapKey:=type
+	// +listType:=map
 	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"  patchStrategy:"merge" patchMergeKey:"type"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// relatedObjects is a list of objects that are "interesting" or related to this operator. Common uses are:
 	// 1. the detailed resource driving the operator

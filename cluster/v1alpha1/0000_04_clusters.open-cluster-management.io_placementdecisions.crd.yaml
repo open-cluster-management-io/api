@@ -64,6 +64,9 @@ spec:
                       description: Reason represents the reason why the ManagedCluster
                         is selected.
                       type: string
+                x-kubernetes-list-map-keys:
+                - clusterName
+                x-kubernetes-list-type: map
     served: true
     storage: true
     subresources:

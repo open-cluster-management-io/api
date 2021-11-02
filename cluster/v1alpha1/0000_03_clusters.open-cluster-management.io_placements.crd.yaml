@@ -200,6 +200,7 @@ spec:
                 type: object
                 properties:
                   configurations:
+                    description: Configurations deinfes a list of prioritizer configurations
                     type: array
                     items:
                       description: PrioritizerConfig represents the configuration
@@ -228,6 +229,9 @@ spec:
                           default: 1
                           maximum: 10
                           minimum: 0
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
                   mode:
                     description: Mode is either Exact, Additive, "" where "" is Additive
                       by default. In Additive mode, any prioritizer not explicitly
@@ -316,6 +320,9 @@ spec:
                       type: string
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               numberOfSelectedClusters:
                 description: NumberOfSelectedClusters represents the number of selected
                   ManagedClusters

@@ -153,6 +153,9 @@ spec:
                       type: string
                       maxLength: 1024
                       minLength: 1
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               conditions:
                 description: Conditions contains the different condition statuses
                   for this managed cluster.
@@ -224,6 +227,9 @@ spec:
                       type: string
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               version:
                 description: Version represents the kubernetes version of the managed
                   cluster.

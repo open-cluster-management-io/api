@@ -212,6 +212,9 @@ spec:
                       type: string
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               generations:
                 description: Generations are used to determine when an item needs
                   to be reconciled or has changed in a way that needs a reaction.

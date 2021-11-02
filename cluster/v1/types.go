@@ -84,6 +84,8 @@ type ClientConfig struct {
 // ManagedClusterStatus represents the current status of joined managed cluster.
 type ManagedClusterStatus struct {
 	// Conditions contains the different condition statuses for this managed cluster.
+	// +listMapKey:=type
+	// +listType:=map
 	Conditions []metav1.Condition `json:"conditions"`
 
 	// Capacity represents the total resource capacity from all nodeStatuses
@@ -101,6 +103,8 @@ type ManagedClusterStatus struct {
 	// (kubeversion.open-cluster-management.io). They are written from the managed
 	// cluster. The set of claims is not uniform across a fleet, some claims can be
 	// vendor or version specific and may not be included from all managed clusters.
+	// +listMapKey:=name
+	// +listType:=map
 	// +optional
 	ClusterClaims []ManagedClusterClaim `json:"clusterClaims,omitempty"`
 }
