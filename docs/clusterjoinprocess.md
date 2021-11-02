@@ -17,28 +17,26 @@ and deploy the agent on managed cluster.
   - it has the identity to create `ManagedCluster` and create/watch csr.
 2. agent on managed cluster creates `ManagedCluster` if it does not exist.
   - The name of `ManagedCluster` is read from Cluster UID in openshift.
-  - Otherwise agent generates a UID and saves it in `Configmap` in managed cluster, so restarting agent or redeploying
-  agent will not lose the UID.
+  - Otherwise agent generates an agent UID and use it as part of `CommonName` to request a certificate(step 3), and once the CSR is approved on the hub, the agent on the managed cluster will store it as `agent-name` in `Secret` `hub-kubeconfig-secret`(step 10), so restarting agent or redeploying agent will not lose the UID after the cluster is managed successfully.
 3. agent on managed cluster creates CSR on hub cluster using bootstrap kubeconfig.
-  - The subject in csr is
+  - The subject in CSR is
 `{"Organization": ["system:open-cluster-management:clusterName"], "CommonName":"system:open-cluster-management:clusterName:agentName"}`.
   - The name of the csr is the digest of subject and private key, with a common prefix.
   CSR will specify the signer name as the kube-client one.
 4. cluster-admin on hub-cluster approve the CSR.
 5. hub-controller creates a clusterrolebinding on the hub with the identity of
-`system:open-cluster-management:clusterName:agentName`
+`open-cluster-management:managedcluster:clusterName`
    - Allows status update of `ManagedCluster`
 6. cluster-admin on hub update `spec.hubAcceptsClient` to `true`.
-  - Only user on hub who has the RBAC permision to update subresource of `managedclusters/accept`
+  - Only user on hub who has the RBAC permission to update subresource of `managedclusters/accept`
   can update this field.
-7. hub-controller updates condition of `ManagedCluster` to `HubApprovedJoin`.
+7. hub-controller updates condition of `ManagedCluster` to `HubAcceptedManagedCluster`.
 8. hub-controller creates a namespace as the name of cluster on hub cluster if it does not exist.
   - managed cluster can only join a hub once, and it can join to multiple hubs.
   - The UID of the managed cluster is identical on each of the hub the Klusterlet agent joins.
-9. hub-controller creates role/rolebinding on the cluster namespace on the hub
+9. hub-controller creates rolebinding `open-cluster-management:managedcluster:clusterName:registration` binded to cluster role `open-cluster-management:managedcluster:registration` on the cluster namespace on the hub
   - Allow the access of agent on managed cluster to the namespace.
-10. agent on managed cluster gets certificate in CSR status, uses the certificate to create a new kubeconfig
-and saves it as secret.
+10. agent on managed cluster gets certificate in CSR status, uses the certificate to create a new kubeconfig `hub-kubeconfig-secret` and saves it as secret.
 10. agent on managed cluster connects to hub apiserver using the new kubeconfig.
 11. agent on managed cluster updates conditions of `ManagedCluster` as `ManagedClusterJoined`.
 12. agent on managed cluster appends updates other fields in status of `ManagedCluster`.
@@ -56,6 +54,5 @@ based on the following steps:
 - check if organization field and commonName field is valid.
 - check if user name in csr is the same as commonName in certificate to ensure the request
 is originated from the same identity.
-- check if the corresponding `ManagedCluster` is in the conndition of `HubApprovedJoin`.
 4. agent on managed cluster reconstructs the kubeconfig using the new key/certificate
 and saves it as a secret on managed cluster.
