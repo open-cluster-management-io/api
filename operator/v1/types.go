@@ -12,7 +12,8 @@ import (
 // +kubebuilder:resource:scope=Cluster
 
 // ClusterManager configures the controllers on the hub that govern registration and work distribution for attached Klusterlets.
-// ClusterManager will only be deployed in open-cluster-management-hub namespace.
+// In Default mode, ClusterManager will only be deployed in open-cluster-management-hub namespace.
+// In Detached mode, ClusterManager will be deployed in <cluster-manager's name>-open-cluster-management-hub namespace.
 type ClusterManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -45,6 +46,31 @@ type ClusterManagerSpec struct {
 	// NodePlacement enables explicit control over the scheduling of the deployed pods.
 	// +optional
 	NodePlacement NodePlacement `json:"nodePlacement,omitempty"`
+
+	// DeployOption contains the options of deploying a cluster-manager
+	// Default mode is used if DeployOption is not set.
+	// +optional
+	DeployOption DeployOption `json:"deployOption,omitempty"`
+}
+
+type InstallMode string
+
+const (
+	InstallModeDefault  InstallMode = "Default"
+	InstallModeDetached InstallMode = "Detached"
+)
+
+type DeployOption struct {
+	// Mode can be Default or Detached.
+	// In Default mode, the Hub is installed as a whole and all parts of Hub are deployed in the same cluster.
+	// In Detached mode, only crd and configurations are installed on one cluster(defined as hub-cluster). Controllers run in another cluster (defined as management-cluster) and connect to the hub with the kubeconfig in secret of "external-hub-kubeconfig"(a kubeconfig of hub-cluster with cluster-admin permission).
+	// The purpose of Detached mode is to give it more flexibility, for example we can install a hub on a cluster with no worker nodes, meanwhile running all deployments on another more powerful cluster.
+	// Do not modify the Mode field once it's applied.
+	// +kubebuilder:validation:Required
+	// +required
+	// +kubebuilder:default=Default
+	// +kubebuilder:validation:Enum=Default;Detached
+	Mode InstallMode `json:"mode"`
 }
 
 // ClusterManagerStatus represents the current status of the registration and work distribution controllers running on the hub.
