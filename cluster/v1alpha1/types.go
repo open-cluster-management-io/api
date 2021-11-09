@@ -333,8 +333,15 @@ type PlacementStatus struct {
 
 const (
 	// PlacementConditionSatisfied means Placement requirements are satisfied.
-	// A placement is not satisfied only if there is empty ClusterDecision in the status.decisions
-	// of PlacementDecisions.
+	// A placement is not satisfied if
+	// 1) No ManagedClusterSetBinding is found in the placement namespace;
+	// 2) ClusterSets in spec is specified and none of them is bound to the placement namespace;
+	// 3) No memeber ManagedCluster is found for all eligible ManagedClusterSets; A ManagedClusterSet
+	//    is eligible for a placement if
+	//    a) It is bound to the placement namespace;
+	//    b) And if ClusterSets in spec is specified, it is in the list;
+	// 4) No ManagedCluster matches any of the cluster predicates of the placement;
+	// 5) NumberOfClusters in spec is specified and NumberOfSelectedClusters in status is less than it;
 	PlacementConditionSatisfied string = "PlacementSatisfied"
 )
 
@@ -360,13 +367,6 @@ type PlacementList struct {
 // PlacementDecision indicates a decision from a placement
 // PlacementDecision should has a label cluster.open-cluster-management.io/placement={placement name}
 // to reference a certain placement.
-//
-// If a placement has spec.numberOfClusters specified, the total number of decisions contained in
-// status.decisions of PlacementDecisions should always be NumberOfClusters; otherwise, the total
-// number of decisions should be the number of ManagedClusters which match the placement requirements.
-//
-// Some of the decisions might be empty when there are no enough ManagedClusters meet the placement
-// requirements.
 type PlacementDecision struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -384,8 +384,10 @@ const (
 // PlacementDecisionStatus represents the current status of the PlacementDecision.
 type PlacementDecisionStatus struct {
 	// Decisions is a slice of decisions according to a placement
-	// The number of decisions should not be larger than 100
+	// The number of decisions should not be larger than 100.
+	// The slice should not include any empty ClusterDecision.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MaxItems=100
 	// +required
 	Decisions []ClusterDecision `json:"decisions"`
 }
@@ -393,8 +395,8 @@ type PlacementDecisionStatus struct {
 // ClusterDecision represents a decision from a placement
 // An empty ClusterDecision indicates it is not scheduled yet.
 type ClusterDecision struct {
-	// ClusterName is the name of the ManagedCluster. If it is not empty, its value should be unique cross all
-	// placement decisions for the Placement.
+	// ClusterName is the name of the ManagedCluster. Its value should be unique cross all
+	// placement decisions for a certian Placement.
 	// +kubebuilder:validation:Required
 	// +required
 	ClusterName string `json:"clusterName"`
