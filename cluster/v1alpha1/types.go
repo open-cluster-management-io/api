@@ -286,7 +286,10 @@ type PrioritizerPolicy struct {
 	// +optional
 	Mode PrioritizerPolicyModeType `json:"mode,omitempty"`
 
+	// Configurations deinfes a list of prioritizer configurations
 	// +optional
+	// +listMapKey:=name
+	// +listType:=map
 	Configurations []PrioritizerConfig `json:"configurations,omitempty"`
 }
 
@@ -327,6 +330,8 @@ type PlacementStatus struct {
 	NumberOfSelectedClusters int32 `json:"numberOfSelectedClusters"`
 
 	// Conditions contains the different condition statuses for this Placement.
+	// +listMapKey:=type
+	// +listType:=map
 	// +optional
 	Conditions []metav1.Condition `json:"conditions"`
 }
@@ -386,6 +391,8 @@ type PlacementDecisionStatus struct {
 	// Decisions is a slice of decisions according to a placement
 	// The number of decisions should not be larger than 100
 	// +kubebuilder:validation:Required
+	// +listMapKey:=clusterName
+	// +listType:=map
 	// +required
 	Decisions []ClusterDecision `json:"decisions"`
 }

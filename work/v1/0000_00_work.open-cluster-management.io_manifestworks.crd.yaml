@@ -183,6 +183,9 @@ spec:
                       type: string
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               resourceStatus:
                 description: ResourceStatus represents the status of each resource
                   in manifestwork deployed on a managed cluster. The Klusterlet agent
@@ -283,6 +286,9 @@ spec:
                                 type: string
                                 maxLength: 316
                                 pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                          x-kubernetes-list-map-keys:
+                          - type
+                          x-kubernetes-list-type: map
                         resourceMeta:
                           description: ResourceMeta represents the group, version,
                             kind, name and namespace of a resoure.

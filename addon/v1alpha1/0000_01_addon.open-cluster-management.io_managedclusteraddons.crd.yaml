@@ -164,6 +164,9 @@ spec:
                       type: string
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               registrations:
                 description: registrations is the conifigurations for the addon agent
                   to register to hub. It should be set by each addon controller on

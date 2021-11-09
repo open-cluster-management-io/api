@@ -43,6 +43,9 @@ type ManagedClusterSetSpec struct {
 // ManagedClusterSetStatus represents the current status of the ManagedClusterSet.
 type ManagedClusterSetStatus struct {
 	// Conditions contains the different condition statuses for this ManagedClusterSet.
+	// +listMapKey:=type
+	// +listType:=map
+	// +optional
 	Conditions []metav1.Condition `json:"conditions"`
 }
 
