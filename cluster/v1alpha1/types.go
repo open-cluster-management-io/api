@@ -301,6 +301,9 @@ const (
 
 // PrioritizerConfig represents the configuration of prioritizer
 type PrioritizerConfig struct {
+	// Name will be deprecated in v1beta1 and replaced by PrioritizerScoreCoordinate.BuildIn.
+	// If both Name and PrioritizerScoreCoordinate.BuildIn are defined, will use the value
+	// in PrioritizerScoreCoordinate.BuildIn.
 	// Name is the name of a prioritizer. Below are the valid names:
 	// 1) Balance: balance the decisions among the clusters.
 	// 2) Steady: ensure the existing decision is stabilized.
@@ -309,16 +312,59 @@ type PrioritizerConfig struct {
 	// +required
 	Name string `json:"name"`
 
-	// Weight defines the weight of prioritizer. The value must be ranged in [0,10].
+	// PrioritizerScoreCoordinate represents the configuration of the prioritizer and score source.
+	// +optional
+	PrioritizerScoreCoordinate PrioritizerScoreCoordinate `json:"scoreCoordinate"`
+
+	// Weight defines the weight of the prioritizer score. The value must be ranged in [-10,10].
 	// Each prioritizer will calculate an integer score of a cluster in the range of [-100, 100].
 	// The final score of a cluster will be sum(weight * prioritizer_score).
 	// A higher weight indicates that the prioritizer weights more in the cluster selection,
-	// while 0 weight indicate thats the prioritizer is disabled.
-	// +kubebuilder:validation:Minimum:=0
+	// while 0 weight indicates that the prioritizer is disabled. A negative weight indicates
+	// wants to select the last ones.
+	// +kubebuilder:validation:Minimum:=-10
 	// +kubebuilder:validation:Maximum:=10
 	// +kubebuilder:default:=1
 	// +optional
 	Weight int32 `json:"weight,omitempty"`
+}
+
+// PrioritizerScoreCoordinate represents the configuration of the prioritizer and score source
+type PrioritizerScoreCoordinate struct {
+	// Type defines the type of the prioritizer.
+	// Type is either "BuildIn", "AddOn" or "", where "" is "BuildIn" by default.
+	// When the type is "BuildIn", need to specify a buildin prioritizer name in BuildIn.
+	// When the type is "AddOn", need to configure the score source in AddOn.
+	// +kubebuilder:default:=BuildIn
+	// +optional
+	Type string `json:"type,omitempty"`
+
+	// BuildIn defines the name of a buildin prioritizer. Below are the valid buildin prioritizer names.
+	// 1) Balance: balance the decisions among the clusters.
+	// 2) Steady: ensure the existing decision is stabilized.
+	// 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.
+	// +optional
+	BuildIn string `json:"buildIn,omitempty"`
+
+	// When type is "AddOn", AddOn defines the resource name and score name.
+	// +optional
+	AddOn PrioritizerAddOnScore `json:"addOn"`
+}
+
+// PrioritizerAddOnScore represents the configuration of the addon score source.
+type PrioritizerAddOnScore struct {
+	// ResourceName defines the resource name of the AddOnPlacementScore.
+	// The placement prioritizer selects AddOnPlacementScore CR by this name.
+	// +kubebuilder:validation:Required
+	// +required
+	ResourceName string `json:"resourceName"`
+
+	// ScoreName defines the score name inside AddOnPlacementScore.
+	// AddOnPlacementScore contains a list of score name and score value, ScoreName specify the score to be used by
+	// the prioritizer.
+	// +kubebuilder:validation:Required
+	// +required
+	ScoreName string `json:"scoreName"`
 }
 
 type PlacementStatus struct {
@@ -326,7 +372,7 @@ type PlacementStatus struct {
 	// +optional
 	NumberOfSelectedClusters int32 `json:"numberOfSelectedClusters"`
 
-	// Conditions contains the different condition statuses for this Placement.
+	// Conditions contains the different condition status for this Placement.
 	// +optional
 	Conditions []metav1.Condition `json:"conditions"`
 }
@@ -417,4 +463,68 @@ type PlacementDecisionList struct {
 
 	// Items is a list of PlacementDecision.
 	Items []PlacementDecision `json:"items"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:resource:scope="Namespaced"
+// +kubebuilder:subresource:status
+
+// AddOnPlacementScore represents a bundle of scores of one managed cluster, which could be used by placement.
+// AddOnPlacementScore is a namespace scoped resource. The namespace of the resource is the cluster namespace.
+type AddOnPlacementScore struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// Status represents the status of the AddOnPlacementScore.
+	// +optional
+	Status AddOnPlacementScoreStatus `json:"status,omitempty"`
+}
+
+//AddOnPlacementScoreStatus represents the current status of AddOnPlacementScore.
+type AddOnPlacementScoreStatus struct {
+	// Conditions contain the different condition statuses for this AddOnPlacementScore.
+	// +optional
+	Conditions []metav1.Condition `json:"conditions"`
+
+	// Scores contains a list of score name and value of this managed cluster.
+	// +optional
+	Scores []AddOnPlacementScoreItem `json:"scores,omitempty"`
+
+	// ValidUntil defines the valid time of the scores.
+	// After this time, the scores are considered to be invalid by placement. nil means never expire.
+	// The controller owning this resource should keep the scores up-to-date.
+	// +optional
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Format=date-time
+	ValidUntil *metav1.Time `json:"validUntil" protobuf:"bytes,4,opt,name=lastTransitionTime"`
+}
+
+//AddOnPlacementScoreItem represents the score name and value.
+type AddOnPlacementScoreItem struct {
+	// Name is the name of the score
+	// +kubebuilder:validation:Required
+	// +required
+	Name string `json:"name"`
+
+	// Value is the value of the score. The score range is from -100 to 100.
+	// +kubebuilder:validation:Minimum:=-100
+	// +kubebuilder:validation:Maximum:=100
+	// +required
+	Value int32 `json:"value,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// AddOnPlacementScoreList is a collection of AddOnPlacementScore.
+type AddOnPlacementScoreList struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard list metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
+	// +optional
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	// Items is a list of AddOnPlacementScore
+	Items []AddOnPlacementScore `json:"items"`
 }
