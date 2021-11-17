@@ -418,3 +418,67 @@ type PlacementDecisionList struct {
 	// Items is a list of PlacementDecision.
 	Items []PlacementDecision `json:"items"`
 }
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:resource:scope="Namespaced"
+// +kubebuilder:subresource:status
+
+// ManagedClusterScalar represents a scalable value (aka score) of one managed cluster.
+// Each ManagedClusterScalar only represents the scalar value of one prioritizer.
+// ManagedClusterScalar is a namesapce scoped resource. The namespace of the resource is the cluster namespace.
+type ManagedClusterScalar struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// Spec defines the attributes of the ManagedClusterScalar.
+	// +kubebuilder:validation:Required
+	// +required
+	Spec ManagedClusterScalarSpec `json:"spec"`
+
+	// Status represents the status of the ManagedClusterScalar.
+	// +optional
+	Status ManagedClusterScalarStatus `json:"status,omitempty"`
+}
+
+// ManagedClusterScalarSpec defines the attributes of the ManagedClusterScalar.
+type ManagedClusterScalarSpec struct {
+	// PrioritizerName will be the prioritizer name used in placement.
+	// +kubebuilder:validation:Required
+	// +required
+	PrioritizerName string `json:"prioritizerName,omitempty"`
+}
+
+//ManagedClusterScalarStatus represents the current status of ManagedClusterScalar.
+type ManagedClusterScalarStatus struct {
+	// Conditions contain the different condition statuses for this managed cluster scalar.
+	// +optional
+	Conditions []metav1.Condition `json:"conditions"`
+
+	// Scalar contains a scalable value of this managed cluster.
+	// +optional
+	Scalar int64 `json:"scalar,omitempty"`
+
+	// ValidUntil defines the time this scalar is valid.
+	// After this time, the scalar is considered to be invalid by placement. nil means never expire.
+	// The controller ownning this resource should keep the scalar up-to-date.
+	// +optional
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Format=date-time
+	ValidUntil *metav1.Time `json:"validUntil" protobuf:"bytes,4,opt,name=lastTransitionTime"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ManagedClusterScalarList is a collection of managed cluster scalar.
+type ManagedClusterScalarList struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard list metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
+	// +optional
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	// Items is a list of managed clusters
+	Items []ManagedClusterScalar `json:"items"`
+}

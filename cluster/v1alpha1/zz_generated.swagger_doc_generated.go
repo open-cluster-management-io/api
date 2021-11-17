@@ -76,6 +76,46 @@ func (ClusterSelector) SwaggerDoc() map[string]string {
 	return map_ClusterSelector
 }
 
+var map_ManagedClusterScalar = map[string]string{
+	"":       "ManagedClusterScalar represents a scalable value (aka score) of one managed cluster. Each ManagedClusterScalar only represents the scalar value of one prioritizer. ManagedClusterScalar is a namesapce scoped resource. The namespace of the resource is the cluster namespace.",
+	"spec":   "Spec defines the attributes of the ManagedClusterScalar.",
+	"status": "Status represents the status of the ManagedClusterScalar.",
+}
+
+func (ManagedClusterScalar) SwaggerDoc() map[string]string {
+	return map_ManagedClusterScalar
+}
+
+var map_ManagedClusterScalarList = map[string]string{
+	"":         "ManagedClusterScalarList is a collection of managed cluster scalar.",
+	"metadata": "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+	"items":    "Items is a list of managed clusters",
+}
+
+func (ManagedClusterScalarList) SwaggerDoc() map[string]string {
+	return map_ManagedClusterScalarList
+}
+
+var map_ManagedClusterScalarSpec = map[string]string{
+	"":                "ManagedClusterScalarSpec defines the attributes of the ManagedClusterScalar.",
+	"prioritizerName": "PrioritizerName will be the prioritizer name used in placement.",
+}
+
+func (ManagedClusterScalarSpec) SwaggerDoc() map[string]string {
+	return map_ManagedClusterScalarSpec
+}
+
+var map_ManagedClusterScalarStatus = map[string]string{
+	"":           "ManagedClusterScalarStatus represents the current status of ManagedClusterScalar.",
+	"conditions": "Conditions contain the different condition statuses for this managed cluster scalar.",
+	"scalar":     "Scalar contains a scalable value of this managed cluster.",
+	"validUntil": "ValidUntil defines the time this scalar is valid. After this time, the scalar is considered to be invalid by placement. nil means never expire. The controller ownning this resource should keep the scalar up-to-date.",
+}
+
+func (ManagedClusterScalarStatus) SwaggerDoc() map[string]string {
+	return map_ManagedClusterScalarStatus
+}
+
 var map_ManagedClusterSet = map[string]string{
 	"":       "ManagedClusterSet defines a group of ManagedClusters that user's workload can run on. A workload can be defined to deployed on a ManagedClusterSet, which mean:\n  1. The workload can run on any ManagedCluster in the ManagedClusterSet\n  2. The workload cannot run on any ManagedCluster outside the ManagedClusterSet\n  3. The service exposed by the workload can be shared in any ManagedCluster in the ManagedClusterSet\n\nIn order to assign a ManagedCluster to a certian ManagedClusterSet, add a label with name `cluster.open-cluster-management.io/clusterset` on the ManagedCluster to refers to the ManagedClusterSet. User is not allow to add/remove this label on a ManagedCluster unless they have a RBAC rule to CREATE on a virtual subresource of managedclustersets/join. In order to update this label, user must have the permission on both the old and new ManagedClusterSet.",
 	"spec":   "Spec defines the attributes of the ManagedClusterSet",
