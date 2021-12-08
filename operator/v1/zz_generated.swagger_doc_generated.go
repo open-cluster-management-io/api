@@ -57,7 +57,8 @@ func (ClusterManagerStatus) SwaggerDoc() map[string]string {
 }
 
 var map_DeployOption = map[string]string{
-	"mode": "Mode can be Default or Detached. In Default mode, the Hub is installed as a whole and all parts of Hub are deployed in the same cluster. In Detached mode, only crd and configurations are installed on one cluster(defined as hub-cluster). Controllers run in another cluster (defined as management-cluster) and connect to the hub with the kubeconfig in secret of \"external-hub-kubeconfig\"(a kubeconfig of hub-cluster with cluster-admin permission). The purpose of Detached mode is to give it more flexibility, for example we can install a hub on a cluster with no worker nodes, meanwhile running all deployments on another more powerful cluster. Do not modify the Mode field once it's applied.",
+	"":     "DeployOption describes the deploy options for cluster-manager or klusterlet",
+	"mode": "Mode can be Default or Detached. For cluster-manager:\n  - In Default mode, the Hub is installed as a whole and all parts of Hub are deployed in the same cluster.\n  - In Detached mode, only crd and configurations are installed on one cluster(defined as hub-cluster). Controllers run in another cluster (defined as management-cluster) and connect to the hub with the kubeconfig in secret of \"external-hub-kubeconfig\"(a kubeconfig of hub-cluster with cluster-admin permission).\nFor klusterlet:\n  - In Default mode, all klusterlet related resources are deployed on the managed cluster.\n  - In Detached mode, only crd and configurations are installed on the spoke/managed cluster. Controllers run in another cluster (defined as management-cluster) and connect to the mangaged cluster with the kubeconfig in secret of \"external-managed-kubeconfig\"(a kubeconfig of managed-cluster with cluster-admin permission).\nThe purpose of Detached mode is to give it more flexibility, for example we can install a hub on a cluster with no worker nodes, meanwhile running all deployments on another more powerful cluster. And we can also register a managed cluster to the hub that has some firewall rules preventing access from the managed cluster.\n\nNote: Do not modify the Mode field once it's applied.",
 }
 
 func (DeployOption) SwaggerDoc() map[string]string {
@@ -79,7 +80,7 @@ func (GenerationStatus) SwaggerDoc() map[string]string {
 }
 
 var map_Klusterlet = map[string]string{
-	"":       "Klusterlet represents controllers on the managed cluster. When configured, the Klusterlet requires a secret named of bootstrap-hub-kubeconfig in the same namespace to allow API requests to the hub for the registration protocol.",
+	"":       "Klusterlet represents controllers to install the resources for a managed cluster. When configured, the Klusterlet requires a secret named bootstrap-hub-kubeconfig in the agent namespace to allow API requests to the hub for the registration protocol. In Detached mode, the Klusterlet requires an additional secret named external-managed-kubeconfig in the agent namespace to allow API requests to the managed cluster for resources installation.",
 	"spec":   "Spec represents the desired deployment configuration of Klusterlet agent.",
 	"status": "Status represents the current status of Klusterlet agent.",
 }
@@ -100,12 +101,13 @@ func (KlusterletList) SwaggerDoc() map[string]string {
 
 var map_KlusterletSpec = map[string]string{
 	"":                          "KlusterletSpec represents the desired deployment configuration of Klusterlet agent.",
-	"namespace":                 "Namespace is the namespace to deploy the agent. The namespace must have a prefix of \"open-cluster-management-\", and if it is not set, the namespace of \"open-cluster-management-agent\" is used to deploy agent.",
+	"namespace":                 "Namespace is the namespace to deploy the agent. The namespace must have a prefix of \"open-cluster-management-\", and if it is not set, the namespace of \"open-cluster-management-agent\" is used to deploy agent. Note: in Detach mode, this field will be **ignored**, the agent will be deployed to the namespace named <klusterlet's name>-open-cluster-management-agent",
 	"registrationImagePullSpec": "RegistrationImagePullSpec represents the desired image configuration of registration agent.",
 	"workImagePullSpec":         "WorkImagePullSpec represents the desired image configuration of work agent.",
 	"clusterName":               "ClusterName is the name of the managed cluster to be created on hub. The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on OpenShift.",
 	"externalServerURLs":        "ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally If it is set empty, managed cluster has no externally accessible url that hub cluster can visit.",
 	"nodePlacement":             "NodePlacement enables explicit control over the scheduling of the deployed pods.",
+	"deployOption":              "DeployOption contains the options of deploying a klusterlet",
 }
 
 func (KlusterletSpec) SwaggerDoc() map[string]string {

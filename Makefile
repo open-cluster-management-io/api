@@ -46,8 +46,8 @@ update-scripts:
 .PHONY: update-scripts
 update: update-scripts update-codegen-crds
 
-update-with-container: update-scripts update-codegen-crds
-
-generate-with-container: Dockerfile.build
+build-runtime-image: Dockerfile.build
 	$(RUNTIME) build -t $(RUNTIME_IMAGE_NAME) -f Dockerfile.build .
-	$(RUNTIME) run -ti --rm -v $(PWD):/go/src/open-cluster-management.io/api:z -w /go/src/open-cluster-management.io/api $(RUNTIME_IMAGE_NAME) make update-with-container
+
+update-with-container: build-runtime-image
+	$(RUNTIME) run -ti --rm -v $(PWD):/go/src/open-cluster-management.io/api:z -w /go/src/open-cluster-management.io/api $(RUNTIME_IMAGE_NAME) make update-scripts update-codegen-crds
