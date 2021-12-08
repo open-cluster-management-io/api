@@ -29,8 +29,6 @@ spec:
         status:
           description: Status represents the status of the AddOnPlacementScore.
           type: object
-          required:
-            - validUntil
           properties:
             conditions:
               description: Conditions contain the different condition statuses for this AddOnPlacementScore.
@@ -76,14 +74,18 @@ spec:
                     type: string
                     maxLength: 316
                     pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+              x-kubernetes-list-map-keys:
+                - type
+              x-kubernetes-list-type: map
             scores:
-              description: Scores contains a list of score name and value of this managed cluster.
+              description: Scores contain a list of score name and value of this managed cluster.
               type: array
               items:
                 description: AddOnPlacementScoreItem represents the score name and value.
                 type: object
                 required:
                   - name
+                  - value
                 properties:
                   name:
                     description: Name is the name of the score
@@ -94,6 +96,9 @@ spec:
                     format: int32
                     maximum: 100
                     minimum: -100
+              x-kubernetes-list-map-keys:
+                - name
+              x-kubernetes-list-type: map
             validUntil:
               description: ValidUntil defines the valid time of the scores. After this time, the scores are considered to be invalid by placement. nil means never expire. The controller owning this resource should keep the scores up-to-date.
               type: string
