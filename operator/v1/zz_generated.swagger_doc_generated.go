@@ -12,7 +12,7 @@ package v1
 
 // AUTO-GENERATED FUNCTIONS START HERE
 var map_ClusterManager = map[string]string{
-	"":       "ClusterManager configures the controllers on the hub that govern registration and work distribution for attached Klusterlets. ClusterManager will only be deployed in open-cluster-management-hub namespace.",
+	"":       "ClusterManager configures the controllers on the hub that govern registration and work distribution for attached Klusterlets. In Default mode, ClusterManager will only be deployed in open-cluster-management-hub namespace. In Detached mode, ClusterManager will be deployed in <cluster-manager's name>-open-cluster-management-hub namespace.",
 	"spec":   "Spec represents a desired deployment configuration of controllers that govern registration and work distribution for attached Klusterlets.",
 	"status": "Status represents the current status of controllers that govern the lifecycle of managed clusters.",
 }
@@ -37,6 +37,7 @@ var map_ClusterManagerSpec = map[string]string{
 	"workImagePullSpec":         "WorkImagePullSpec represents the desired image configuration of work controller/webhook installed on hub.",
 	"placementImagePullSpec":    "PlacementImagePullSpec represents the desired image configuration of placement controller/webhook installed on hub.",
 	"nodePlacement":             "NodePlacement enables explicit control over the scheduling of the deployed pods.",
+	"deployOption":              "DeployOption contains the options of deploying a cluster-manager Default mode is used if DeployOption is not set.",
 }
 
 func (ClusterManagerSpec) SwaggerDoc() map[string]string {
@@ -53,6 +54,14 @@ var map_ClusterManagerStatus = map[string]string{
 
 func (ClusterManagerStatus) SwaggerDoc() map[string]string {
 	return map_ClusterManagerStatus
+}
+
+var map_DeployOption = map[string]string{
+	"mode": "Mode can be Default or Detached. In Default mode, the Hub is installed as a whole and all parts of Hub are deployed in the same cluster. In Detached mode, only crd and configurations are installed on one cluster(defined as hub-cluster). Controllers run in another cluster (defined as management-cluster) and connect to the hub with the kubeconfig in secret of \"external-hub-kubeconfig\"(a kubeconfig of hub-cluster with cluster-admin permission). The purpose of Detached mode is to give it more flexibility, for example we can install a hub on a cluster with no worker nodes, meanwhile running all deployments on another more powerful cluster. Do not modify the Mode field once it's applied.",
+}
+
+func (DeployOption) SwaggerDoc() map[string]string {
+	return map_DeployOption
 }
 
 var map_GenerationStatus = map[string]string{
