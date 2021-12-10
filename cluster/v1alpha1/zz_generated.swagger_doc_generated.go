@@ -205,6 +205,7 @@ var map_PlacementSpec = map[string]string{
 	"numberOfClusters":  "NumberOfClusters represents the desired number of ManagedClusters to be selected which meet the placement requirements. 1) If not specified, all ManagedClusters which meet the placement requirements (including ClusterSets,\n   and Predicates) will be selected;\n2) Otherwise if the nubmer of ManagedClusters meet the placement requirements is larger than\n   NumberOfClusters, a random subset with desired number of ManagedClusters will be selected;\n3) If the nubmer of ManagedClusters meet the placement requirements is equal to NumberOfClusters,\n   all of them will be selected;\n4) If the nubmer of ManagedClusters meet the placement requirements is less than NumberOfClusters,\n   all of them will be selected, and the status of condition `PlacementConditionSatisfied` will be\n   set to false;",
 	"predicates":        "Predicates represent a slice of predicates to select ManagedClusters. The predicates are ORed.",
 	"prioritizerPolicy": "PrioritizerPolicy defines the policy of the prioritizers. If this field is unset, then default prioritizer mode and configurations are used. Referring to PrioritizerPolicy to see more description about Mode and Configurations.",
+	"tolerations":       "Tolerations are applied to placements, and allow (but do not require) the managed clusters with certain taints to be selected by placements with matching tolerations.",
 }
 
 func (PlacementSpec) SwaggerDoc() map[string]string {
@@ -249,6 +250,19 @@ var map_ScoreCoordinate = map[string]string{
 
 func (ScoreCoordinate) SwaggerDoc() map[string]string {
 	return map_ScoreCoordinate
+}
+
+var map_Toleration = map[string]string{
+	"":                  "Toleration represents the toleration object that can be attached to a placement. The placement this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
+	"key":               "Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.",
+	"operator":          "Operator represents a key's relationship to the value. Valid operators are Exists and Equal. Defaults to Equal. Exists is equivalent to wildcard for value, so that a placement can tolerate all taints of a particular category.",
+	"value":             "Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.",
+	"effect":            "Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSelect, PreferNoSelect and NoSelectIfNew.",
+	"tolerationSeconds": "TolerationSeconds represents the period of time the toleration (which must be of effect NoSelect/PreferNoSelect, otherwise this field is ignored) tolerates the taint. The default value is nil, which indicates it tolerates the taint forever. The start time of counting the TolerationSeconds should be the TimeAdded in Taint, not the cluster scheduled time or TolerationSeconds added time.",
+}
+
+func (Toleration) SwaggerDoc() map[string]string {
+	return map_Toleration
 }
 
 var map_AddOnPlacementScore = map[string]string{
