@@ -97,7 +97,7 @@ github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 ## explicit
 github.com/modern-go/reflect2
-# github.com/openshift/build-machinery-go v0.0.0-20210115170933-e575b44a7a94
+# github.com/openshift/build-machinery-go v0.0.0-20211213093930-7e33a7eb4ce3
 ## explicit; go 1.13
 github.com/openshift/build-machinery-go
 github.com/openshift/build-machinery-go/make
