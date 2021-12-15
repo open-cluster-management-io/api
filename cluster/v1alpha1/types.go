@@ -301,9 +301,9 @@ const (
 
 // PrioritizerConfig represents the configuration of prioritizer
 type PrioritizerConfig struct {
-	// Name will be removed in v1beta1 and replaced by PrioritizerScoreCoordinate.BuiltIn.
-	// If both Name and PrioritizerScoreCoordinate.BuiltIn are defined, will use the value
-	// in PrioritizerScoreCoordinate.BuiltIn.
+	// Name will be removed in v1beta1 and replaced by ScoreCoordinate.BuiltIn.
+	// If both Name and ScoreCoordinate.BuiltIn are defined, will use the value
+	// in ScoreCoordinate.BuiltIn.
 	// Name is the name of a prioritizer. Below are the valid names:
 	// 1) Balance: balance the decisions among the clusters.
 	// 2) Steady: ensure the existing decision is stabilized.
@@ -311,9 +311,9 @@ type PrioritizerConfig struct {
 	// +optional
 	Name string `json:"name,omitempty"`
 
-	// PrioritizerScoreCoordinate represents the configuration of the prioritizer and score source.
+	// ScoreCoordinate represents the configuration of the prioritizer and score source.
 	// +optional
-	PrioritizerScoreCoordinate *PrioritizerScoreCoordinate `json:"scoreCoordinate,omitempty"`
+	ScoreCoordinate *ScoreCoordinate `json:"scoreCoordinate,omitempty"`
 
 	// Weight defines the weight of the prioritizer score. The value must be ranged in [-10,10].
 	// Each prioritizer will calculate an integer score of a cluster in the range of [-100, 100].
@@ -328,9 +328,9 @@ type PrioritizerConfig struct {
 	Weight int32 `json:"weight,omitempty"`
 }
 
-// PrioritizerScoreCoordinate represents the configuration of the prioritizer and score source
-type PrioritizerScoreCoordinate struct {
-	// Type defines the type of the prioritizer.
+// ScoreCoordinate represents the configuration of the score type and score source
+type ScoreCoordinate struct {
+	// Type defines the type of the prioritizer score.
 	// Type is either "BuiltIn", "AddOn" or "", where "" is "BuiltIn" by default.
 	// When the type is "BuiltIn", need to specify a BuiltIn prioritizer name in BuiltIn.
 	// When the type is "AddOn", need to configure the score source in AddOn.
@@ -349,11 +349,11 @@ type PrioritizerScoreCoordinate struct {
 
 	// When type is "AddOn", AddOn defines the resource name and score name.
 	// +optional
-	AddOn *PrioritizerAddOnScore `json:"addOn,omitempty"`
+	AddOn *AddOnScore `json:"addOn,omitempty"`
 }
 
-// PrioritizerAddOnScore represents the configuration of the addon score source.
-type PrioritizerAddOnScore struct {
+// AddOnScore represents the configuration of the addon score source.
+type AddOnScore struct {
 	// ResourceName defines the resource name of the AddOnPlacementScore.
 	// The placement prioritizer selects AddOnPlacementScore CR by this name.
 	// +kubebuilder:validation:Required

@@ -128,10 +128,10 @@ spec:
                         type: object
                         properties:
                           name:
-                            description: 'Name will be removed in v1beta1 and replaced by PrioritizerScoreCoordinate.BuiltIn. If both Name and PrioritizerScoreCoordinate.BuiltIn are defined, will use the value in PrioritizerScoreCoordinate.BuiltIn. Name is the name of a prioritizer. Below are the valid names: 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.'
+                            description: 'Name will be removed in v1beta1 and replaced by ScoreCoordinate.BuiltIn. If both Name and ScoreCoordinate.BuiltIn are defined, will use the value in ScoreCoordinate.BuiltIn. Name is the name of a prioritizer. Below are the valid names: 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.'
                             type: string
                           scoreCoordinate:
-                            description: PrioritizerScoreCoordinate represents the configuration of the prioritizer and score source.
+                            description: ScoreCoordinate represents the configuration of the prioritizer and score source.
                             type: object
                             required:
                               - type
@@ -153,7 +153,7 @@ spec:
                                 description: 'BuiltIn defines the name of a BuiltIn prioritizer. Below are the valid BuiltIn prioritizer names. 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.'
                                 type: string
                               type:
-                                description: Type defines the type of the prioritizer. Type is either "BuiltIn", "AddOn" or "", where "" is "BuiltIn" by default. When the type is "BuiltIn", need to specify a BuiltIn prioritizer name in BuiltIn. When the type is "AddOn", need to configure the score source in AddOn.
+                                description: Type defines the type of the prioritizer score. Type is either "BuiltIn", "AddOn" or "", where "" is "BuiltIn" by default. When the type is "BuiltIn", need to specify a BuiltIn prioritizer name in BuiltIn. When the type is "AddOn", need to configure the score source in AddOn.
                                 type: string
                                 default: BuiltIn
                                 enum:
