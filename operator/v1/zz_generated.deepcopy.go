@@ -227,6 +227,7 @@ func (in *KlusterletSpec) DeepCopyInto(out *KlusterletSpec) {
 		}
 	}
 	in.NodePlacement.DeepCopyInto(&out.NodePlacement)
+	out.DeployOption = in.DeployOption
 	return
 }
 
