@@ -301,9 +301,9 @@ const (
 
 // PrioritizerConfig represents the configuration of prioritizer
 type PrioritizerConfig struct {
-	// Name will be deprecated in v1beta1 and replaced by PrioritizerScoreCoordinate.Builtin.
-	// If both Name and PrioritizerScoreCoordinate.Builtin are defined, will use the value
-	// in PrioritizerScoreCoordinate.Builtin.
+	// Name will be removed in v1beta1 and replaced by PrioritizerScoreCoordinate.BuiltIn.
+	// If both Name and PrioritizerScoreCoordinate.BuiltIn are defined, will use the value
+	// in PrioritizerScoreCoordinate.BuiltIn.
 	// Name is the name of a prioritizer. Below are the valid names:
 	// 1) Balance: balance the decisions among the clusters.
 	// 2) Steady: ensure the existing decision is stabilized.
@@ -331,21 +331,21 @@ type PrioritizerConfig struct {
 // PrioritizerScoreCoordinate represents the configuration of the prioritizer and score source
 type PrioritizerScoreCoordinate struct {
 	// Type defines the type of the prioritizer.
-	// Type is either "Builtin", "AddOn" or "", where "" is "Builtin" by default.
-	// When the type is "Builtin", need to specify a Builtin prioritizer name in Builtin.
+	// Type is either "BuiltIn", "AddOn" or "", where "" is "BuiltIn" by default.
+	// When the type is "BuiltIn", need to specify a BuiltIn prioritizer name in BuiltIn.
 	// When the type is "AddOn", need to configure the score source in AddOn.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=Builtin;AddOn
-	// +kubebuilder:default:=Builtin
+	// +kubebuilder:validation:Enum=BuiltIn;AddOn
+	// +kubebuilder:default:=BuiltIn
 	// +required
 	Type string `json:"type,omitempty"`
 
-	// Builtin defines the name of a builtin prioritizer. Below are the valid builtin prioritizer names.
+	// BuiltIn defines the name of a BuiltIn prioritizer. Below are the valid BuiltIn prioritizer names.
 	// 1) Balance: balance the decisions among the clusters.
 	// 2) Steady: ensure the existing decision is stabilized.
 	// 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.
 	// +optional
-	Builtin string `json:"builtin,omitempty"`
+	BuiltIn string `json:"builtIn,omitempty"`
 
 	// When type is "AddOn", AddOn defines the resource name and score name.
 	// +optional
