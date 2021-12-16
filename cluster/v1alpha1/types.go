@@ -301,24 +301,71 @@ const (
 
 // PrioritizerConfig represents the configuration of prioritizer
 type PrioritizerConfig struct {
+	// Name will be removed in v1beta1 and replaced by ScoreCoordinate.BuiltIn.
+	// If both Name and ScoreCoordinate.BuiltIn are defined, will use the value
+	// in ScoreCoordinate.BuiltIn.
 	// Name is the name of a prioritizer. Below are the valid names:
 	// 1) Balance: balance the decisions among the clusters.
 	// 2) Steady: ensure the existing decision is stabilized.
 	// 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.
-	// +kubebuilder:validation:Required
-	// +required
-	Name string `json:"name"`
+	// +optional
+	Name string `json:"name,omitempty"`
 
-	// Weight defines the weight of prioritizer. The value must be ranged in [0,10].
+	// ScoreCoordinate represents the configuration of the prioritizer and score source.
+	// +optional
+	ScoreCoordinate *ScoreCoordinate `json:"scoreCoordinate,omitempty"`
+
+	// Weight defines the weight of the prioritizer score. The value must be ranged in [-10,10].
 	// Each prioritizer will calculate an integer score of a cluster in the range of [-100, 100].
 	// The final score of a cluster will be sum(weight * prioritizer_score).
 	// A higher weight indicates that the prioritizer weights more in the cluster selection,
-	// while 0 weight indicate thats the prioritizer is disabled.
-	// +kubebuilder:validation:Minimum:=0
+	// while 0 weight indicates that the prioritizer is disabled. A negative weight indicates
+	// wants to select the last ones.
+	// +kubebuilder:validation:Minimum:=-10
 	// +kubebuilder:validation:Maximum:=10
 	// +kubebuilder:default:=1
 	// +optional
 	Weight int32 `json:"weight,omitempty"`
+}
+
+// ScoreCoordinate represents the configuration of the score type and score source
+type ScoreCoordinate struct {
+	// Type defines the type of the prioritizer score.
+	// Type is either "BuiltIn", "AddOn" or "", where "" is "BuiltIn" by default.
+	// When the type is "BuiltIn", need to specify a BuiltIn prioritizer name in BuiltIn.
+	// When the type is "AddOn", need to configure the score source in AddOn.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=BuiltIn;AddOn
+	// +kubebuilder:default:=BuiltIn
+	// +required
+	Type string `json:"type,omitempty"`
+
+	// BuiltIn defines the name of a BuiltIn prioritizer. Below are the valid BuiltIn prioritizer names.
+	// 1) Balance: balance the decisions among the clusters.
+	// 2) Steady: ensure the existing decision is stabilized.
+	// 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.
+	// +optional
+	BuiltIn string `json:"builtIn,omitempty"`
+
+	// When type is "AddOn", AddOn defines the resource name and score name.
+	// +optional
+	AddOn *AddOnScore `json:"addOn,omitempty"`
+}
+
+// AddOnScore represents the configuration of the addon score source.
+type AddOnScore struct {
+	// ResourceName defines the resource name of the AddOnPlacementScore.
+	// The placement prioritizer selects AddOnPlacementScore CR by this name.
+	// +kubebuilder:validation:Required
+	// +required
+	ResourceName string `json:"resourceName"`
+
+	// ScoreName defines the score name inside AddOnPlacementScore.
+	// AddOnPlacementScore contains a list of score name and score value, ScoreName specify the score to be used by
+	// the prioritizer.
+	// +kubebuilder:validation:Required
+	// +required
+	ScoreName string `json:"scoreName"`
 }
 
 type PlacementStatus struct {
@@ -326,7 +373,7 @@ type PlacementStatus struct {
 	// +optional
 	NumberOfSelectedClusters int32 `json:"numberOfSelectedClusters"`
 
-	// Conditions contains the different condition statuses for this Placement.
+	// Conditions contains the different condition status for this Placement.
 	// +optional
 	Conditions []metav1.Condition `json:"conditions"`
 }

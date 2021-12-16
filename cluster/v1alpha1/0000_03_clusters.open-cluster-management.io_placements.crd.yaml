@@ -126,19 +126,46 @@ spec:
                       items:
                         description: PrioritizerConfig represents the configuration of prioritizer
                         type: object
-                        required:
-                          - name
                         properties:
                           name:
-                            description: 'Name is the name of a prioritizer. Below are the valid names: 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.'
+                            description: 'Name will be removed in v1beta1 and replaced by ScoreCoordinate.BuiltIn. If both Name and ScoreCoordinate.BuiltIn are defined, will use the value in ScoreCoordinate.BuiltIn. Name is the name of a prioritizer. Below are the valid names: 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.'
                             type: string
+                          scoreCoordinate:
+                            description: ScoreCoordinate represents the configuration of the prioritizer and score source.
+                            type: object
+                            required:
+                              - type
+                            properties:
+                              addOn:
+                                description: When type is "AddOn", AddOn defines the resource name and score name.
+                                type: object
+                                required:
+                                  - resourceName
+                                  - scoreName
+                                properties:
+                                  resourceName:
+                                    description: ResourceName defines the resource name of the AddOnPlacementScore. The placement prioritizer selects AddOnPlacementScore CR by this name.
+                                    type: string
+                                  scoreName:
+                                    description: ScoreName defines the score name inside AddOnPlacementScore. AddOnPlacementScore contains a list of score name and score value, ScoreName specify the score to be used by the prioritizer.
+                                    type: string
+                              builtIn:
+                                description: 'BuiltIn defines the name of a BuiltIn prioritizer. Below are the valid BuiltIn prioritizer names. 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.'
+                                type: string
+                              type:
+                                description: Type defines the type of the prioritizer score. Type is either "BuiltIn", "AddOn" or "", where "" is "BuiltIn" by default. When the type is "BuiltIn", need to specify a BuiltIn prioritizer name in BuiltIn. When the type is "AddOn", need to configure the score source in AddOn.
+                                type: string
+                                default: BuiltIn
+                                enum:
+                                  - BuiltIn
+                                  - AddOn
                           weight:
-                            description: Weight defines the weight of prioritizer. The value must be ranged in [0,10]. Each prioritizer will calculate an integer score of a cluster in the range of [-100, 100]. The final score of a cluster will be sum(weight * prioritizer_score). A higher weight indicates that the prioritizer weights more in the cluster selection, while 0 weight indicate thats the prioritizer is disabled.
+                            description: Weight defines the weight of the prioritizer score. The value must be ranged in [-10,10]. Each prioritizer will calculate an integer score of a cluster in the range of [-100, 100]. The final score of a cluster will be sum(weight * prioritizer_score). A higher weight indicates that the prioritizer weights more in the cluster selection, while 0 weight indicates that the prioritizer is disabled. A negative weight indicates wants to select the last ones.
                             type: integer
                             format: int32
                             default: 1
                             maximum: 10
-                            minimum: 0
+                            minimum: -10
                     mode:
                       description: Mode is either Exact, Additive, "" where "" is Additive by default. In Additive mode, any prioritizer not explicitly enumerated is enabled in its default Configurations, in which Steady and Balance prioritizers have the weight of 1 while other prioritizers have the weight of 0. Additive doesn't require configuring all prioritizers. The default Configurations may change in the future, and additional prioritization will happen. In Exact mode, any prioritizer not explicitly enumerated is weighted as zero. Exact requires knowing the full set of prioritizers you want, but avoids behavior changes between releases.
                       type: string
@@ -148,7 +175,7 @@ spec:
               type: object
               properties:
                 conditions:
-                  description: Conditions contains the different condition statuses for this Placement.
+                  description: Conditions contains the different condition status for this Placement.
                   type: array
                   items:
                     description: "Condition contains details for one aspect of the current state of this API Resource. --- This struct is intended for direct use as an array at the field path .status.conditions.  For example, type FooStatus struct{     // Represents the observations of a foo's current state.     // Known .status.conditions.type are: \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type     // +patchStrategy=merge     // +listType=map     // +listMapKey=type     Conditions []metav1.Condition `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` \n     // other fields }"
