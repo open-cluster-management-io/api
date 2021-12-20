@@ -64,4 +64,8 @@ type ManagedClusterSetList struct {
 
 	// Items is a list of ManagedClusterSet.
 	Items []ManagedClusterSet `json:"items"`
+<<<<<<< HEAD:cluster/v1beta1/types_placement.go
 }
+=======
+}
+>>>>>>> e03f52c (fixed issue #112 - spreated types.go file):cluster/v1beta1/placement_types.go
