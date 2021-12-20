@@ -63,7 +63,7 @@ type DeleteOption struct {
 	// 1. create manifestwork/2 to manage foo
 	// 2. update manifestwork/1 to selectively orphan foo
 	// 3. remove foo from manifestwork/1 without impacting continuity because manifestwork/2 adopts it.
-	// +kubebuilder:default=ForeGround
+	// +kubebuilder:default=Foreground
 	PropagationPolicy DeletePropagationPolicyType `json:"propagationPolicy"`
 
 	// selectivelyOrphan represents a list of resources following orphan deletion stratecy
