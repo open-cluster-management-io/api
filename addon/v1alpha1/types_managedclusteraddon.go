@@ -165,7 +165,7 @@ type HealthCheck struct {
 	// mode indicates which mode will be used to check the healthiness status of the addon.
 	// +optional
 	// +kubebuilder:default=Lease
-	Mode HealthCheckMode `json:"mode"`
+	Mode HealthCheckMode `json:"mode,omitempty"`
 }
 
 // ManagedClusterAddOnList is a list of ManagedClusterAddOn resources.
