@@ -358,6 +358,12 @@ type ScoreCoordinate struct {
 	AddOn *AddOnScore `json:"addOn,omitempty"`
 }
 
+const (
+	// Valid ScoreCoordinate type is BuiltIn, AddOn.
+	ScoreCoordinateTypeBuiltIn string = "BuiltIn"
+	ScoreCoordinateTypeAddOn   string = "AddOn"
+)
+
 // AddOnScore represents the configuration of the addon score source.
 type AddOnScore struct {
 	// ResourceName defines the resource name of the AddOnPlacementScore.
