@@ -440,6 +440,8 @@ const (
 	// A placement is not satisfied only if there is empty ClusterDecision in the status.decisions
 	// of PlacementDecisions.
 	PlacementConditionSatisfied string = "PlacementSatisfied"
+	// PlacementConditionMisconfigured means Placement configuration is incorrect.
+	PlacementConditionMisconfigured string = "PlacementMisconfigured"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
