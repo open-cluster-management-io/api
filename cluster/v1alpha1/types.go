@@ -358,6 +358,12 @@ type ScoreCoordinate struct {
 	AddOn *AddOnScore `json:"addOn,omitempty"`
 }
 
+const (
+	// Valid ScoreCoordinate type is BuiltIn, AddOn.
+	ScoreCoordinateTypeBuiltIn string = "BuiltIn"
+	ScoreCoordinateTypeAddOn   string = "AddOn"
+)
+
 // AddOnScore represents the configuration of the addon score source.
 type AddOnScore struct {
 	// ResourceName defines the resource name of the AddOnPlacementScore.
@@ -434,6 +440,8 @@ const (
 	// A placement is not satisfied only if there is empty ClusterDecision in the status.decisions
 	// of PlacementDecisions.
 	PlacementConditionSatisfied string = "PlacementSatisfied"
+	// PlacementConditionMisconfigured means Placement configuration is incorrect.
+	PlacementConditionMisconfigured string = "PlacementMisconfigured"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

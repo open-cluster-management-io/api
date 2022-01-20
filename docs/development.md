@@ -57,7 +57,7 @@ For more information on the API markers to add to your Go types, see the [Kubebu
 To generate `zz_generated.deepcopy.go` & `zz_generated.swagger_doc_generated.go`:
 1. You will need to create a `register.go` file in your `API_DIRECTORY`. You can get an example from [/cluster/v1/register.go](/cluster/v1/register.go). Make sure the `package`, `GroupName`, and `GroupVersion` are correct. Make sure the `addKnownTypes()` function adds types you are creating in `types.go`.
 2. Add `add-crd-gen` in `Makefile` (step 2 of [Updating CRD schemas](#Updating-CRD-schemas)).
-3. Run `make update-scripts` to see `zz_generated.deepcopy.go` & `zz_generated.swagger_doc_generated.go` generated in your API directory, and along with some related scripts generated in `client` directory. If `zz_generated.deepcopy.go` is not generated properly, please run the command in a container with `RUNTIME=docker make generate-with-container` (if you are using `podman`, set `RUNTIME=podman`).
+3. Run `make update-scripts` to see `zz_generated.deepcopy.go` & `zz_generated.swagger_doc_generated.go` generated in your API directory, and along with some related scripts generated in `client` directory. If `zz_generated.deepcopy.go` is not generated properly, please run the command in a container with `RUNTIME=docker make update-with-container` (if you are using `podman`, set `RUNTIME=podman`).
 
 ## Verify
 Before you commit you changes, please run `make verify` locally to make sure you have generated all required files.
