@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "open-cluster-management.io/api/cluster/v1"
 )
 
 // +genclient
@@ -239,6 +240,11 @@ type PlacementSpec struct {
 	// Referring to PrioritizerPolicy to see more description about Mode and Configurations.
 	// +optional
 	PrioritizerPolicy PrioritizerPolicy `json:"prioritizerPolicy"`
+
+	// Tolerations are applied to placements, and allow (but do not require) the managed clusters with
+	// certain taints to be selected by placements with matching tolerations.
+	// +optional
+	Tolerations []Toleration `json:"tolerations,omitempty"`
 }
 
 // ClusterPredicate represents a predicate to select ManagedClusters.
@@ -367,6 +373,51 @@ type AddOnScore struct {
 	// +required
 	ScoreName string `json:"scoreName"`
 }
+
+// Toleration represents the toleration object that can be attached to a placement.
+// The placement this Toleration is attached to tolerates any taint that matches
+// the triple <key,value,effect> using the matching operator <operator>.
+type Toleration struct {
+	// Key is the taint key that the toleration applies to. Empty means match all taint keys.
+	// If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+	// +kubebuilder:validation:Pattern=`^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$`
+	// +kubebuilder:validation:MaxLength=316
+	// +optional
+	Key string `json:"key,omitempty"`
+	// Operator represents a key's relationship to the value.
+	// Valid operators are Exists and Equal. Defaults to Equal.
+	// Exists is equivalent to wildcard for value, so that a placement can
+	// tolerate all taints of a particular category.
+	// +kubebuilder:default:="Equal"
+	// +optional
+	Operator TolerationOperator `json:"operator,omitempty"`
+	// Value is the taint value the toleration matches to.
+	// If the operator is Exists, the value should be empty, otherwise just a regular string.
+	// +kubebuilder:validation:MaxLength=1024
+	// +optional
+	Value string `json:"value,omitempty"`
+	// Effect indicates the taint effect to match. Empty means match all taint effects.
+	// When specified, allowed values are NoSelect, PreferNoSelect and NoSelectIfNew.
+	// +kubebuilder:validation:Enum:=NoSelect;PreferNoSelect;NoSelectIfNew
+	// +optional
+	Effect v1.TaintEffect `json:"effect,omitempty"`
+	// TolerationSeconds represents the period of time the toleration (which must be of effect
+	// NoSelect/PreferNoSelect, otherwise this field is ignored) tolerates the taint.
+	// The default value is nil, which indicates it tolerates the taint forever.
+	// The start time of counting the TolerationSeconds should be the TimeAdded in Taint, not the cluster
+	// scheduled time or TolerationSeconds added time.
+	// +optional
+	TolerationSeconds *int64 `json:"tolerationSeconds,omitempty"`
+}
+
+// TolerationOperator is the set of operators that can be used in a toleration.
+type TolerationOperator string
+
+// These are valid values for TolerationOperator
+const (
+	TolerationOpExists TolerationOperator = "Exists"
+	TolerationOpEqual  TolerationOperator = "Equal"
+)
 
 type PlacementStatus struct {
 	// NumberOfSelectedClusters represents the number of selected ManagedClusters
