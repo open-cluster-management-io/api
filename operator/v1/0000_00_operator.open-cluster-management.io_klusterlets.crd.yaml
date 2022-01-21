@@ -48,6 +48,14 @@ spec:
                       enum:
                         - Default
                         - Detached
+                    registrationAPIServiceTargetPort:
+                      description: RegistrationAPIServiceTargetPort will be used in rendering the the file "cluster-manager-registration-webhook-apiservice.yaml" in manifests. The default value is 443.
+                      type: integer
+                      default: 443
+                    workAPIServiceTargetPort:
+                      description: WorkAPIServiceTargetPort also used in rendering the file "cluster-manager-work-webhook-apiservice.yaml" in manifests. The default value is 443.
+                      type: integer
+                      default: 443
                 externalServerURLs:
                   description: ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally If it is set empty, managed cluster has no externally accessible url that hub cluster can visit.
                   type: array

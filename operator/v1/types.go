@@ -74,6 +74,20 @@ type DeployOption struct {
 	// +kubebuilder:default=Default
 	// +kubebuilder:validation:Enum=Default;Detached
 	Mode InstallMode `json:"mode"`
+
+	// RegistrationAPIServiceTargetPort will be used in rendering the the file "cluster-manager-registration-webhook-apiservice.yaml" in manifests.
+	// The default value is 443.
+	//
+	// +optional
+	// +kubebuilder:default=443
+	RegistrationAPIServiceTargetPort int `json:"registrationAPIServiceTargetPort,omitempty"`
+
+	// WorkAPIServiceTargetPort also used in rendering the file "cluster-manager-work-webhook-apiservice.yaml" in manifests.
+	// The default value is 443.
+	//
+	// +optional
+	// +kubebuilder:default=443
+	WorkAPIServiceTargetPort int `json:"workAPIServiceTargetPort,omitempty"`
 }
 
 // InstallMode represents the mode of deploy cluster-manager or klusterlet
