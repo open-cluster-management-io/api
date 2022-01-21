@@ -52,6 +52,39 @@ type ClusterManagerSpec struct {
 	// +optional
 	// +kubebuilder:default={mode: Default}
 	DeployOption DeployOption `json:"deployOption,omitempty"`
+
+	// Detached includes configurations we needs for clustermanager in the detached mode.
+	// +optional
+	Detached DetachedClusterManagerConfiguration `json:"detached,omitempty"`
+}
+
+// DetachedClusterManagerConfiguration represents customized configurations we need to set for clustermanager in the detached mode.
+type DetachedClusterManagerConfiguration struct {
+	// RegistrationWebhookConfiguration represents the customized webhook-server configuration of registration.
+	// +optional
+	RegistrationWebhookConfiguration WebhookConfiguration `json:"registrationWebhookConfiguration,omitempty"`
+
+	// WorkWebhookConfiguration represents the customized webhook-server configuration of work.
+	// +optional
+	WorkWebhookConfiguration WebhookConfiguration `json:"workWebhookConfiguration,omitempty"`
+}
+
+// WebhookConfiguration has two properties: Address and Port.
+type WebhookConfiguration struct {
+	// Address represents the address of a webhook-server.
+	// It could be in IP format or fqdn format.
+	// The Address must be reachable by apiserver of the hub cluster.
+	// +required
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+	Address string `json:"address"`
+
+	// Port represents the port of a webhook-server. The default value of Port is 443.
+	// +optional
+	// +default=443
+	// +kubebuilder:default=443
+	// +kubebuilder:validation:Maximum=65535
+	Port int32 `json:"port,omitempty"`
 }
 
 // DeployOption describes the deploy options for cluster-manager or klusterlet
