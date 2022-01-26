@@ -151,18 +151,9 @@ const (
 
 // PrioritizerConfig represents the configuration of prioritizer
 type PrioritizerConfig struct {
-	// Name will be removed in v1beta1 and replaced by ScoreCoordinate.BuiltIn.
-	// If both Name and ScoreCoordinate.BuiltIn are defined, will use the value
-	// in ScoreCoordinate.BuiltIn.
-	// Name is the name of a prioritizer. Below are the valid names:
-	// 1) Balance: balance the decisions among the clusters.
-	// 2) Steady: ensure the existing decision is stabilized.
-	// 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.
-	// +optional
-	Name string `json:"name,omitempty"`
-
 	// ScoreCoordinate represents the configuration of the prioritizer and score source.
-	// +optional
+	// +kubebuilder:validation:Required
+	// +required
 	ScoreCoordinate *ScoreCoordinate `json:"scoreCoordinate,omitempty"`
 
 	// Weight defines the weight of the prioritizer score. The value must be ranged in [-10,10].

@@ -23,6 +23,8 @@ spec:
           name: SelectedClusters
           type: integer
       name: v1alpha1
+      deprecated: true
+      deprecationWarning: "cluster.open-cluster-management.io/v1alpha1 Placement is deprecated; use cluster.open-cluster-management.io/v1beta1 Placement"
       schema:
         openAPIV3Schema:
           description: "Placement defines a rule to select a set of ManagedClusters from the ManagedClusterSets bound to the placement namespace. \n Here is how the placement policy combines with other selection methods to determine a matching list of ManagedClusters: 1) Kubernetes clusters are registered with hub as cluster-scoped ManagedClusters; 2) ManagedClusters are organized into cluster-scoped ManagedClusterSets; 3) ManagedClusterSets are bound to workload namespaces; 4) Namespace-scoped Placements specify a slice of ManagedClusterSets which select a working set    of potential ManagedClusters; 5) Then Placements subselect from that working set using label/claim selection. \n No ManagedCluster will be selected if no ManagedClusterSet is bound to the placement namespace. User is able to bind a ManagedClusterSet to a namespace by creating a ManagedClusterSetBinding in that namespace if they have a RBAC rule to CREATE on the virtual subresource of `managedclustersets/bind`. \n A slice of PlacementDecisions with label cluster.open-cluster-management.io/placement={placement name} will be created to represent the ManagedClusters selected by this placement. \n If a ManagedCluster is selected and added into the PlacementDecisions, other components may apply workload on it; once it is removed from the PlacementDecisions, the workload applied on this ManagedCluster should be evicted accordingly."
@@ -371,10 +373,9 @@ spec:
                       items:
                         description: PrioritizerConfig represents the configuration of prioritizer
                         type: object
+                        required:
+                          - scoreCoordinate
                         properties:
-                          name:
-                            description: 'Name will be removed in v1beta1 and replaced by ScoreCoordinate.BuiltIn. If both Name and ScoreCoordinate.BuiltIn are defined, will use the value in ScoreCoordinate.BuiltIn. Name is the name of a prioritizer. Below are the valid names: 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.'
-                            type: string
                           scoreCoordinate:
                             description: ScoreCoordinate represents the configuration of the prioritizer and score source.
                             type: object
