@@ -13,6 +13,8 @@ spec:
   preserveUnknownFields: false
   versions:
     - name: v1alpha1
+      deprecated: true
+      deprecationWarning: "cluster.open-cluster-management.io/v1alpha1 PlacementDecision is deprecated; use cluster.open-cluster-management.io/v1beta1 PlacementDecision"
       schema:
         openAPIV3Schema:
           description: "PlacementDecision indicates a decision from a placement PlacementDecision should has a label cluster.open-cluster-management.io/placement={placement name} to reference a certain placement. \n If a placement has spec.numberOfClusters specified, the total number of decisions contained in status.decisions of PlacementDecisions should always be NumberOfClusters; otherwise, the total number of decisions should be the number of ManagedClusters which match the placement requirements. \n Some of the decisions might be empty when there are no enough ManagedClusters meet the placement requirements."
