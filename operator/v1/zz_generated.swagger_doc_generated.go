@@ -38,6 +38,7 @@ var map_ClusterManagerSpec = map[string]string{
 	"placementImagePullSpec":    "PlacementImagePullSpec represents the desired image configuration of placement controller/webhook installed on hub.",
 	"nodePlacement":             "NodePlacement enables explicit control over the scheduling of the deployed pods.",
 	"deployOption":              "DeployOption contains the options of deploying a cluster-manager Default mode is used if DeployOption is not set.",
+	"detached":                  "Detached includes configurations we needs for clustermanager in the detached mode.",
 }
 
 func (ClusterManagerSpec) SwaggerDoc() map[string]string {
@@ -63,6 +64,16 @@ var map_DeployOption = map[string]string{
 
 func (DeployOption) SwaggerDoc() map[string]string {
 	return map_DeployOption
+}
+
+var map_DetachedClusterManagerConfiguration = map[string]string{
+	"":                                 "DetachedClusterManagerConfiguration represents customized configurations we need to set for clustermanager in the detached mode.",
+	"registrationWebhookConfiguration": "RegistrationWebhookConfiguration represents the customized webhook-server configuration of registration.",
+	"workWebhookConfiguration":         "WorkWebhookConfiguration represents the customized webhook-server configuration of work.",
+}
+
+func (DetachedClusterManagerConfiguration) SwaggerDoc() map[string]string {
+	return map_DetachedClusterManagerConfiguration
 }
 
 var map_GenerationStatus = map[string]string{
@@ -157,6 +168,16 @@ var map_ServerURL = map[string]string{
 
 func (ServerURL) SwaggerDoc() map[string]string {
 	return map_ServerURL
+}
+
+var map_WebhookConfiguration = map[string]string{
+	"":        "WebhookConfiguration has two properties: Address and Port.",
+	"address": "Address represents the address of a webhook-server. It could be in IP format or fqdn format. The Address must be reachable by apiserver of the hub cluster.",
+	"port":    "Port represents the port of a webhook-server. The default value of Port is 443.",
+}
+
+func (WebhookConfiguration) SwaggerDoc() map[string]string {
+	return map_WebhookConfiguration
 }
 
 // AUTO-GENERATED FUNCTIONS END HERE
