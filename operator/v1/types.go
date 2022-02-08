@@ -50,12 +50,7 @@ type ClusterManagerSpec struct {
 	// DeployOption contains the options of deploying a cluster-manager
 	// Default mode is used if DeployOption is not set.
 	// +optional
-	// +kubebuilder:default={mode: Default}
 	DeployOption DeployOption `json:"deployOption,omitempty"`
-
-	// Detached includes configurations we needs for clustermanager in the detached mode.
-	// +optional
-	Detached DetachedClusterManagerConfiguration `json:"detached,omitempty"`
 }
 
 // DetachedClusterManagerConfiguration represents customized configurations we need to set for clustermanager in the detached mode.
@@ -107,6 +102,10 @@ type DeployOption struct {
 	// +kubebuilder:default=Default
 	// +kubebuilder:validation:Enum=Default;Detached
 	Mode InstallMode `json:"mode"`
+
+	// Detached includes configurations we needs for clustermanager in the detached mode.
+	// +optional
+	Detached *DetachedClusterManagerConfiguration `json:"detached,omitempty"`
 }
 
 // InstallMode represents the mode of deploy cluster-manager or klusterlet
