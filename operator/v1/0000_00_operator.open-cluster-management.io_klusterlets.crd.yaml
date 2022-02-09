@@ -241,6 +241,19 @@ spec:
                       version:
                         description: version is the version of the thing you're tracking
                         type: string
+                version:
+                  description: Version represents the version of the compoenents in klusterlet
+                  type: object
+                  properties:
+                    klusterlet:
+                      description: Klusterlet is the version of klusterlet operator
+                      type: string
+                    registration:
+                      description: Registration is the version of the registration agent
+                      type: string
+                    work:
+                      description: Work is the version of the work agent
+                      type: string
       served: true
       storage: true
       subresources:

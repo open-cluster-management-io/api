@@ -47,6 +47,7 @@ func (ClusterManagerSpec) SwaggerDoc() map[string]string {
 var map_ClusterManagerStatus = map[string]string{
 	"":                   "ClusterManagerStatus represents the current status of the registration and work distribution controllers running on the hub.",
 	"observedGeneration": "ObservedGeneration is the last generation change you've dealt with",
+	"version":            "Version represents the version of the compoenents in cluster manager",
 	"conditions":         "Conditions contain the different condition statuses for this ClusterManager. Valid condition types are: Applied: Components in hub are applied. Available: Components in hub are available and ready to serve. Progressing: Components in hub are in a transitioning state. Degraded: Components in hub do not match the desired configuration and only provide degraded service.",
 	"generations":        "Generations are used to determine when an item needs to be reconciled or has changed in a way that needs a reaction.",
 	"relatedResources":   "RelatedResources are used to track the resources that are related to this ClusterManager.",
@@ -54,6 +55,18 @@ var map_ClusterManagerStatus = map[string]string{
 
 func (ClusterManagerStatus) SwaggerDoc() map[string]string {
 	return map_ClusterManagerStatus
+}
+
+var map_ClusterManagerVersion = map[string]string{
+	"":               "ClusterManagerVersion represents the version of the compoenents in cluster manager",
+	"clusterManager": "ClusterManager is the version of cluster manager operator",
+	"registration":   "Registration is the version of the registration controller and webhoook",
+	"work":           "Work is the version of the work webhook",
+	"placement":      "Placement is the version of the placement controller",
+}
+
+func (ClusterManagerVersion) SwaggerDoc() map[string]string {
+	return map_ClusterManagerVersion
 }
 
 var map_DeployOption = map[string]string{
@@ -128,6 +141,7 @@ func (KlusterletSpec) SwaggerDoc() map[string]string {
 var map_KlusterletStatus = map[string]string{
 	"":                   "KlusterletStatus represents the current status of Klusterlet agent.",
 	"observedGeneration": "ObservedGeneration is the last generation change you've dealt with",
+	"version":            "Version represents the version of the compoenents in klusterlet",
 	"conditions":         "Conditions contain the different condition statuses for this Klusterlet. Valid condition types are: Applied: Components have been applied in the managed cluster. Available: Components in the managed cluster are available and ready to serve. Progressing: Components in the managed cluster are in a transitioning state. Degraded: Components in the managed cluster do not match the desired configuration and only provide degraded service.",
 	"generations":        "Generations are used to determine when an item needs to be reconciled or has changed in a way that needs a reaction.",
 	"relatedResources":   "RelatedResources are used to track the resources that are related to this Klusterlet.",
@@ -135,6 +149,17 @@ var map_KlusterletStatus = map[string]string{
 
 func (KlusterletStatus) SwaggerDoc() map[string]string {
 	return map_KlusterletStatus
+}
+
+var map_KlusterletVersion = map[string]string{
+	"":             "KlusterletVersion represents the version of the compoenents in klusterlet",
+	"klusterlet":   "Klusterlet is the version of klusterlet operator",
+	"registration": "Registration is the version of the registration agent",
+	"work":         "Work is the version of the work agent",
+}
+
+func (KlusterletVersion) SwaggerDoc() map[string]string {
+	return map_KlusterletVersion
 }
 
 var map_NodePlacement = map[string]string{

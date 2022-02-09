@@ -127,6 +127,9 @@ type ClusterManagerStatus struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
+	// Version represents the version of the compoenents in cluster manager
+	Version ClusterManagerVersion `json:"version,omitempty"`
+
 	// Conditions contain the different condition statuses for this ClusterManager.
 	// Valid condition types are:
 	// Applied: Components in hub are applied.
@@ -143,6 +146,21 @@ type ClusterManagerStatus struct {
 	// RelatedResources are used to track the resources that are related to this ClusterManager.
 	// +optional
 	RelatedResources []RelatedResourceMeta `json:"relatedResources,omitempty"`
+}
+
+// ClusterManagerVersion represents the version of the compoenents in cluster manager
+type ClusterManagerVersion struct {
+	// ClusterManager is the version of cluster manager operator
+	ClusterManager string `json:"clusterManager,omitempty"`
+
+	// Registration is the version of the registration controller and webhoook
+	Registration string `json:"registration,omitempty"`
+
+	// Work is the version of the work webhook
+	Work string `json:"work,omitempty"`
+
+	// Placement is the version of the placement controller
+	Placement string `json:"placement,omitempty"`
 }
 
 // RelatedResourceMeta represents the resource that is managed by an operator
@@ -297,11 +315,26 @@ type NodePlacement struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
+// KlusterletVersion represents the version of the compoenents in klusterlet
+type KlusterletVersion struct {
+	// Klusterlet is the version of klusterlet operator
+	Klusterlet string `json:"klusterlet,omitempty"`
+
+	// Registration is the version of the registration agent
+	Registration string `json:"registration,omitempty"`
+
+	// Work is the version of the work agent
+	Work string `json:"work,omitempty"`
+}
+
 // KlusterletStatus represents the current status of Klusterlet agent.
 type KlusterletStatus struct {
 	// ObservedGeneration is the last generation change you've dealt with
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Version represents the version of the compoenents in klusterlet
+	Version KlusterletVersion `json:"version,omitempty"`
 
 	// Conditions contain the different condition statuses for this Klusterlet.
 	// Valid condition types are:
