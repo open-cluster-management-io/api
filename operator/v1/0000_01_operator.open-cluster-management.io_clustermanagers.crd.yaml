@@ -223,6 +223,22 @@ spec:
                       version:
                         description: version is the version of the thing you're tracking
                         type: string
+                version:
+                  description: Version represents the version of the compoenents in cluster manager
+                  type: object
+                  properties:
+                    clusterManager:
+                      description: ClusterManager is the version of cluster manager operator
+                      type: string
+                    placement:
+                      description: Placement is the version of the placement controller
+                      type: string
+                    registration:
+                      description: Registration is the version of the registration controller and webhoook
+                      type: string
+                    work:
+                      description: Work is the version of the work webhook
+                      type: string
       served: true
       storage: true
       subresources:
