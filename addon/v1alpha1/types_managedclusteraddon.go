@@ -58,6 +58,18 @@ type RegistrationConfig struct {
 	//
 	// +optional
 	Subject Subject `json:"subject,omitempty"`
+
+	// certificateStatus actively tracks the status of the certificate used by the addon.
+	CertificateStatus *RegistrationConfigCertificateStatus `json:"certificateStatus,omitempty"`
+}
+
+type RegistrationConfigCertificateStatus struct {
+	// lastRenewedTimestamp records the last timestamp when we approved/renewed certificates
+	// for the addon agents.
+	LastRenewedTimestamp metav1.Time `json:"lastRenewedTimestamp,omitempty"`
+
+	// expiringTimestamp records the next time certificate will expire.
+	ExpiringTimestamp metav1.Time `json:"expiringTimestamp,omitempty"`
 }
 
 // Subject is the user subject of the addon agent to be registered to the hub.
@@ -126,6 +138,16 @@ const (
 	// ManagedClusterAddOnConditionDegraded represents that the addon agent is providing degraded service on
 	// the managed cluster.
 	ManagedClusterAddOnConditionDegraded string = "Degraded"
+
+	// ManagedClusterAddOConditionTypeRegistrationApplied represents that whether the addon agent finished
+	// its registration into the hub control plane, including finishing CSR approval, signing, permission
+	// configuration, etc.
+	ManagedClusterAddOConditionTypeRegistrationApplied = "RegistrationApplied"
+
+	// ManagedClusterAddOConditionTypeManifestApplied represents that whether the corresponding resources are
+	// applied to the hub cluster as a ManifestWork resource. Note that it doesn't imply the applied ManifestWork
+	// is successfully delivered/executed by the work agent.
+	ManagedClusterAddOConditionTypeManifestApplied = "ManifestApplied"
 )
 
 // ObjectReference contains enough information to let you inspect or modify the referred object.
