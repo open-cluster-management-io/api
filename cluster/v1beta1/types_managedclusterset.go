@@ -50,7 +50,7 @@ type ManagedClusterSelector struct {
 	// +kubebuilder:validation:Enum=LegacyClusterSetLabel
 	// +kubebuilder:default:="LegacyClusterSetLabel"
 	// +required
-	SelectorType SelectorType `json:"selectorType"`
+	SelectorType SelectorType `json:"selectorType,omitempty"`
 }
 
 type SelectorType string
