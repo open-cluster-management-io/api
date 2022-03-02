@@ -10,7 +10,7 @@ include $(addprefix ./vendor/github.com/openshift/build-machinery-go/make/, \
 	targets/openshift/crd-schema-gen.mk \
 )
 
-GO_PACKAGES :=$(addsuffix ...,$(addprefix ./,$(filter-out vendor/,$(filter-out hack/,$(wildcard */)))))
+GO_PACKAGES :=$(addsuffix ...,$(addprefix ./,$(filter-out test/, $(filter-out vendor/,$(filter-out hack/,$(wildcard */))))))
 GO_BUILD_PACKAGES :=$(GO_PACKAGES)
 GO_BUILD_PACKAGES_EXPANDED :=$(GO_BUILD_PACKAGES)
 # LDFLAGS are not needed for dummy builds (saving time on calling git commands)
@@ -51,3 +51,5 @@ build-runtime-image: Dockerfile.build
 
 update-with-container: build-runtime-image
 	$(RUNTIME) run -ti --rm -v $(PWD):/go/src/open-cluster-management.io/api:z -w /go/src/open-cluster-management.io/api $(RUNTIME_IMAGE_NAME) make update-scripts update-codegen-crds
+
+include ./test/integration-test.mk
