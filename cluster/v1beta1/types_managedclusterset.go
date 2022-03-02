@@ -29,6 +29,7 @@ type ManagedClusterSet struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the attributes of the ManagedClusterSet
+	// +kubebuilder:default={clusterSelector: {selectorType: LegacyClusterSetLabel}}
 	Spec ManagedClusterSetSpec `json:"spec"`
 
 	// Status represents the current status of the ManagedClusterSet
@@ -40,6 +41,7 @@ type ManagedClusterSet struct {
 type ManagedClusterSetSpec struct {
 	// ClusterSelector represents a selector of ManagedClusters
 	// +optional
+	// +kubebuilder:default:={selectorType: LegacyClusterSetLabel}
 	ClusterSelector ManagedClusterSelector `json:"clusterSelector,omitempty"`
 }
 
@@ -48,9 +50,9 @@ type ManagedClusterSelector struct {
 	// SelectorType could only be "LegacyClusterSetLabel" now, will support more SelectorType later
 	// "LegacyClusterSetLabel" means to use label "cluster.open-cluster-management.io/clusterset:<ManagedClusterSet Name>"" to select target clusters.
 	// +kubebuilder:validation:Enum=LegacyClusterSetLabel
-	// +kubebuilder:default:="LegacyClusterSetLabel"
+	// +kubebuilder:default:=LegacyClusterSetLabel
 	// +required
-	SelectorType SelectorType `json:"selectorType"`
+	SelectorType SelectorType `json:"selectorType,omitempty"`
 }
 
 type SelectorType string

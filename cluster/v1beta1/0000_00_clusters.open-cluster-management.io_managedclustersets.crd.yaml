@@ -110,10 +110,15 @@ spec:
             spec:
               description: Spec defines the attributes of the ManagedClusterSet
               type: object
+              default:
+                clusterSelector:
+                  selectorType: LegacyClusterSetLabel
               properties:
                 clusterSelector:
                   description: ClusterSelector represents a selector of ManagedClusters
                   type: object
+                  default:
+                    selectorType: LegacyClusterSetLabel
                   properties:
                     selectorType:
                       description: SelectorType could only be "LegacyClusterSetLabel" now, will support more SelectorType later "LegacyClusterSetLabel" means to use label "cluster.open-cluster-management.io/clusterset:<ManagedClusterSet Name>"" to select target clusters.
