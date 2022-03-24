@@ -1,0 +1,31 @@
+name: GoRelease
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+env:
+  # Common versions
+  GITHUB_REF: ${{ github.ref }}
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: get release version
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: get major release version
+        run: |
+          echo "MAJOR_RELEASE_VERSION=${RELEASE_VERSION%.*}" >> $GITHUB_ENV
+      - name: generate changelog
+        run: |
+          echo "# Open Cluster Management API $RELEASE_VERSION" > /home/runner/work/changelog.txt
+          echo "- See the [CHANGELOG](https://github.com/open-cluster-management-io/api/blob/main/CHANGELOG/CHANGELOG-${MAJOR_RELEASE_VERSION}.md) for more details." >> /home/runner/work/changelog.txt
+      - name: publish release
+        uses: softprops/action-gh-release@v0.1.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body_path: /home/runner/work/changelog.txt
