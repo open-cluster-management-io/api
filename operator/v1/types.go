@@ -247,11 +247,13 @@ type Klusterlet struct {
 
 // KlusterletSpec represents the desired deployment configuration of Klusterlet agent.
 type KlusterletSpec struct {
-	// Namespace is the namespace to deploy the agent.
+	// Namespace is the namespace to deploy the agent on the managed cluster.
 	// The namespace must have a prefix of "open-cluster-management-", and if it is not set,
 	// the namespace of "open-cluster-management-agent" is used to deploy agent.
-	// Note: in Detach mode, this field will be **ignored**, the agent will be deployed to the
-	// namespace with the same name as klusterlet.
+	// In addition, the add-ons are deployed to the namespace of "{Namespace}-addon".
+	// In the Hosted mode, this namespace still exists on the managed cluster to contain
+	// necessary resources, like service accounts, roles and rolebindings, while the agent
+	// is deployed to the namespace with the same name as klusterlet on the management cluster.
 	// +optional
 	Namespace string `json:"namespace,omitempty"`
 
