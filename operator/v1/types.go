@@ -53,6 +53,18 @@ type ClusterManagerSpec struct {
 	// +optional
 	// +kubebuilder:default={mode: Default}
 	DeployOption ClusterManagerDeployOption `json:"deployOption,omitempty"`
+
+	// RegistrationConfiguration contains the configuration of registration
+	// +optional
+	RegistrationConfiguration *RegistrationConfiguration `json:"registrationConfiguration,omitempty"`
+}
+
+type RegistrationConfiguration struct {
+	// FeatureGates represents the list of feature gates for registration
+	// If it is set empty, default feature gates will be used.
+	// If it is set not empty, registration controller will use all items of it as args. And the default feature gates will be overrode if set.
+	// +optional
+	FeatureGates map[string]bool `json:"featureGates,omitempty"`
 }
 
 // HostedClusterManagerConfiguration represents customized configurations we need to set for clustermanager in the Hosted mode.
@@ -284,6 +296,10 @@ type KlusterletSpec struct {
 	// DeployOption contains the options of deploying a klusterlet
 	// +optional
 	DeployOption KlusterletDeployOption `json:"deployOption,omitempty"`
+
+	// RegistrationConfiguration contains the configuration of registration
+	// +optional
+	RegistrationConfiguration *RegistrationConfiguration `json:"registrationConfiguration,omitempty"`
 }
 
 // ServerURL represents the apiserver url and ca bundle that is accessible externally

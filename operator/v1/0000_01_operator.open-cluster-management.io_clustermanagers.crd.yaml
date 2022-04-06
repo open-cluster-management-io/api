@@ -120,6 +120,15 @@ spec:
                   description: PlacementImagePullSpec represents the desired image configuration of placement controller/webhook installed on hub.
                   type: string
                   default: quay.io/open-cluster-management/placement
+                registrationConfiguration:
+                  description: RegistrationConfiguration contains the configuration of registration
+                  type: object
+                  properties:
+                    featureGates:
+                      description: FeatureGates represents the list of feature gates for registration If it is set empty, default feature gates will be used. If it is set not empty, registration controller will use all items of it as args. And the default feature gates will be overrode if set.
+                      type: object
+                      additionalProperties:
+                        type: boolean
                 registrationImagePullSpec:
                   description: RegistrationImagePullSpec represents the desired image of registration controller/webhook installed on hub.
                   type: string

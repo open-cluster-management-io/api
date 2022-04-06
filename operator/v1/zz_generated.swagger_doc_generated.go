@@ -48,6 +48,7 @@ var map_ClusterManagerSpec = map[string]string{
 	"placementImagePullSpec":    "PlacementImagePullSpec represents the desired image configuration of placement controller/webhook installed on hub.",
 	"nodePlacement":             "NodePlacement enables explicit control over the scheduling of the deployed pods.",
 	"deployOption":              "DeployOption contains the options of deploying a cluster-manager Default mode is used if DeployOption is not set.",
+	"registrationConfiguration": "RegistrationConfiguration contains the configuration of registration",
 }
 
 func (ClusterManagerSpec) SwaggerDoc() map[string]string {
@@ -128,6 +129,7 @@ var map_KlusterletSpec = map[string]string{
 	"externalServerURLs":        "ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally If it is set empty, managed cluster has no externally accessible url that hub cluster can visit.",
 	"nodePlacement":             "NodePlacement enables explicit control over the scheduling of the deployed pods.",
 	"deployOption":              "DeployOption contains the options of deploying a klusterlet",
+	"registrationConfiguration": "RegistrationConfiguration contains the configuration of registration",
 }
 
 func (KlusterletSpec) SwaggerDoc() map[string]string {
@@ -154,6 +156,14 @@ var map_NodePlacement = map[string]string{
 
 func (NodePlacement) SwaggerDoc() map[string]string {
 	return map_NodePlacement
+}
+
+var map_RegistrationConfiguration = map[string]string{
+	"featureGates": "FeatureGates represents the list of feature gates for registration If it is set empty, default feature gates will be used. If it is set not empty, registration controller will use all items of it as args. And the default feature gates will be overrode if set.",
+}
+
+func (RegistrationConfiguration) SwaggerDoc() map[string]string {
+	return map_RegistrationConfiguration
 }
 
 var map_RelatedResourceMeta = map[string]string{
