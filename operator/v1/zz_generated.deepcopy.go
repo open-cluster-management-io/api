@@ -98,7 +98,11 @@ func (in *ClusterManagerSpec) DeepCopyInto(out *ClusterManagerSpec) {
 	*out = *in
 	in.NodePlacement.DeepCopyInto(&out.NodePlacement)
 	in.DeployOption.DeepCopyInto(&out.DeployOption)
-	in.RegistrationConfiguration.DeepCopyInto(&out.RegistrationConfiguration)
+	if in.RegistrationConfiguration != nil {
+		in, out := &in.RegistrationConfiguration, &out.RegistrationConfiguration
+		*out = new(RegistrationConfiguration)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -268,7 +272,11 @@ func (in *KlusterletSpec) DeepCopyInto(out *KlusterletSpec) {
 	}
 	in.NodePlacement.DeepCopyInto(&out.NodePlacement)
 	out.DeployOption = in.DeployOption
-	in.RegistrationConfiguration.DeepCopyInto(&out.RegistrationConfiguration)
+	if in.RegistrationConfiguration != nil {
+		in, out := &in.RegistrationConfiguration, &out.RegistrationConfiguration
+		*out = new(RegistrationConfiguration)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
