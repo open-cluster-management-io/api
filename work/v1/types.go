@@ -87,9 +87,12 @@ type ManifestConfigOption struct {
 	ResourceIdentifier ResourceIdentifier `json:"resourceIdentifier"`
 
 	// FeedbackRules defines what resource status field should be returned.
-	// +kubebuilder:validation:Required
-	// +required
-	FeedbackRules []FeedbackRule `json:"feedbackRules"`
+	// +optional
+	FeedbackRules []FeedbackRule `json:"feedbackRules,omitempty"`
+
+	// UpdateStrategy defines the strategy to update this manifest
+	// optional
+	UpdateStrategy UpdateStrategy `json:"updateStrategy"`
 }
 
 // ManifestWorkExecutor is the executor that applies the resources to the managed cluster. i.e. the
@@ -143,15 +146,16 @@ type ManifestWorkSubjectServiceAccount struct {
 	Name string `json:"name"`
 }
 
+// UpdateStrategy defines the strategy to update this manifest
 type UpdateStrategy struct {
 	// type defines the strategy to update this manifest, default value is Update.
 	// Update type means to update resource by an update call.
-	// None type means do not update resource based on current manifest.
-	// ServerSideApply type means to update resource using server side apply as fieldManager of work-controller.
+	// CreateOnly type means do not update resource based on current manifest.
+	// ServerSideApply type means to update resource using server side apply with work-controller as the field manager.
 	// If there is conflict, the related Applied condition of manifest will be in the status of False with the
 	// reason of ApplyConflict.
 	// +kubebuilder:default=Update
-	// +kubebuilder:validation:Enum=Update;None;ServerSideApply
+	// +kubebuilder:validation:Enum=Update;CreateOnly;ServerSideApply
 	// +kubebuilder:validation:Required
 	// +required
 	Type string `json:"type"`
@@ -161,6 +165,23 @@ type UpdateStrategy struct {
 	// +optional
 	ServerSideApply *ServerSideApplyConfig `json:"serverSideApply,omitempty"`
 }
+
+type UpdateStrategyType string
+
+const (
+	// Update type means to update resource by an update call.
+	UpdateStrategyTypeUpdate UpdateStrategyType = "Update"
+
+	// CreateOnly type means do not update resource based on current manifest. This should be used only when
+	// ServerSideApply type is not support on the spoke, and the user on hub would like some other controller
+	// on the spoke to own the control of the resource.
+	UpdateStrategyTypeCreateOnly UpdateStrategyType = "CreateOnly"
+
+	// ServerSideApply type means to update resource using server side apply with work-controller as the field manager.
+	// If there is conflict, the related Applied condition of manifest will be in the status of False with the
+	// reason of ApplyConflict. This type allows another controller on the spoke to control certain field of the resource.
+	UpdateStrategyTypeServerSideApply UpdateStrategyType = "ServerSideApply"
+)
 
 type ServerSideApplyConfig struct {
 	// Force represents to force apply the manifest.

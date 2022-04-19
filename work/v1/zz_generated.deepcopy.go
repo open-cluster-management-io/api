@@ -284,6 +284,7 @@ func (in *ManifestConfigOption) DeepCopyInto(out *ManifestConfigOption) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	in.UpdateStrategy.DeepCopyInto(&out.UpdateStrategy)
 	return
 }
 
