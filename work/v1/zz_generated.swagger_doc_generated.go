@@ -263,6 +263,14 @@ func (SelectivelyOrphan) SwaggerDoc() map[string]string {
 	return map_SelectivelyOrphan
 }
 
+var map_ServerSideApplyConfig = map[string]string{
+	"force": "Force represents to force apply the manifest.",
+}
+
+func (ServerSideApplyConfig) SwaggerDoc() map[string]string {
+	return map_ServerSideApplyConfig
+}
+
 var map_StatusFeedbackResult = map[string]string{
 	"":       "StatusFeedbackResult represents the values of the feild synced back defined in statusFeedbacks",
 	"values": "Values represents the synced value of the interested field.",
@@ -270,6 +278,15 @@ var map_StatusFeedbackResult = map[string]string{
 
 func (StatusFeedbackResult) SwaggerDoc() map[string]string {
 	return map_StatusFeedbackResult
+}
+
+var map_UpdateStrategy = map[string]string{
+	"type":            "type defines the strategy to update this manifest, default value is Update. Update type means to update resource by an update call. None type means do not update resource based on current manifest. ServerSideApply type means to update resource using server side apply as fieldManager of work-controller. If there is conflict, the related Applied condition of manifest will be in the status of False with the reason of ApplyConflict.",
+	"serverSideApply": "serverSideApply defines the configuration for server side apply. It is honored only when type of updateStrategy is ServerSideApply",
+}
+
+func (UpdateStrategy) SwaggerDoc() map[string]string {
+	return map_UpdateStrategy
 }
 
 // AUTO-GENERATED FUNCTIONS END HERE
