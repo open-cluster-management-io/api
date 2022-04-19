@@ -143,6 +143,31 @@ type ManifestWorkSubjectServiceAccount struct {
 	Name string `json:"name"`
 }
 
+type UpdateStrategy struct {
+	// type defines the strategy to update this manifest, default value is Update.
+	// Update type means to update resource by an update call.
+	// None type means do not update resource based on current manifest.
+	// ServerSideApply type means to update resource using server side apply as fieldManager of work-controller.
+	// If there is conflict, the related Applied condition of manifest will be in the status of False with the
+	// reason of ApplyConflict.
+	// +kubebuilder:default=Update
+	// +kubebuilder:validation:Enum=Update;None;ServerSideApply
+	// +kubebuilder:validation:Required
+	// +required
+	Type string `json:"type"`
+
+	// serverSideApply defines the configuration for server side apply. It is honored only when
+	// type of updateStrategy is ServerSideApply
+	// +optional
+	ServerSideApply *ServerSideApplyConfig `json:"serverSideApply,omitempty"`
+}
+
+type ServerSideApplyConfig struct {
+	// Force represents to force apply the manifest.
+	// +optional
+	Force bool `json:"force"`
+}
+
 type FeedbackRule struct {
 	// Type defines the option of how status can be returned.
 	// It can be jsonPaths or wellKnownStatus.
