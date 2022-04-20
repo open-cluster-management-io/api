@@ -68,8 +68,28 @@ type RegistrationConfiguration struct {
 	//   3. If featuregate/Foo exists and is true by default. If a cluster-admin upgrading from 1 to 2 wants to continue having featuregate/Foo=false,
 	//  	he can set featuregate/Foo=false before upgrading. Let's say the cluster-admin wants featuregate/Foo=false.
 	// +optional
-	FeatureGates map[string]bool `json:"featureGates,omitempty"`
+	FeatureGates []FeatureGate `json:"featureGates,omitempty"`
 }
+
+type FeatureGate struct {
+	// Feature is the key of feature gate. e.g. featuregate/Foo.
+	Feature string `json:"feature"`
+
+	// Mode is either Enable, Disable, "" where "" is Disable by default.
+	// In Enable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=true".
+	// In Disable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=false".
+	// +kubebuilder:default:=Disable
+	// +optional
+	Mode FeatureGateModeType `json:"mode,omitempty"`
+}
+
+type FeatureGateModeType string
+
+const (
+	// Valid FeatureGateModeType value is Enable, Disable.
+	FeatureGateModeTypeEnable  FeatureGateModeType = "Enable"
+	FeatureGateModeTypeDisable FeatureGateModeType = "Disable"
+)
 
 // HostedClusterManagerConfiguration represents customized configurations we need to set for clustermanager in the Hosted mode.
 type HostedClusterManagerConfiguration struct {

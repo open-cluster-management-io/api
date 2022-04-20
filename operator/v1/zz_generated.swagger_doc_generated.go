@@ -67,6 +67,15 @@ func (ClusterManagerStatus) SwaggerDoc() map[string]string {
 	return map_ClusterManagerStatus
 }
 
+var map_FeatureGate = map[string]string{
+	"feature": "Feature is the key of feature gate. e.g. featuregate/Foo.",
+	"mode":    "Mode is either Enable, Disable, \"\" where \"\" is Disable by default. In Enable mode, a valid feature gate `featuregate/Foo` will be set to \"--featuregate/Foo=true\". In Disable mode, a valid feature gate `featuregate/Foo` will be set to \"--featuregate/Foo=false\".",
+}
+
+func (FeatureGate) SwaggerDoc() map[string]string {
+	return map_FeatureGate
+}
+
 var map_GenerationStatus = map[string]string{
 	"":               "GenerationStatus keeps track of the generation for a given resource so that decisions about forced updates can be made. The definition matches the GenerationStatus defined in github.com/openshift/api/v1",
 	"group":          "group is the group of the resource that you're tracking",
