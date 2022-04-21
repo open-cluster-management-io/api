@@ -73,12 +73,14 @@ type RegistrationConfiguration struct {
 
 type FeatureGate struct {
 	// Feature is the key of feature gate. e.g. featuregate/Foo.
+	// +required
 	Feature string `json:"feature"`
 
 	// Mode is either Enable, Disable, "" where "" is Disable by default.
 	// In Enable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=true".
 	// In Disable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=false".
 	// +kubebuilder:default:=Disable
+	// +kubebuilder:validation:Enum:=Enable;Disable
 	// +optional
 	Mode FeatureGateModeType `json:"mode,omitempty"`
 }

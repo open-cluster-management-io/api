@@ -137,6 +137,9 @@ spec:
                             description: Mode is either Enable, Disable, "" where "" is Disable by default. In Enable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=true". In Disable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=false".
                             type: string
                             default: Disable
+                            enum:
+                              - Enable
+                              - Disable
                 registrationImagePullSpec:
                   description: RegistrationImagePullSpec represents the desired image of registration controller/webhook installed on hub.
                   type: string
