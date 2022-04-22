@@ -73,6 +73,7 @@ type RegistrationConfiguration struct {
 
 type FeatureGate struct {
 	// Feature is the key of feature gate. e.g. featuregate/Foo.
+	// +kubebuilder:validation:Required
 	// +required
 	Feature string `json:"feature"`
 

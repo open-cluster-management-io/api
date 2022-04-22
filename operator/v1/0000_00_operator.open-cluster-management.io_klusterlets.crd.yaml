@@ -98,6 +98,8 @@ spec:
                       type: array
                       items:
                         type: object
+                        required:
+                          - feature
                         properties:
                           feature:
                             description: Feature is the key of feature gate. e.g. featuregate/Foo.
