@@ -45,4 +45,40 @@ var _ = ginkgo.Describe("ManagedClusterSet API test", func() {
 		_, err := hubClusterClient.ClusterV1beta1().ManagedClusterSets().Create(context.TODO(), clusterset, metav1.CreateOptions{})
 		gomega.Expect(err).To(gomega.HaveOccurred())
 	})
+
+	ginkgo.It("Create a clusterset with null label selector", func() {
+		clusterset := &clusterv1beta1.ManagedClusterSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterSetName,
+			},
+			Spec: clusterv1beta1.ManagedClusterSetSpec{
+				ClusterSelector: clusterv1beta1.ManagedClusterSelector{
+					SelectorType:  "LabelSelector",
+					LabelSelector: &metav1.LabelSelector{},
+				},
+			},
+		}
+		_, err := hubClusterClient.ClusterV1beta1().ManagedClusterSets().Create(context.TODO(), clusterset, metav1.CreateOptions{})
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	})
+
+	ginkgo.It("Create a clusterset with label selector(one label)", func() {
+		clusterset := &clusterv1beta1.ManagedClusterSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterSetName,
+			},
+			Spec: clusterv1beta1.ManagedClusterSetSpec{
+				ClusterSelector: clusterv1beta1.ManagedClusterSelector{
+					SelectorType: "LabelSelector",
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"vendor": "OpenShift",
+						},
+					},
+				},
+			},
+		}
+		_, err := hubClusterClient.ClusterV1beta1().ManagedClusterSets().Create(context.TODO(), clusterset, metav1.CreateOptions{})
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	})
 })
