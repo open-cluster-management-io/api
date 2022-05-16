@@ -1,12 +1,17 @@
 package integration
 
 import (
+	"context"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"path/filepath"
 	"testing"
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	addonv1alpha1client "open-cluster-management.io/api/client/addon/clientset/versioned"
@@ -16,6 +21,8 @@ import (
 )
 
 var testEnv *envtest.Environment
+var testNamespace string
+var kubernetesClient kubernetes.Interface
 var hubWorkClient workclientset.Interface
 var hubClusterClient clusterv1client.Interface
 var hubAddonClient addonv1alpha1client.Interface
@@ -57,6 +64,17 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 	operatorClient, err = operatorclientset.NewForConfig(cfg)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	kubernetesClient, err = kubernetes.NewForConfig(cfg)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+	testNamespace = "open-cluster-management-api-test-" + rand.String(5)
+	_, err = kubernetesClient.CoreV1().Namespaces().
+		Create(context.TODO(), &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: testNamespace,
+			},
+		}, metav1.CreateOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	close(done)
 }, 300)
@@ -64,6 +82,10 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 var _ = ginkgo.AfterSuite(func() {
 	ginkgo.By("tearing down the test environment")
 
-	err := testEnv.Stop()
+	err := kubernetesClient.CoreV1().Namespaces().
+		Delete(context.TODO(), testNamespace, metav1.DeleteOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	err = testEnv.Stop()
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 })
