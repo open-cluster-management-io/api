@@ -1,7 +1,6 @@
 package v1beta1
 
 import (
-	"context"
 	"os"
 	"reflect"
 	"testing"
@@ -11,7 +10,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
@@ -21,13 +19,6 @@ import (
 var (
 	scheme = runtime.NewScheme()
 )
-
-type clusterGetter struct {
-	client client.Client
-}
-type clusterSetGetter struct {
-	client client.Client
-}
 
 var existingClusterSets = []*ManagedClusterSet{
 	{
@@ -113,32 +104,6 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
-func (mcl clusterGetter) List(selector labels.Selector) ([]*v1.ManagedCluster, error) {
-	clusterList := v1.ManagedClusterList{}
-	err := mcl.client.List(context.Background(), &clusterList, &client.ListOptions{LabelSelector: selector})
-	if err != nil {
-		return nil, err
-	}
-	var retClusters []*v1.ManagedCluster
-	for i := range clusterList.Items {
-		retClusters = append(retClusters, &clusterList.Items[i])
-	}
-	return retClusters, nil
-}
-
-func (msl clusterSetGetter) List(selector labels.Selector) ([]*ManagedClusterSet, error) {
-	clusterSetList := ManagedClusterSetList{}
-	err := msl.client.List(context.Background(), &clusterSetList, &client.ListOptions{LabelSelector: selector})
-	if err != nil {
-		return nil, err
-	}
-	var retClusterSets []*ManagedClusterSet
-	for i := range clusterSetList.Items {
-		retClusterSets = append(retClusterSets, &clusterSetList.Items[i])
-	}
-	return retClusterSets, nil
-}
-
 func TestGetClustersFromClusterSet(t *testing.T) {
 	tests := []struct {
 		name               string
@@ -210,7 +175,7 @@ func TestGetClustersFromClusterSet(t *testing.T) {
 	for _, clusters := range existingClusters {
 		existingObjs = append(existingObjs, clusters)
 	}
-	mcl := clusterGetter{
+	mcl := ManagedClustersGetterControllerRuntimeImpl{
 		client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(existingObjs...).Build(),
 	}
 
@@ -304,7 +269,7 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 		existingObjs = append(existingObjs, clusterset)
 	}
 
-	msl := clusterSetGetter{
+	msl := ManagedClusterSetsGetterControllerRuntimeImpl{
 		client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(existingObjs...).Build(),
 	}
 
