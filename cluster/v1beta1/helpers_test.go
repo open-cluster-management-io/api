@@ -22,13 +22,53 @@ var (
 	scheme = runtime.NewScheme()
 )
 
-type clusterGetter struct {
+type clustersGetter struct {
 	client client.Client
 }
-type clusterSetGetter struct {
+type clusterSetsGetter struct {
+	client client.Client
+}
+type clusterSetBindingsGetter struct {
 	client client.Client
 }
 
+var existingClusterSetBindings = []*ManagedClusterSetBinding{
+	{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev",
+			Namespace: "default",
+		},
+		Spec: ManagedClusterSetBindingSpec{
+			ClusterSet: "dev",
+		},
+		Status: ManagedClusterSetBindingStatus{
+			Conditions: []metav1.Condition{
+				{
+					Type:   ClusterSetBindingBoundType,
+					Status: metav1.ConditionTrue,
+				},
+			},
+		},
+	},
+	{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "global",
+			Namespace: "default",
+		},
+		Spec: ManagedClusterSetBindingSpec{
+			ClusterSet: "global",
+		},
+	},
+	{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "no-such-cluster-set",
+			Namespace: "kube-system",
+		},
+		Spec: ManagedClusterSetBindingSpec{
+			ClusterSet: "no-such-cluster-set",
+		},
+	},
+}
 var existingClusterSets = []*ManagedClusterSet{
 	{
 		ObjectMeta: metav1.ObjectMeta{
@@ -113,7 +153,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
-func (mcl clusterGetter) List(selector labels.Selector) ([]*v1.ManagedCluster, error) {
+func (mcl clustersGetter) List(selector labels.Selector) ([]*v1.ManagedCluster, error) {
 	clusterList := v1.ManagedClusterList{}
 	err := mcl.client.List(context.Background(), &clusterList, &client.ListOptions{LabelSelector: selector})
 	if err != nil {
@@ -126,7 +166,7 @@ func (mcl clusterGetter) List(selector labels.Selector) ([]*v1.ManagedCluster, e
 	return retClusters, nil
 }
 
-func (msl clusterSetGetter) List(selector labels.Selector) ([]*ManagedClusterSet, error) {
+func (msl clusterSetsGetter) List(selector labels.Selector) ([]*ManagedClusterSet, error) {
 	clusterSetList := ManagedClusterSetList{}
 	err := msl.client.List(context.Background(), &clusterSetList, &client.ListOptions{LabelSelector: selector})
 	if err != nil {
@@ -137,6 +177,21 @@ func (msl clusterSetGetter) List(selector labels.Selector) ([]*ManagedClusterSet
 		retClusterSets = append(retClusterSets, &clusterSetList.Items[i])
 	}
 	return retClusterSets, nil
+}
+
+func (mbl clusterSetBindingsGetter) List(namespace string,
+	selector labels.Selector) ([]*ManagedClusterSetBinding, error) {
+	clusterSetBindingList := ManagedClusterSetBindingList{}
+	err := mbl.client.List(context.Background(), &clusterSetBindingList,
+		client.InNamespace(namespace), &client.ListOptions{LabelSelector: selector})
+	if err != nil {
+		return nil, err
+	}
+	var retClusterSetBindings []*ManagedClusterSetBinding
+	for i := range clusterSetBindingList.Items {
+		retClusterSetBindings = append(retClusterSetBindings, &clusterSetBindingList.Items[i])
+	}
+	return retClusterSetBindings, nil
 }
 
 func TestGetClustersFromClusterSet(t *testing.T) {
@@ -207,10 +262,10 @@ func TestGetClustersFromClusterSet(t *testing.T) {
 	}
 
 	var existingObjs []client.Object
-	for _, clusters := range existingClusters {
-		existingObjs = append(existingObjs, clusters)
+	for _, cluster := range existingClusters {
+		existingObjs = append(existingObjs, cluster)
 	}
-	mcl := clusterGetter{
+	mcl := clustersGetter{
 		client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(existingObjs...).Build(),
 	}
 
@@ -297,14 +352,14 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 	}
 
 	var existingObjs []client.Object
-	for _, clusters := range existingClusters {
-		existingObjs = append(existingObjs, clusters)
+	for _, cluster := range existingClusters {
+		existingObjs = append(existingObjs, cluster)
 	}
 	for _, clusterset := range existingClusterSets {
 		existingObjs = append(existingObjs, clusterset)
 	}
 
-	msl := clusterSetGetter{
+	msl := clusterSetsGetter{
 		client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(existingObjs...).Build(),
 	}
 
@@ -346,4 +401,68 @@ func convertClusterSetToSet(clustersets []*ManagedClusterSet) sets.String {
 		retSet.Insert(clusterset.Name)
 	}
 	return retSet
+}
+
+func convertClusterSetBindingsToSet(clusterSetBindings []*ManagedClusterSetBinding) sets.String {
+	if len(clusterSetBindings) == 0 {
+		return nil
+	}
+	retSet := sets.NewString()
+	for _, clusterSetBinding := range clusterSetBindings {
+		retSet.Insert(clusterSetBinding.Name)
+	}
+	return retSet
+}
+
+func TestGetValidManagedClusterSetBindings(t *testing.T) {
+	tests := []struct {
+		name                          string
+		namespace                     string
+		expectClusterSetBindingsNames sets.String
+		expectError                   bool
+	}{
+		{
+			name:                          "test found valid cluster bindings only",
+			namespace:                     "default",
+			expectClusterSetBindingsNames: sets.NewString("dev"),
+		},
+
+		{
+			name:                          "test no cluster binding found",
+			namespace:                     "kube-system",
+			expectClusterSetBindingsNames: nil,
+		},
+	}
+
+	var existingObjs []client.Object
+	for _, cluster := range existingClusters {
+		existingObjs = append(existingObjs, cluster)
+	}
+	for _, clusterSet := range existingClusterSets {
+		existingObjs = append(existingObjs, clusterSet)
+	}
+	for _, clusterSetBinding := range existingClusterSetBindings {
+		existingObjs = append(existingObjs, clusterSetBinding)
+	}
+
+	mbl := clusterSetBindingsGetter{
+		client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(existingObjs...).Build(),
+	}
+
+	for _, test := range tests {
+		returnSets, err := GetBoundManagedClusterSetBindings(test.namespace, mbl)
+
+		if err != nil {
+			if test.expectError {
+				continue
+			}
+			t.Errorf("Case: %v, Failed to run GetValidManagedClusterSetBindings with namespace: %v", test.name, test.namespace)
+			return
+		}
+		returnBindings := convertClusterSetBindingsToSet(returnSets)
+		if !reflect.DeepEqual(returnBindings, test.expectClusterSetBindingsNames) {
+			t.Errorf("Case: %v, Failed to run GetValidManagedClusterSetBindings. Expect bindings: %v, return bindings: %v", test.name, test.expectClusterSetBindingsNames, returnBindings)
+			return
+		}
+	}
 }
