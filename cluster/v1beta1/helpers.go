@@ -9,6 +9,10 @@ import (
 	v1 "open-cluster-management.io/api/cluster/v1"
 )
 
+const (
+	clusterSetLabel = "cluster.open-cluster-management.io/clusterset"
+)
+
 type ManagedClustersGetter interface {
 	List(selector labels.Selector) (ret []*v1.ManagedCluster, err error)
 }
@@ -107,4 +111,18 @@ func GetBoundManagedClusterSetBindings(namespace string,
 	}
 
 	return boundBindings, nil
+}
+
+// GetClusterSetName returns the ManagedClusterSet name in the ManagedCluster's clusterSet label
+func GetClusterSetName(managedCluster v1.ManagedCluster) string {
+	labels := managedCluster.GetLabels()
+	if len(labels) == 0 {
+		return ""
+	}
+
+	if clusterSetName := labels[clusterSetLabel]; len(clusterSetName) > 0 {
+		return clusterSetName
+	}
+
+	return ""
 }

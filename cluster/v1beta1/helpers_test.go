@@ -466,3 +466,45 @@ func TestGetValidManagedClusterSetBindings(t *testing.T) {
 		}
 	}
 }
+
+func TestGetClusterSetName(t *testing.T) {
+	tests := []struct {
+		name                 string
+		cluster              v1.ManagedCluster
+		expectClusterSetName string
+		expectError          bool
+	}{
+		{
+			name: "test cluster with clusterset label",
+			cluster: v1.ManagedCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "c1",
+					Labels: map[string]string{
+						"cluster.open-cluster-management.io/clusterset": "c1set",
+					},
+				},
+				Spec: v1.ManagedClusterSpec{},
+			},
+			expectClusterSetName: "c1set",
+		},
+		{
+			name: "test cluster without clusterset label",
+			cluster: v1.ManagedCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "c2",
+				},
+				Spec: v1.ManagedClusterSpec{},
+			},
+			expectClusterSetName: "",
+		},
+	}
+
+	for _, test := range tests {
+		returnClusterSetName := GetClusterSetName(test.cluster)
+
+		if !reflect.DeepEqual(returnClusterSetName, test.expectClusterSetName) {
+			t.Errorf("Case: %v, Failed to run TestGetClusterSetName. Expect clusterSetName: %v, return clusterSetName: %v", test.name, test.expectClusterSetName, returnClusterSetName)
+			return
+		}
+	}
+}
