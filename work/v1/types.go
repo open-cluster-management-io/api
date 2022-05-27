@@ -86,13 +86,15 @@ type ManifestConfigOption struct {
 	// +required
 	ResourceIdentifier ResourceIdentifier `json:"resourceIdentifier"`
 
-	// FeedbackRules defines what resource status field should be returned.
+	// FeedbackRules defines what resource status field should be returned. If it is not set or empty,
+	// no feedback rules will be honored.
 	// +optional
 	FeedbackRules []FeedbackRule `json:"feedbackRules,omitempty"`
 
-	// UpdateStrategy defines the strategy to update this manifest
+	// UpdateStrategy defines the strategy to update this manifest. UpdateStrategy is Update
+	// if it is not set,
 	// optional
-	UpdateStrategy UpdateStrategy `json:"updateStrategy"`
+	UpdateStrategy *UpdateStrategy `json:"updateStrategy"`
 }
 
 // ManifestWorkExecutor is the executor that applies the resources to the managed cluster. i.e. the
@@ -158,7 +160,7 @@ type UpdateStrategy struct {
 	// +kubebuilder:validation:Enum=Update;CreateOnly;ServerSideApply
 	// +kubebuilder:validation:Required
 	// +required
-	Type string `json:"type"`
+	Type UpdateStrategyType `json:"type,omitempty"`
 
 	// serverSideApply defines the configuration for server side apply. It is honored only when
 	// type of updateStrategy is ServerSideApply
@@ -187,6 +189,13 @@ type ServerSideApplyConfig struct {
 	// Force represents to force apply the manifest.
 	// +optional
 	Force bool `json:"force"`
+
+	// FieldManager is the manager to apply the resource. It is work-agent by default, but can be other name with work-agent
+	// as the prefix.
+	// +kubebuilder:default=work-agent
+	// +kubebuilder:validation:Pattern=`^work-agent`
+	// +optional
+	FieldManager string `json:"fieldManager,omitempty"`
 }
 
 type FeedbackRule struct {

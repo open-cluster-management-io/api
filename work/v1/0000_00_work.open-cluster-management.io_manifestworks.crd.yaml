@@ -112,7 +112,7 @@ spec:
                       - resourceIdentifier
                     properties:
                       feedbackRules:
-                        description: FeedbackRules defines what resource status field should be returned.
+                        description: FeedbackRules defines what resource status field should be returned. If it is not set or empty, no feedback rules will be honored.
                         type: array
                         items:
                           type: object
@@ -163,7 +163,7 @@ spec:
                             description: Resource is the resource name of the Kubernetes resource.
                             type: string
                       updateStrategy:
-                        description: UpdateStrategy defines the strategy to update this manifest optional
+                        description: UpdateStrategy defines the strategy to update this manifest. UpdateStrategy is Update if it is not set, optional
                         type: object
                         required:
                           - type
@@ -172,6 +172,11 @@ spec:
                             description: serverSideApply defines the configuration for server side apply. It is honored only when type of updateStrategy is ServerSideApply
                             type: object
                             properties:
+                              fieldManager:
+                                description: FieldManager is the manager to apply the resource. It is work-agent by default, but can be other name with work-agent as the prefix.
+                                type: string
+                                default: work-agent
+                                pattern: ^work-agent
                               force:
                                 description: Force represents to force apply the manifest.
                                 type: boolean

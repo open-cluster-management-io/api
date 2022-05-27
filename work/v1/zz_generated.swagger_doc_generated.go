@@ -131,8 +131,8 @@ func (ManifestCondition) SwaggerDoc() map[string]string {
 var map_ManifestConfigOption = map[string]string{
 	"":                   "ManifestConfigOption represents the configurations of a manifest defined in workload field.",
 	"resourceIdentifier": "ResourceIdentifier represents the group, resource, name and namespace of a resoure. iff this refers to a resource not created by this manifest work, the related rules will not be executed.",
-	"feedbackRules":      "FeedbackRules defines what resource status field should be returned.",
-	"updateStrategy":     "UpdateStrategy defines the strategy to update this manifest optional",
+	"feedbackRules":      "FeedbackRules defines what resource status field should be returned. If it is not set or empty, no feedback rules will be honored.",
+	"updateStrategy":     "UpdateStrategy defines the strategy to update this manifest. UpdateStrategy is Update if it is not set, optional",
 }
 
 func (ManifestConfigOption) SwaggerDoc() map[string]string {
@@ -265,7 +265,8 @@ func (SelectivelyOrphan) SwaggerDoc() map[string]string {
 }
 
 var map_ServerSideApplyConfig = map[string]string{
-	"force": "Force represents to force apply the manifest.",
+	"force":        "Force represents to force apply the manifest.",
+	"fieldManager": "FieldManager is the manager to apply the resource. It is work-agent by default, but can be other name with work-agent as the prefix.",
 }
 
 func (ServerSideApplyConfig) SwaggerDoc() map[string]string {

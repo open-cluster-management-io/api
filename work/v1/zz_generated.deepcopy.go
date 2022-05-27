@@ -284,7 +284,11 @@ func (in *ManifestConfigOption) DeepCopyInto(out *ManifestConfigOption) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.UpdateStrategy.DeepCopyInto(&out.UpdateStrategy)
+	if in.UpdateStrategy != nil {
+		in, out := &in.UpdateStrategy, &out.UpdateStrategy
+		*out = new(UpdateStrategy)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
