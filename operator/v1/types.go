@@ -69,6 +69,10 @@ type RegistrationConfiguration struct {
 	//  	he can set featuregate/Foo=false before upgrading. Let's say the cluster-admin wants featuregate/Foo=false.
 	// +optional
 	FeatureGates []FeatureGate `json:"featureGates,omitempty"`
+
+	// Args is list of valid flag arguments that are accepted in registration.
+	// The format is only allowed --arg1=xxx.
+	Args []string `json:"args,omitempty"`
 }
 
 type FeatureGate struct {
