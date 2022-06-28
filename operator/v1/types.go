@@ -133,6 +133,11 @@ type KlusterletDeployOption struct {
 	// Note: Do not modify the Mode field once it's applied.
 	// +optional
 	Mode InstallMode `json:"mode"`
+
+	// HubApiServerHostAlias contains the host alias for hub api server.
+	// registration-agent and work-agent will use it to communicate with hub api server.
+	// +optional
+	HubApiServerHostAlias *v1.HostAlias `json:"hub_api_server_host_alias,omitempty"`
 }
 
 // ClusterManagerDeployOption describes the deploy options for cluster-manager

@@ -111,8 +111,9 @@ func (Klusterlet) SwaggerDoc() map[string]string {
 }
 
 var map_KlusterletDeployOption = map[string]string{
-	"":     "KlusterletDeployOption describes the deploy options for klusterlet",
-	"mode": "Mode can be Default or Hosted. It is Default mode if not specified In Default mode, all klusterlet related resources are deployed on the managed cluster. In Hosted mode, only crd and configurations are installed on the spoke/managed cluster. Controllers run in another cluster (defined as management-cluster) and connect to the mangaged cluster with the kubeconfig in secret of \"external-managed-kubeconfig\"(a kubeconfig of managed-cluster with cluster-admin permission). Note: Do not modify the Mode field once it's applied.",
+	"":                          "KlusterletDeployOption describes the deploy options for klusterlet",
+	"mode":                      "Mode can be Default or Hosted. It is Default mode if not specified In Default mode, all klusterlet related resources are deployed on the managed cluster. In Hosted mode, only crd and configurations are installed on the spoke/managed cluster. Controllers run in another cluster (defined as management-cluster) and connect to the mangaged cluster with the kubeconfig in secret of \"external-managed-kubeconfig\"(a kubeconfig of managed-cluster with cluster-admin permission). Note: Do not modify the Mode field once it's applied.",
+	"hub_api_server_host_alias": "HubApiServerHostAlias contains the host alias for hub api server. registration-agent and work-agent will use it to communicate with hub api server.",
 }
 
 func (KlusterletDeployOption) SwaggerDoc() map[string]string {
