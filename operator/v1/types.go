@@ -331,7 +331,7 @@ type KlusterletSpec struct {
 	// HubApiServerHostAlias contains the host alias for hub api server.
 	// registration-agent and work-agent will use it to communicate with hub api server.
 	// +optional
-	HubApiServerHostAlias *v1.HostAlias `json:"hubApiServerHostAlias,omitempty"`
+	HubApiServerHostAlias *HubApiServerHostAlias `json:"hubApiServerHostAlias,omitempty"`
 }
 
 // ServerURL represents the apiserver url and ca bundle that is accessible externally
@@ -357,6 +357,22 @@ type NodePlacement struct {
 	// The default is an empty list.
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+}
+
+// HubApiServerHostAlias holds the mapping between IP and hostnames that will be injected as an entry in the
+// pod's hosts file.
+type HubApiServerHostAlias struct {
+	// IP address of the host file entry.
+	// +required
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=`^((0|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(0|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$`
+	IP string `json:"ip,omitempty" protobuf:"bytes,1,opt,name=ip"`
+
+	// Hostname for the above IP address.
+	// +required
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`
+	Hostname string `json:"hostnames,omitempty" protobuf:"bytes,2,rep,name=hostnames"`
 }
 
 // KlusterletStatus represents the current status of Klusterlet agent.
