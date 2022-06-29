@@ -31,3 +31,54 @@ var _ = Describe("Create Klusterlet API", func() {
 		})
 	})
 })
+
+var _ = Describe("valid HubApiServerHostAlias", func() {
+	var klusterlet *operatorv1.Klusterlet
+
+	BeforeEach(func() {
+		suffix := rand.String(5)
+		klusterManagerName := fmt.Sprintf("cm-%s", suffix)
+		klusterlet = &operatorv1.Klusterlet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: klusterManagerName,
+			},
+			Spec: operatorv1.KlusterletSpec{
+				HubApiServerHostAlias: &operatorv1.HubApiServerHostAlias{},
+			},
+		}
+	})
+
+	Context("Empty IPV4 address", func() {
+		It("should return err", func() {
+			klusterlet.Spec.HubApiServerHostAlias.Hostname = "xxx.yyy.zzz"
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("Empty hostname", func() {
+		It("should return err", func() {
+			klusterlet.Spec.HubApiServerHostAlias.IP = "1.2.3.4"
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("Invalid IPV4 address and hostname", func() {
+		It("should return err", func() {
+			klusterlet.Spec.HubApiServerHostAlias.IP = "1.2.3.257"
+			klusterlet.Spec.HubApiServerHostAlias.Hostname = "xxxyyyzzz"
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("Valid IPV4 address and hostname", func() {
+		It("should create successfully", func() {
+			klusterlet.Spec.HubApiServerHostAlias.IP = "1.2.3.4"
+			klusterlet.Spec.HubApiServerHostAlias.Hostname = "xxx.yyy.zzz"
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(BeNil())
+		})
+	})
+})

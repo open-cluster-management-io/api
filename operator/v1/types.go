@@ -365,7 +365,7 @@ type HubApiServerHostAlias struct {
 	// IP address of the host file entry.
 	// +required
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern=`^((0|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(0|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$`
+	// +kubebuilder:validation:Pattern=`^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
 	IP string `json:"ip"`
 
 	// Hostname for the above IP address.
