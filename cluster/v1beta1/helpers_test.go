@@ -13,6 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 	v1 "open-cluster-management.io/api/cluster/v1"
@@ -376,6 +377,201 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 		returnClusters := convertClusterSetToSet(returnSets)
 		if !reflect.DeepEqual(returnClusters, test.expectClusterSetName) {
 			t.Errorf("Case: %v, Failed to run GetClusterSetsOfCluster. Expect clusters: %v, return cluster: %v", test.name, test.expectClusterSetName, returnClusters)
+			return
+		}
+	}
+}
+
+type placementDecisionGetter struct {
+	client client.Client
+}
+
+func (pdl placementDecisionGetter) List(selector labels.Selector, namespace string) ([]*PlacementDecision, error) {
+	decisionList := PlacementDecisionList{}
+	err := pdl.client.List(context.Background(), &decisionList, &client.ListOptions{
+		Namespace:     namespace,
+		LabelSelector: selector})
+	if err != nil {
+		return nil, err
+	}
+	var decisions []*PlacementDecision
+	for i := range decisionList.Items {
+		decisions = append(decisions, &decisionList.Items[i])
+	}
+	return decisions, nil
+}
+
+func TestPlacementDecisionClustersTracker(t *testing.T) {
+	tests := []struct {
+		name                            string
+		placement                       Placement
+		existingDecisions               []*PlacementDecision
+		expectExistingScheduledClusters sets.String
+		updateDecisions                 []*PlacementDecision
+		expectUpdatedScheduledClusters  sets.String
+		expectAddedScheduledClusters    sets.String
+		expectDeletedScheduledClusters  sets.String
+	}{
+		{
+			name: "test placementdecisions",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "placement1",
+					Namespace: "default",
+				},
+				Spec: PlacementSpec{},
+			},
+			existingDecisions: []*PlacementDecision{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "placement1-decision-1",
+						Namespace: "default",
+						Labels: map[string]string{
+							PlacementLabel: "placement1",
+						},
+					},
+					Status: PlacementDecisionStatus{
+						Decisions: []ClusterDecision{
+							{
+								ClusterName: "cluster1",
+								Reason:      "reason1",
+							},
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "placement1-decision-2",
+						Namespace: "default",
+						Labels: map[string]string{
+							PlacementLabel: "placement1",
+						},
+					},
+					Status: PlacementDecisionStatus{
+						Decisions: []ClusterDecision{
+							{
+								ClusterName: "cluster2",
+								Reason:      "reason2",
+							},
+						},
+					},
+				},
+			},
+			updateDecisions: []*PlacementDecision{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "placement1-decision-2",
+						Namespace: "default",
+						Labels: map[string]string{
+							PlacementLabel: "placement1",
+						},
+					},
+					Status: PlacementDecisionStatus{
+						Decisions: []ClusterDecision{
+							{
+								ClusterName: "cluster3",
+								Reason:      "reason3",
+							},
+						},
+					},
+				},
+			},
+			expectExistingScheduledClusters: sets.NewString("cluster1", "cluster2"),
+			expectUpdatedScheduledClusters:  sets.NewString("cluster1", "cluster3"),
+			expectAddedScheduledClusters:    sets.NewString("cluster3"),
+			expectDeletedScheduledClusters:  sets.NewString("cluster2"),
+		},
+		{
+			name: "test empty placementdecision",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "placement2",
+					Namespace: "default",
+				},
+				Spec: PlacementSpec{},
+			},
+			existingDecisions: []*PlacementDecision{},
+			updateDecisions: []*PlacementDecision{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "placement2-decision-1",
+						Namespace: "default",
+						Labels: map[string]string{
+							PlacementLabel: "placement2",
+						},
+					},
+					Status: PlacementDecisionStatus{
+						Decisions: []ClusterDecision{
+							{
+								ClusterName: "cluster1",
+								Reason:      "reason1",
+							},
+							{
+								ClusterName: "cluster2",
+								Reason:      "reason2",
+							},
+						},
+					},
+				},
+			},
+			expectExistingScheduledClusters: sets.NewString(),
+			expectUpdatedScheduledClusters:  sets.NewString("cluster1", "cluster2"),
+			expectAddedScheduledClusters:    sets.NewString("cluster1", "cluster2"),
+			expectDeletedScheduledClusters:  sets.NewString(),
+		},
+	}
+
+	for _, test := range tests {
+		// init decisions
+		var existingObjs []client.Object
+		for _, d := range test.existingDecisions {
+			existingObjs = append(existingObjs, d)
+		}
+
+		pdl := placementDecisionGetter{
+			client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(existingObjs...).Build(),
+		}
+
+		// init tracker
+		tracker := NewPlacementDecisionClustersTracker(&test.placement, pdl, nil)
+
+		// check decision clusters
+		_, _, err := tracker.Get()
+		if err != nil {
+			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
+		}
+		if !reflect.DeepEqual(tracker.Existing(), test.expectExistingScheduledClusters) {
+			t.Errorf("Case: %v, expect decisions: %v, return decisions: %v", test.name, test.expectExistingScheduledClusters, tracker.Existing())
+			return
+		}
+
+		// update decisions
+		for _, d := range test.updateDecisions {
+			existDecision := &PlacementDecision{}
+			err := pdl.client.Get(context.Background(), types.NamespacedName{Namespace: d.Namespace, Name: d.Name}, existDecision)
+			if err == nil {
+				existDecision.Status = d.Status
+				pdl.client.Status().Update(context.Background(), existDecision)
+			} else {
+				pdl.client.Create(context.Background(), d)
+			}
+		}
+
+		// check changed decision clusters
+		addedClusters, deletedClusters, err := tracker.Get()
+		if err != nil {
+			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
+		}
+		if !reflect.DeepEqual(addedClusters, test.expectAddedScheduledClusters) {
+			t.Errorf("Case: %v, expect added decisions: %v, return decisions: %v", test.name, test.expectAddedScheduledClusters, addedClusters)
+			return
+		}
+		if !reflect.DeepEqual(deletedClusters, test.expectDeletedScheduledClusters) {
+			t.Errorf("Case: %v, expect deleted decisions: %v, return decisions: %v", test.name, test.expectDeletedScheduledClusters, deletedClusters)
+			return
+		}
+		if !reflect.DeepEqual(tracker.Existing(), test.expectUpdatedScheduledClusters) {
+			t.Errorf("Case: %v, expect updated decisions: %v, return decisions: %v", test.name, test.expectUpdatedScheduledClusters, tracker.Existing())
 			return
 		}
 	}
