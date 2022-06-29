@@ -359,7 +359,7 @@ type NodePlacement struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
-// HubApiServerHostAlias holds the mapping between IP and hostnames that will be injected as an entry in the
+// HubApiServerHostAlias holds the mapping between IP and hostname that will be injected as an entry in the
 // pod's hosts file.
 type HubApiServerHostAlias struct {
 	// IP address of the host file entry.

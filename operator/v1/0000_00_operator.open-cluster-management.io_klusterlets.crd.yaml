@@ -58,10 +58,10 @@ spec:
                   description: HubApiServerHostAlias contains the host alias for hub api server. registration-agent and work-agent will use it to communicate with hub api server.
                   type: object
                   required:
-                    - hostnames
+                    - hostname
                     - ip
                   properties:
-                    hostnames:
+                    hostname:
                       description: Hostname for the above IP address.
                       type: string
                       pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$

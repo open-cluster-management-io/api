@@ -101,9 +101,9 @@ func (HostedClusterManagerConfiguration) SwaggerDoc() map[string]string {
 }
 
 var map_HubApiServerHostAlias = map[string]string{
-	"":          "HubApiServerHostAlias holds the mapping between IP and hostnames that will be injected as an entry in the pod's hosts file.",
-	"ip":        "IP address of the host file entry.",
-	"hostnames": "Hostname for the above IP address.",
+	"":         "HubApiServerHostAlias holds the mapping between IP and hostname that will be injected as an entry in the pod's hosts file.",
+	"ip":       "IP address of the host file entry.",
+	"hostname": "Hostname for the above IP address.",
 }
 
 func (HubApiServerHostAlias) SwaggerDoc() map[string]string {
