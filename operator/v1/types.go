@@ -366,13 +366,13 @@ type HubApiServerHostAlias struct {
 	// +required
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern=`^((0|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(0|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$`
-	IP string `json:"ip,omitempty" protobuf:"bytes,1,opt,name=ip"`
+	IP string `json:"ip"`
 
 	// Hostname for the above IP address.
 	// +required
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern=`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`
-	Hostname string `json:"hostnames,omitempty" protobuf:"bytes,2,rep,name=hostnames"`
+	Hostname string `json:"hostname"`
 }
 
 // KlusterletStatus represents the current status of Klusterlet agent.
