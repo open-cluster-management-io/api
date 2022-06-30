@@ -37,14 +37,14 @@ verify-scripts:
 	bash -x hack/verify-crds.sh
 	bash -x hack/verify-codegen.sh
 .PHONY: verify-scripts
-verify: verify-scripts verify-codegen-crds
+verify: check-env verify-scripts verify-codegen-crds
 
 update-scripts:
 	hack/update-deepcopy.sh
 	hack/update-swagger-docs.sh
 	hack/update-codegen.sh
 .PHONY: update-scripts
-update: update-scripts update-codegen-crds
+update: check-env update-scripts update-codegen-crds
 
 build-runtime-image: Dockerfile.build
 	$(RUNTIME) build -t $(RUNTIME_IMAGE_NAME) -f Dockerfile.build .
@@ -53,3 +53,10 @@ update-with-container: build-runtime-image
 	$(RUNTIME) run -ti --rm -v $(PWD):/go/src/open-cluster-management.io/api:z -w /go/src/open-cluster-management.io/api $(RUNTIME_IMAGE_NAME) make update-scripts update-codegen-crds
 
 include ./test/integration-test.mk
+
+check-env:
+ifeq ($(GOPATH),)
+	$(warning "environment variable GOPATH is empty, auto set from go env GOPATH") 
+export GOPATH=$(shell go env GOPATH)
+endif
+.PHONY: check-env

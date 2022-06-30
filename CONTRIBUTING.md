@@ -3,12 +3,10 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Contributing guidelines](#contributing-guidelines)
-    - [Contributions](#contributions)
-    - [Certificate of Origin](#certificate-of-origin)
-    - [Contributing A Patch](#contributing-a-patch)
-    - [Issue and Pull Request Management](#issue-and-pull-request-management)
-    - [Pre-check before submitting a PR](#pre-check-before-submitting-a-pr)
-    - [Build images](#build-images)
+  - [Contributions](#contributions)
+  - [Certificate of Origin](#certificate-of-origin)
+  - [Issue and Pull Request Management](#issue-and-pull-request-management)
+  - [Contributing A Patch](#contributing-a-patch)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -37,13 +35,16 @@ Repo maintainers can assign you an issue or pull request by leaving a
 ## Contributing A Patch
 
 1. Submit an issue describing your proposed change to the repo in question.
-1. The [repo owners](OWNERS) will respond to your issue promptly.
-1. Fork this repo and clone the forked repo to your `$GOPATH/src/open-cluster-management.io/api` directory. 
-1. After your code changes is ready to commit, please run following commands to check your code.
+2. The [repo owners](OWNERS) will respond to your issue promptly.
+3. Fork this repo and clone the forked repo to your `$GOPATH/src/open-cluster-management.io/api` directory.
+4. After your code changes is ready to commit, please run following commands to check your code.
+5. Check that the `GOPATH` environment variable has been set correctly. If not, this makefile will automatically get the value from `go env GOPATH` and set it.
+
    ```shell
    make update
    make verify
    ```
-1. Submit a pull request.
+
+6. Submit a pull request.
 
 Now, you can follow the [getting started guide](./README.md#getting-started) to work with the open-cluster-management API repository.
