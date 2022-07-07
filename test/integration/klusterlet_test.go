@@ -30,6 +30,14 @@ var _ = Describe("Create Klusterlet API", func() {
 			Expect(err).To(BeNil())
 		})
 	})
+
+	Context("Create with invalid namespace", func() {
+		It("should reject the klusterlet creation", func() {
+			klusterlet.Spec.Namespace = "invalid-klusterlet-ns"
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).NotTo(BeNil())
+		})
+	})
 })
 
 var _ = Describe("valid HubApiServerHostAlias", func() {
