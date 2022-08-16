@@ -203,12 +203,26 @@ func TestGetClustersFromClusterSet(t *testing.T) {
 		expectError        bool
 	}{
 		{
-			name: "test legency cluster set",
+			name: "test legacy cluster set",
 			clusterset: &ManagedClusterSet{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "dev",
 				},
 				Spec: ManagedClusterSetSpec{},
+			},
+			expectClustersName: sets.NewString("c1", "c2"),
+		},
+		{
+			name: "test exclusive cluster set",
+			clusterset: &ManagedClusterSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "dev",
+				},
+				Spec: ManagedClusterSetSpec{
+					ClusterSelector: ManagedClusterSelector{
+						SelectorType: ExclusiveClusterSetLabel,
+					},
+				},
 			},
 			expectClustersName: sets.NewString("c1", "c2"),
 		},
