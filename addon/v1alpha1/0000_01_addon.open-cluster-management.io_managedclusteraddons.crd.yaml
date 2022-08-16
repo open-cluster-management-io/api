@@ -137,6 +137,18 @@ spec:
                     description: RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will create a csr for the addon agent with the registrationConfig.
                     type: object
                     properties:
+                      certificateStatus:
+                        description: certificateStatus actively tracks the status of the certificate used by the addon.
+                        type: object
+                        properties:
+                          expiringTimestamp:
+                            description: expiringTimestamp records the next time certificate will expire.
+                            type: string
+                            format: date-time
+                          lastRenewedTimestamp:
+                            description: lastRenewedTimestamp records the last timestamp when we approved/renewed certificates for the addon agents.
+                            type: string
+                            format: date-time
                       signerName:
                         description: signerName is the name of signer that addon agent will use to create csr.
                         type: string

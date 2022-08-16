@@ -132,13 +132,23 @@ func (ObjectReference) SwaggerDoc() map[string]string {
 }
 
 var map_RegistrationConfig = map[string]string{
-	"":           "RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will create a csr for the addon agent with the registrationConfig.",
-	"signerName": "signerName is the name of signer that addon agent will use to create csr.",
-	"subject":    "subject is the user subject of the addon agent to be registered to the hub. If it is not set, the addon agent will have the default subject \"subject\": {\n\t\"user\": \"system:open-cluster-management:addon:{addonName}:{clusterName}:{agentName}\",\n\t\"groups: [\"system:open-cluster-management:addon\", \"system:open-cluster-management:addon:{addonName}\", \"system:authenticated\"]\n}",
+	"":                  "RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will create a csr for the addon agent with the registrationConfig.",
+	"signerName":        "signerName is the name of signer that addon agent will use to create csr.",
+	"subject":           "subject is the user subject of the addon agent to be registered to the hub. If it is not set, the addon agent will have the default subject \"subject\": {\n\t\"user\": \"system:open-cluster-management:addon:{addonName}:{clusterName}:{agentName}\",\n\t\"groups: [\"system:open-cluster-management:addon\", \"system:open-cluster-management:addon:{addonName}\", \"system:authenticated\"]\n}",
+	"certificateStatus": "certificateStatus actively tracks the status of the certificate used by the addon.",
 }
 
 func (RegistrationConfig) SwaggerDoc() map[string]string {
 	return map_RegistrationConfig
+}
+
+var map_RegistrationConfigCertificateStatus = map[string]string{
+	"lastRenewedTimestamp": "lastRenewedTimestamp records the last timestamp when we approved/renewed certificates for the addon agents.",
+	"expiringTimestamp":    "expiringTimestamp records the next time certificate will expire.",
+}
+
+func (RegistrationConfigCertificateStatus) SwaggerDoc() map[string]string {
+	return map_RegistrationConfigCertificateStatus
 }
 
 var map_Subject = map[string]string{
