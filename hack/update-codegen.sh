@@ -24,7 +24,7 @@ for group in cluster; do
   bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
     open-cluster-management.io/api/client/${group} \
     open-cluster-management.io/api \
-    "${group}:v1,v1alpha1,v1beta1" \
+    "${group}:v1,v1alpha1,v1beta1,v1beta2" \
     --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
     ${verify}
 done

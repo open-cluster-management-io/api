@@ -2,11 +2,12 @@ package integration
 
 import (
 	"context"
+	"path/filepath"
+	"testing"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"path/filepath"
-	"testing"
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
@@ -43,7 +44,10 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 			filepath.Join(".", "work", "v1", "0000_00_work.open-cluster-management.io_manifestworks.crd.yaml"),
 			filepath.Join(".", "work", "v1", "0000_01_work.open-cluster-management.io_appliedmanifestworks.crd.yaml"),
 			filepath.Join(".", "cluster", "v1"),
-			filepath.Join(".", "cluster", "v1beta1"),
+			filepath.Join(".", "cluster", "v1beta1", "0000_02_clusters.open-cluster-management.io_placements.crd.yaml"),
+			filepath.Join(".", "cluster", "v1beta1", "0000_03_clusters.open-cluster-management.io_placementdecisions.crd.yaml"),
+			filepath.Join(".", "cluster", "v1beta2"),
+
 			filepath.Join(".", "cluster", "v1alpha1", "0000_02_clusters.open-cluster-management.io_clusterclaims.crd.yaml"),
 			filepath.Join(".", "cluster", "v1alpha1", "0000_05_clusters.open-cluster-management.io_addonplacementscores.crd.yaml"),
 			filepath.Join(".", "addon", "v1alpha1"),
