@@ -2,6 +2,10 @@
 
 package v1alpha1
 
+// AddOnDeploymentConfigListerExpansion allows custom methods to be added to
+// AddOnDeploymentConfigLister.
+type AddOnDeploymentConfigListerExpansion interface{}
+
 // ClusterManagementAddOnListerExpansion allows custom methods to be added to
 // ClusterManagementAddOnLister.
 type ClusterManagementAddOnListerExpansion interface{}
