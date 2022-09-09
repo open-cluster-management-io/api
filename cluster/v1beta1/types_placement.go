@@ -292,3 +292,11 @@ type PlacementList struct {
 	// Items is a list of Placements.
 	Items []Placement `json:"items"`
 }
+
+const (
+	// PlacementDisableAnnotation is used to disable scheduling for a placement.
+	// The typical case is a placement is created in the global hub cluster.
+	// But the placement is not designed to be running in the global hub cluster.
+	// It is designed to be running in the regional clusters.
+	PlacementDisableAnnotation = "cluster.open-cluster-management.io/experimental-scheduling-disable"
+)
