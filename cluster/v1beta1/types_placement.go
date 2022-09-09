@@ -295,8 +295,7 @@ type PlacementList struct {
 
 const (
 	// PlacementDisableAnnotation is used to disable scheduling for a placement.
-	// The typical case is a placement is created in one hub cluster.
-	// But the placement is not designed to be running in the that hub cluster.
-	// It is designed to be running in the other clusters which are managed by that hub cluster.
+	// It is a experimental flag to let placement controller ignore this placement,
+	// so other placement consumers can chime in.
 	PlacementDisableAnnotation = "cluster.open-cluster-management.io/experimental-scheduling-disable"
 )
