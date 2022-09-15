@@ -32,14 +32,16 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 					DisplayName: "test",
 					Description: "for test",
 				},
-				AddOnConfiguration: addonv1alpha1.ConfigCoordinates{
-					ConfigGroupResource: &addonv1alpha1.ConfigGroupResource{
-						Group:    "test.addon",
-						Resource: "tests",
-					},
-					DefaultConfig: &addonv1alpha1.ConfigReferent{
-						Namespace: testNamespace,
-						Name:      "test",
+				SupportedConfigs: []addonv1alpha1.ConfigMeta{
+					{
+						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+							Group:    "test.addon",
+							Resource: "tests",
+						},
+						DefaultConfig: &addonv1alpha1.ConfigReferent{
+							Namespace: testNamespace,
+							Name:      "test",
+						},
 					},
 				},
 			},
@@ -75,9 +77,9 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 				Name: clusterManagementAddOnName,
 			},
 			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
-				AddOnConfiguration: addonv1alpha1.ConfigCoordinates{
-					ConfigGroupResource: &addonv1alpha1.ConfigGroupResource{
-						Group: "test.addon",
+				SupportedConfigs: []addonv1alpha1.ConfigMeta{
+					{
+						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{Group: "test.addon"},
 					},
 				},
 			},
@@ -97,12 +99,14 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 				Name: clusterManagementAddOnName,
 			},
 			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
-				AddOnConfiguration: addonv1alpha1.ConfigCoordinates{
-					ConfigGroupResource: &addonv1alpha1.ConfigGroupResource{
-						Group:    "test.addon",
-						Resource: "tests",
+				SupportedConfigs: []addonv1alpha1.ConfigMeta{
+					{
+						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+							Group:    "test.addon",
+							Resource: "tests",
+						},
+						DefaultConfig: &addonv1alpha1.ConfigReferent{},
 					},
-					DefaultConfig: &addonv1alpha1.ConfigReferent{},
 				},
 			},
 		}

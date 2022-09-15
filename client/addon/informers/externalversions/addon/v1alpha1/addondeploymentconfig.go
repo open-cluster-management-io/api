@@ -26,32 +26,33 @@ type AddOnDeploymentConfigInformer interface {
 type addOnDeploymentConfigInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
+	namespace        string
 }
 
 // NewAddOnDeploymentConfigInformer constructs a new informer for AddOnDeploymentConfig type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewAddOnDeploymentConfigInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredAddOnDeploymentConfigInformer(client, resyncPeriod, indexers, nil)
+func NewAddOnDeploymentConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredAddOnDeploymentConfigInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
 // NewFilteredAddOnDeploymentConfigInformer constructs a new informer for AddOnDeploymentConfig type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredAddOnDeploymentConfigInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredAddOnDeploymentConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AddonV1alpha1().AddOnDeploymentConfigs().List(context.TODO(), options)
+				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AddonV1alpha1().AddOnDeploymentConfigs().Watch(context.TODO(), options)
+				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&addonv1alpha1.AddOnDeploymentConfig{},
@@ -61,7 +62,7 @@ func NewFilteredAddOnDeploymentConfigInformer(client versioned.Interface, resync
 }
 
 func (f *addOnDeploymentConfigInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredAddOnDeploymentConfigInformer(client, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+	return NewFilteredAddOnDeploymentConfigInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
 func (f *addOnDeploymentConfigInformer) Informer() cache.SharedIndexInformer {

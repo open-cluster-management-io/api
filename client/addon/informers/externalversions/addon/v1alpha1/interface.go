@@ -29,7 +29,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 
 // AddOnDeploymentConfigs returns a AddOnDeploymentConfigInformer.
 func (v *version) AddOnDeploymentConfigs() AddOnDeploymentConfigInformer {
-	return &addOnDeploymentConfigInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
+	return &addOnDeploymentConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ClusterManagementAddOns returns a ClusterManagementAddOnInformer.

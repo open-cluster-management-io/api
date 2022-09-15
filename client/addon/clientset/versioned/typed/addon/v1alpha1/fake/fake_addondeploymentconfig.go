@@ -17,6 +17,7 @@ import (
 // FakeAddOnDeploymentConfigs implements AddOnDeploymentConfigInterface
 type FakeAddOnDeploymentConfigs struct {
 	Fake *FakeAddonV1alpha1
+	ns   string
 }
 
 var addondeploymentconfigsResource = schema.GroupVersionResource{Group: "addon.open-cluster-management.io", Version: "v1alpha1", Resource: "addondeploymentconfigs"}
@@ -26,7 +27,8 @@ var addondeploymentconfigsKind = schema.GroupVersionKind{Group: "addon.open-clus
 // Get takes name of the addOnDeploymentConfig, and returns the corresponding addOnDeploymentConfig object, and an error if there is any.
 func (c *FakeAddOnDeploymentConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AddOnDeploymentConfig, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(addondeploymentconfigsResource, name), &v1alpha1.AddOnDeploymentConfig{})
+		Invokes(testing.NewGetAction(addondeploymentconfigsResource, c.ns, name), &v1alpha1.AddOnDeploymentConfig{})
+
 	if obj == nil {
 		return nil, err
 	}
@@ -36,7 +38,8 @@ func (c *FakeAddOnDeploymentConfigs) Get(ctx context.Context, name string, optio
 // List takes label and field selectors, and returns the list of AddOnDeploymentConfigs that match those selectors.
 func (c *FakeAddOnDeploymentConfigs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AddOnDeploymentConfigList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(addondeploymentconfigsResource, addondeploymentconfigsKind, opts), &v1alpha1.AddOnDeploymentConfigList{})
+		Invokes(testing.NewListAction(addondeploymentconfigsResource, addondeploymentconfigsKind, c.ns, opts), &v1alpha1.AddOnDeploymentConfigList{})
+
 	if obj == nil {
 		return nil, err
 	}
@@ -57,13 +60,15 @@ func (c *FakeAddOnDeploymentConfigs) List(ctx context.Context, opts v1.ListOptio
 // Watch returns a watch.Interface that watches the requested addOnDeploymentConfigs.
 func (c *FakeAddOnDeploymentConfigs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(addondeploymentconfigsResource, opts))
+		InvokesWatch(testing.NewWatchAction(addondeploymentconfigsResource, c.ns, opts))
+
 }
 
 // Create takes the representation of a addOnDeploymentConfig and creates it.  Returns the server's representation of the addOnDeploymentConfig, and an error, if there is any.
 func (c *FakeAddOnDeploymentConfigs) Create(ctx context.Context, addOnDeploymentConfig *v1alpha1.AddOnDeploymentConfig, opts v1.CreateOptions) (result *v1alpha1.AddOnDeploymentConfig, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(addondeploymentconfigsResource, addOnDeploymentConfig), &v1alpha1.AddOnDeploymentConfig{})
+		Invokes(testing.NewCreateAction(addondeploymentconfigsResource, c.ns, addOnDeploymentConfig), &v1alpha1.AddOnDeploymentConfig{})
+
 	if obj == nil {
 		return nil, err
 	}
@@ -73,7 +78,8 @@ func (c *FakeAddOnDeploymentConfigs) Create(ctx context.Context, addOnDeployment
 // Update takes the representation of a addOnDeploymentConfig and updates it. Returns the server's representation of the addOnDeploymentConfig, and an error, if there is any.
 func (c *FakeAddOnDeploymentConfigs) Update(ctx context.Context, addOnDeploymentConfig *v1alpha1.AddOnDeploymentConfig, opts v1.UpdateOptions) (result *v1alpha1.AddOnDeploymentConfig, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(addondeploymentconfigsResource, addOnDeploymentConfig), &v1alpha1.AddOnDeploymentConfig{})
+		Invokes(testing.NewUpdateAction(addondeploymentconfigsResource, c.ns, addOnDeploymentConfig), &v1alpha1.AddOnDeploymentConfig{})
+
 	if obj == nil {
 		return nil, err
 	}
@@ -83,13 +89,14 @@ func (c *FakeAddOnDeploymentConfigs) Update(ctx context.Context, addOnDeployment
 // Delete takes name of the addOnDeploymentConfig and deletes it. Returns an error if one occurs.
 func (c *FakeAddOnDeploymentConfigs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteActionWithOptions(addondeploymentconfigsResource, name, opts), &v1alpha1.AddOnDeploymentConfig{})
+		Invokes(testing.NewDeleteActionWithOptions(addondeploymentconfigsResource, c.ns, name, opts), &v1alpha1.AddOnDeploymentConfig{})
+
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeAddOnDeploymentConfigs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(addondeploymentconfigsResource, listOpts)
+	action := testing.NewDeleteCollectionAction(addondeploymentconfigsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.AddOnDeploymentConfigList{})
 	return err
@@ -98,7 +105,8 @@ func (c *FakeAddOnDeploymentConfigs) DeleteCollection(ctx context.Context, opts 
 // Patch applies the patch and returns the patched addOnDeploymentConfig.
 func (c *FakeAddOnDeploymentConfigs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AddOnDeploymentConfig, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(addondeploymentconfigsResource, name, pt, data, subresources...), &v1alpha1.AddOnDeploymentConfig{})
+		Invokes(testing.NewPatchSubresourceAction(addondeploymentconfigsResource, c.ns, name, pt, data, subresources...), &v1alpha1.AddOnDeploymentConfig{})
+
 	if obj == nil {
 		return nil, err
 	}

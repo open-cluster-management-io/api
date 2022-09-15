@@ -30,7 +30,8 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 	ginkgo.It("Should create a AddOnDeploymentConfig", func() {
 		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: addOnDeploymentConfigName,
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
 				CustomizedVariables: []addonv1alpha1.CustomizedVariable{
@@ -54,7 +55,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 			},
 		}
 
-		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs().Create(
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
 			context.TODO(),
 			addOnDeploymentConfig,
 			metav1.CreateOptions{},
@@ -65,7 +66,8 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 	ginkgo.It("Should create a AddOnDeploymentConfig without node placement", func() {
 		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: addOnDeploymentConfigName,
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
 				CustomizedVariables: []addonv1alpha1.CustomizedVariable{
@@ -77,7 +79,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 			},
 		}
 
-		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs().Create(
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
 			context.TODO(),
 			addOnDeploymentConfig,
 			metav1.CreateOptions{},
@@ -88,7 +90,8 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 	ginkgo.It("Should not create a AddOnDeploymentConfig with a wrong variable name", func() {
 		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: addOnDeploymentConfigName,
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
 				CustomizedVariables: []addonv1alpha1.CustomizedVariable{
@@ -100,7 +103,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 			},
 		}
 
-		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs().Create(
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
 			context.TODO(),
 			addOnDeploymentConfig,
 			metav1.CreateOptions{},
@@ -111,7 +114,8 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 	ginkgo.It("Should not create a AddOnDeploymentConfig with a long variable name", func() {
 		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: addOnDeploymentConfigName,
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
 				CustomizedVariables: []addonv1alpha1.CustomizedVariable{
@@ -123,7 +127,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 			},
 		}
 
-		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs().Create(
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
 			context.TODO(),
 			addOnDeploymentConfig,
 			metav1.CreateOptions{},
@@ -134,7 +138,8 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 	ginkgo.It("Should not create a AddOnDeploymentConfig with a long variable value", func() {
 		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: addOnDeploymentConfigName,
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
 				CustomizedVariables: []addonv1alpha1.CustomizedVariable{
@@ -146,7 +151,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 			},
 		}
 
-		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs().Create(
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
 			context.TODO(),
 			addOnDeploymentConfig,
 			metav1.CreateOptions{},
