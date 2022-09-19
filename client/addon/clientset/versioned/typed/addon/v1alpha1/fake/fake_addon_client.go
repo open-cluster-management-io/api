@@ -12,8 +12,8 @@ type FakeAddonV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeAddonV1alpha1) AddOnDeploymentConfigs() v1alpha1.AddOnDeploymentConfigInterface {
-	return &FakeAddOnDeploymentConfigs{c}
+func (c *FakeAddonV1alpha1) AddOnDeploymentConfigs(namespace string) v1alpha1.AddOnDeploymentConfigInterface {
+	return &FakeAddOnDeploymentConfigs{c, namespace}
 }
 
 func (c *FakeAddonV1alpha1) ClusterManagementAddOns() v1alpha1.ClusterManagementAddOnInterface {

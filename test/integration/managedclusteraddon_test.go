@@ -28,9 +28,17 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 			},
 			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
 				InstallNamespace: testNamespace,
-				Config: &addonv1alpha1.ConfigReferent{
-					Namespace: testNamespace,
-					Name:      "test",
+				Configs: []addonv1alpha1.AddOnConfig{
+					{
+						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+							Group:    "test.group",
+							Resource: "tests",
+						},
+						ConfigReferent: addonv1alpha1.ConfigReferent{
+							Namespace: testNamespace,
+							Name:      "test",
+						},
+					},
 				},
 			},
 		}
@@ -118,9 +126,17 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 			},
 			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
 				InstallNamespace: testNamespace,
-				Config: &addonv1alpha1.ConfigReferent{
-					Namespace: testNamespace,
-					Name:      "test",
+				Configs: []addonv1alpha1.AddOnConfig{
+					{
+						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+							Group:    "test.group",
+							Resource: "tests",
+						},
+						ConfigReferent: addonv1alpha1.ConfigReferent{
+							Namespace: testNamespace,
+							Name:      "test",
+						},
+					},
 				},
 			},
 		}
@@ -140,10 +156,18 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 		gomega.Expect(mca.Spec.InstallNamespace).To(gomega.BeEquivalentTo(testNamespace))
 
-		mca.Status.ConfigReference = &addonv1alpha1.ConfigReference{
-			ConfigGroupResource:    addonv1alpha1.ConfigGroupResource{Resource: "configmap"},
-			ConfigReferent:         addonv1alpha1.ConfigReferent{Name: "test"},
-			LastObservedGeneration: 1,
+		mca.Status.ConfigReferences = []addonv1alpha1.ConfigReference{
+			{
+				ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+					Group:    "test.group",
+					Resource: "tests",
+				},
+				ConfigReferent: addonv1alpha1.ConfigReferent{
+					Namespace: testNamespace,
+					Name:      "test",
+				},
+				LastObservedGeneration: 1,
+			},
 		}
 
 		_, err = hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).UpdateStatus(
@@ -209,14 +233,47 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
 	})
 
+	ginkgo.It("Should not create a ManagedClusterAddOn when its config type is empty", func() {
+		managedClusterAddOn := &addonv1alpha1.ManagedClusterAddOn{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: managedClusterAddOnName,
+			},
+			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
+				Configs: []addonv1alpha1.AddOnConfig{
+					{
+						ConfigReferent: addonv1alpha1.ConfigReferent{
+							Namespace: testNamespace,
+							Name:      "test",
+						},
+					},
+				},
+			},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Create(
+			context.TODO(),
+			managedClusterAddOn,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+	})
+
 	ginkgo.It("Should not create a ManagedClusterAddOn when its config name is empty", func() {
 		managedClusterAddOn := &addonv1alpha1.ManagedClusterAddOn{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: managedClusterAddOnName,
 			},
 			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
-				Config: &addonv1alpha1.ConfigReferent{
-					Namespace: testNamespace,
+				Configs: []addonv1alpha1.AddOnConfig{
+					{
+						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+							Group:    "test.group",
+							Resource: "tests",
+						},
+						ConfigReferent: addonv1alpha1.ConfigReferent{
+							Namespace: testNamespace,
+						},
+					},
 				},
 			},
 		}

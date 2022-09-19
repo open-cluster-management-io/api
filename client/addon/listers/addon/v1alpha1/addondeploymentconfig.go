@@ -15,9 +15,8 @@ type AddOnDeploymentConfigLister interface {
 	// List lists all AddOnDeploymentConfigs in the indexer.
 	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.AddOnDeploymentConfig, err error)
-	// Get retrieves the AddOnDeploymentConfig from the index for a given name.
-	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.AddOnDeploymentConfig, error)
+	// AddOnDeploymentConfigs returns an object that can list and get AddOnDeploymentConfigs.
+	AddOnDeploymentConfigs(namespace string) AddOnDeploymentConfigNamespaceLister
 	AddOnDeploymentConfigListerExpansion
 }
 
@@ -39,9 +38,41 @@ func (s *addOnDeploymentConfigLister) List(selector labels.Selector) (ret []*v1a
 	return ret, err
 }
 
-// Get retrieves the AddOnDeploymentConfig from the index for a given name.
-func (s *addOnDeploymentConfigLister) Get(name string) (*v1alpha1.AddOnDeploymentConfig, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
+// AddOnDeploymentConfigs returns an object that can list and get AddOnDeploymentConfigs.
+func (s *addOnDeploymentConfigLister) AddOnDeploymentConfigs(namespace string) AddOnDeploymentConfigNamespaceLister {
+	return addOnDeploymentConfigNamespaceLister{indexer: s.indexer, namespace: namespace}
+}
+
+// AddOnDeploymentConfigNamespaceLister helps list and get AddOnDeploymentConfigs.
+// All objects returned here must be treated as read-only.
+type AddOnDeploymentConfigNamespaceLister interface {
+	// List lists all AddOnDeploymentConfigs in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
+	List(selector labels.Selector) (ret []*v1alpha1.AddOnDeploymentConfig, err error)
+	// Get retrieves the AddOnDeploymentConfig from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
+	Get(name string) (*v1alpha1.AddOnDeploymentConfig, error)
+	AddOnDeploymentConfigNamespaceListerExpansion
+}
+
+// addOnDeploymentConfigNamespaceLister implements the AddOnDeploymentConfigNamespaceLister
+// interface.
+type addOnDeploymentConfigNamespaceLister struct {
+	indexer   cache.Indexer
+	namespace string
+}
+
+// List lists all AddOnDeploymentConfigs in the indexer for a given namespace.
+func (s addOnDeploymentConfigNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.AddOnDeploymentConfig, err error) {
+	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
+		ret = append(ret, m.(*v1alpha1.AddOnDeploymentConfig))
+	})
+	return ret, err
+}
+
+// Get retrieves the AddOnDeploymentConfig from the indexer for a given namespace and name.
+func (s addOnDeploymentConfigNamespaceLister) Get(name string) (*v1alpha1.AddOnDeploymentConfig, error) {
+	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
 	}
