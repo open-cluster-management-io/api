@@ -262,3 +262,91 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 		Expect(clusterManager.Spec.RegistrationConfiguration.FeatureGates[1].Mode).Should(Equal(operatorv1.FeatureGateModeTypeEnable))
 	})
 })
+
+var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
+	var clusterManagerName string
+
+	BeforeEach(func() {
+		suffix := rand.String(5)
+		clusterManagerName = fmt.Sprintf("cm-%s", suffix)
+	})
+
+	It("Create a cluster manager with empty spec", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagerName,
+			},
+			Spec: operatorv1.ClusterManagerSpec{},
+		}
+		clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(clusterManager.Spec.WorkConfiguration).To(BeNil())
+	})
+
+	It("Create a cluster manager with empty work feature gate mode", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagerName,
+			},
+			Spec: operatorv1.ClusterManagerSpec{
+				WorkConfiguration: &operatorv1.WorkConfiguration{
+					FeatureGates: []operatorv1.FeatureGate{
+						{
+							Feature: "Foo",
+						},
+					},
+				},
+			},
+		}
+		clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(clusterManager.Spec.WorkConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
+	})
+
+	It("Create a cluster manager with wrong work feature gate mode", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagerName,
+			},
+			Spec: operatorv1.ClusterManagerSpec{
+				WorkConfiguration: &operatorv1.WorkConfiguration{
+					FeatureGates: []operatorv1.FeatureGate{
+						{
+							Feature: "Foo",
+							Mode:    "WrongMode",
+						},
+					},
+				},
+			},
+		}
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("Create a cluster manager with right work feature gate mode", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagerName,
+			},
+			Spec: operatorv1.ClusterManagerSpec{
+				WorkConfiguration: &operatorv1.WorkConfiguration{
+					FeatureGates: []operatorv1.FeatureGate{
+						{
+							Feature: "Foo",
+							Mode:    "Disable",
+						},
+						{
+							Feature: "Bar",
+							Mode:    "Enable",
+						},
+					},
+				},
+			},
+		}
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+		Expect(clusterManager.Spec.WorkConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
+		Expect(clusterManager.Spec.WorkConfiguration.FeatureGates[1].Mode).Should(Equal(operatorv1.FeatureGateModeTypeEnable))
+	})
+})
