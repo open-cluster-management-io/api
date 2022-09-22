@@ -8,7 +8,7 @@ RUN curl -LO https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     rm -rf /usr/local/go && \
     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
     rm -rf go${GO_VERSION}.linux-amd64.tar.gz
-RUN go get -u -v golang.org/x/tools/cmd/...
+RUN go install golang.org/x/tools/cmd/...@latest
 
 RUN dnf -y install make git unzip findutils
 RUN curl -LO  https://github.com/google/protobuf/releases/download/v3.0.2/protoc-3.0.2-linux-x86_64.zip && \
