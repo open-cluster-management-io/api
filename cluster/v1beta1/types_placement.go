@@ -85,6 +85,11 @@ type PlacementSpec struct {
 	// +optional
 	PrioritizerPolicy PrioritizerPolicy `json:"prioritizerPolicy"`
 
+	// SpreadPolicy defines how placement decisions should be distributed among a
+	// set of ManagedClusters.
+	// +optional
+	SpreadPolicy SpreadPolicy `json:"spreadPolicy,omitempty"`
+
 	// Tolerations are applied to placements, and allow (but do not require) the managed clusters with
 	// certain taints to be selected by placements with matching tolerations.
 	// +optional
@@ -185,6 +190,7 @@ type ScoreCoordinate struct {
 	// 1) Balance: balance the decisions among the clusters.
 	// 2) Steady: ensure the existing decision is stabilized.
 	// 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.
+	// 4) Spread: spread the workload evenly to topologies.
 	// +optional
 	BuiltIn string `json:"builtIn,omitempty"`
 
@@ -214,6 +220,69 @@ type AddOnScore struct {
 	// +required
 	ScoreName string `json:"scoreName"`
 }
+
+// SpreadPolicy defines how the placement decision should be spread among the ManagedClusters.
+type SpreadPolicy struct {
+	// SpreadConstraints defines how the placement decision should be distributed among a set of ManagedClusters.
+	// The importance of the SpreadConstraintsTerms follows the natural order of their index in the slice.
+	// The scheduler first consider SpreadConstraintsTerms with smaller index then those with larger index
+	// to distribute the placement decision.
+	// +optional
+	// +kubebuilder:validation:MaxItems=8
+	SpreadConstraints []SpreadConstraintsTerm `json:"spreadConstraints,omitempty"`
+}
+
+// SpreadConstraintsTerm defines a terminology to spread placement decisions.
+type SpreadConstraintsTerm struct {
+	// TopologyKey is either a label key or a cluster claim name of ManagedClusters.
+	// +required
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=`^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$`
+	// +kubebuilder:validation:MaxLength=316
+	TopologyKey string `json:"topologyKey"`
+
+	// TopologyKeyType indicates the type of TopologyKey. It could be Label or Claim.
+	// +required
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=Label;Claim
+	TopologyKeyType TopologyKeyType `json:"topologyKeyType"`
+
+	// MaxSkew represents the degree to which the workload may be unevenly distributed.
+	// Skew is the maximum difference between the number of selected ManagedClusters in a topology and the global minimum.
+	// The global minimum is the minimum number of selected ManagedClusters for the topologies within the same TopologyKey.
+	// The minimum possible value of MaxSkew is 1, and the default value is 1.
+	// +optional
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=1
+	MaxSkew int32 `json:"maxSkew"`
+
+	// WhenUnsatisfiable represents the action of the scheduler when MaxSkew cannot be satisfied.
+	// It could be DoNotSchedule or ScheduleAnyway. The default value is ScheduleAnyway.
+	// DoNotSchedule instructs the scheduler not to schedule more ManagedClusters when MaxSkew is not satisfied.
+	// ScheduleAnyway instructs the scheduler to keep scheduling even if MaxSkew is not satisfied.
+	// +optional
+	// +kubebuilder:validation:Enum=DoNotSchedule;ScheduleAnyway
+	// +kubebuilder:default=ScheduleAnyway
+	WhenUnsatisfiable UnsatisfiableMaxSkewAction `json:"whenUnsatisfiable"`
+}
+
+// TopologyKeyType represents the type of TopologyKey.
+type TopologyKeyType string
+
+const (
+	// Valid TopologyKeyType value is Claim, Label.
+	TopologyKeyTypeClaim TopologyKeyType = "Claim"
+	TopologyKeyTypeLabel TopologyKeyType = "Label"
+)
+
+// UnsatisfiableMaxSkewAction represents the action when MaxSkew cannot be satisfied.
+type UnsatisfiableMaxSkewAction string
+
+const (
+	// Valid UnsatisfiableMaxSkewAction value is DoNotSchedule, ScheduleAnyway.
+	DoNotSchedule  UnsatisfiableMaxSkewAction = "DoNotSchedule"
+	ScheduleAnyway UnsatisfiableMaxSkewAction = "ScheduleAnyway"
+)
 
 // Toleration represents the toleration object that can be attached to a placement.
 // The placement this Toleration is attached to tolerates any taint that matches

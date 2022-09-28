@@ -161,6 +161,7 @@ var map_PlacementSpec = map[string]string{
 	"numberOfClusters":  "NumberOfClusters represents the desired number of ManagedClusters to be selected which meet the placement requirements. 1) If not specified, all ManagedClusters which meet the placement requirements (including ClusterSets,\n   and Predicates) will be selected;\n2) Otherwise if the nubmer of ManagedClusters meet the placement requirements is larger than\n   NumberOfClusters, a random subset with desired number of ManagedClusters will be selected;\n3) If the nubmer of ManagedClusters meet the placement requirements is equal to NumberOfClusters,\n   all of them will be selected;\n4) If the nubmer of ManagedClusters meet the placement requirements is less than NumberOfClusters,\n   all of them will be selected, and the status of condition `PlacementConditionSatisfied` will be\n   set to false;",
 	"predicates":        "Predicates represent a slice of predicates to select ManagedClusters. The predicates are ORed.",
 	"prioritizerPolicy": "PrioritizerPolicy defines the policy of the prioritizers. If this field is unset, then default prioritizer mode and configurations are used. Referring to PrioritizerPolicy to see more description about Mode and Configurations.",
+	"spreadPolicy":      "SpreadPolicy defines how placement decisions should be distributed among a set of ManagedClusters.",
 	"tolerations":       "Tolerations are applied to placements, and allow (but do not require) the managed clusters with certain taints to be selected by placements with matching tolerations.",
 }
 
@@ -199,12 +200,33 @@ func (PrioritizerPolicy) SwaggerDoc() map[string]string {
 var map_ScoreCoordinate = map[string]string{
 	"":        "ScoreCoordinate represents the configuration of the score type and score source",
 	"type":    "Type defines the type of the prioritizer score. Type is either \"BuiltIn\", \"AddOn\" or \"\", where \"\" is \"BuiltIn\" by default. When the type is \"BuiltIn\", need to specify a BuiltIn prioritizer name in BuiltIn. When the type is \"AddOn\", need to configure the score source in AddOn.",
-	"builtIn": "BuiltIn defines the name of a BuiltIn prioritizer. Below are the valid BuiltIn prioritizer names. 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.",
+	"builtIn": "BuiltIn defines the name of a BuiltIn prioritizer. Below are the valid BuiltIn prioritizer names. 1) Balance: balance the decisions among the clusters. 2) Steady: ensure the existing decision is stabilized. 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable. 4) Spread: spread the workload evenly to topologies.",
 	"addOn":   "When type is \"AddOn\", AddOn defines the resource name and score name.",
 }
 
 func (ScoreCoordinate) SwaggerDoc() map[string]string {
 	return map_ScoreCoordinate
+}
+
+var map_SpreadConstraintsTerm = map[string]string{
+	"":                  "SpreadConstraintsTerm defines a terminology to spread placement decisions.",
+	"topologyKey":       "TopologyKey is either a label key or a cluster claim name of ManagedClusters.",
+	"topologyKeyType":   "TopologyKeyType indicates the type of TopologyKey. It could be Label or Claim.",
+	"maxSkew":           "MaxSkew represents the degree to which the workload may be unevenly distributed. Skew is the maximum difference between the number of selected ManagedClusters in a topology and the global minimum. The global minimum is the minimum number of selected ManagedClusters for the topologies within the same TopologyKey. The minimum possible value of MaxSkew is 1, and the default value is 1.",
+	"whenUnsatisfiable": "WhenUnsatisfiable represents the action of the scheduler when MaxSkew cannot be satisfied. It could be DoNotSchedule or ScheduleAnyway. The default value is ScheduleAnyway. DoNotSchedule instructs the scheduler not to schedule more ManagedClusters when MaxSkew is not satisfied. ScheduleAnyway instructs the scheduler to keep scheduling even if MaxSkew is not satisfied.",
+}
+
+func (SpreadConstraintsTerm) SwaggerDoc() map[string]string {
+	return map_SpreadConstraintsTerm
+}
+
+var map_SpreadPolicy = map[string]string{
+	"":                  "SpreadPolicy defines how the placement decision should be spread among the ManagedClusters.",
+	"spreadConstraints": "SpreadConstraints defines how the placement decision should be distributed among a set of ManagedClusters. The importance of the SpreadConstraintsTerms follows the natural order of their index in the slice. The scheduler first consider SpreadConstraintsTerms with smaller index then those with larger index to distribute the placement decision.",
+}
+
+func (SpreadPolicy) SwaggerDoc() map[string]string {
+	return map_SpreadPolicy
 }
 
 var map_Toleration = map[string]string{
