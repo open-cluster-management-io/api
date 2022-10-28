@@ -17,6 +17,7 @@ cluster/v1beta2 \
 work/v1 \
 operator/v1 \
 addon/v1alpha1 \
+place-work/v1alpha1 \
 "
 
 API_PACKAGES="\
@@ -27,4 +28,5 @@ open-cluster-management.io/api/cluster/v1beta2,\
 open-cluster-management.io/api/work/v1,\
 open-cluster-management.io/api/operator/v1,\
 open-cluster-management.io/api/addon/v1alpha1\
+open-cluster-management.io/api/place-work/v1alpha1\
 "
