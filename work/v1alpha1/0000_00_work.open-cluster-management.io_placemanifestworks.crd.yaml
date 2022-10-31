@@ -35,7 +35,7 @@ spec:
       name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: PlaceManifestWork is the Schema for the placementmanifestworks API
+          description: PlaceManifestWork is the Schema for the PlaceManifestWorks API. This custom resource is able to apply ManifestWork using Placement for 0..n ManagedCluster(in their namespaces). It will also remove the ManifestWork custom resources when deleted. Lastly the specific ManifestWork custom resources created per ManagedCluster namespace will be adjusted based on PlacementDecision changes.
           type: object
           properties:
             apiVersion:
@@ -50,7 +50,7 @@ spec:
               description: Spec reperesents the desired ManifestWork payload and Placement reference to be reconciled
               type: object
               properties:
-                manifestWorkSpec:
+                manifestWorkTemplate:
                   description: ManifestWorkSpec is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork
                   type: object
                   properties:
@@ -229,7 +229,7 @@ spec:
                   type: object
                   properties:
                     name:
-                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                      description: Name of the Placement resource in the current namespace
                       type: string
             status:
               description: Status represent the current status of Placing ManifestWork resources
@@ -288,17 +288,14 @@ spec:
                       applied:
                         type: boolean
                         default: false
-                      status:
-                        description: ManifestWorkStatus ManifestWorkStatus.Condition can be
+                      timestamp:
+                        description: Timestamp is the time when the ManifestWork was last modified
                         type: string
                         enum:
                           - Progressing
                           - Available
                           - Degraded
                           - Applied
-                      timestamp:
-                        description: Timestamp is the time when the ManifestWork was last modified
-                        type: string
                       workRef:
                         description: Work is an objectReference to the actual ManifestWork resource
                         type: object

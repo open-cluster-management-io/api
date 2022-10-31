@@ -8,11 +8,9 @@ import (
 	"k8s.io/client-go/discovery"
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
-	clientset "open-cluster-management.io/api/client/work/clientset/versioned"
-	workv1 "open-cluster-management.io/api/client/work/clientset/versioned/typed/work/v1"
-	fakeworkv1 "open-cluster-management.io/api/client/work/clientset/versioned/typed/work/v1/fake"
-	workv1alpha1 "open-cluster-management.io/api/client/work/clientset/versioned/typed/work/v1alpha1"
-	fakeworkv1alpha1 "open-cluster-management.io/api/client/work/clientset/versioned/typed/work/v1alpha1/fake"
+	clientset "open-cluster-management.io/api/client/place-work/clientset/versioned"
+	workv1alpha1 "open-cluster-management.io/api/client/place-work/clientset/versioned/typed/place-work/v1alpha1"
+	fakeworkv1alpha1 "open-cluster-management.io/api/client/place-work/clientset/versioned/typed/place-work/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -64,11 +62,6 @@ var (
 	_ clientset.Interface = &Clientset{}
 	_ testing.FakeClient  = &Clientset{}
 )
-
-// WorkV1 retrieves the WorkV1Client
-func (c *Clientset) WorkV1() workv1.WorkV1Interface {
-	return &fakeworkv1.FakeWorkV1{Fake: &c.Fake}
-}
 
 // WorkV1alpha1 retrieves the WorkV1alpha1Client
 func (c *Clientset) WorkV1alpha1() workv1alpha1.WorkV1alpha1Interface {

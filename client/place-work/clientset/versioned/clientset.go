@@ -9,13 +9,11 @@ import (
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
-	workv1 "open-cluster-management.io/api/client/work/clientset/versioned/typed/work/v1"
-	workv1alpha1 "open-cluster-management.io/api/client/work/clientset/versioned/typed/work/v1alpha1"
+	workv1alpha1 "open-cluster-management.io/api/client/place-work/clientset/versioned/typed/place-work/v1alpha1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	WorkV1() workv1.WorkV1Interface
 	WorkV1alpha1() workv1alpha1.WorkV1alpha1Interface
 }
 
@@ -23,13 +21,7 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	workV1       *workv1.WorkV1Client
 	workV1alpha1 *workv1alpha1.WorkV1alpha1Client
-}
-
-// WorkV1 retrieves the WorkV1Client
-func (c *Clientset) WorkV1() workv1.WorkV1Interface {
-	return c.workV1
 }
 
 // WorkV1alpha1 retrieves the WorkV1alpha1Client
@@ -77,10 +69,6 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 
 	var cs Clientset
 	var err error
-	cs.workV1, err = workv1.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
 	cs.workV1alpha1, err = workv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -106,7 +94,6 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.workV1 = workv1.New(c)
 	cs.workV1alpha1 = workv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)

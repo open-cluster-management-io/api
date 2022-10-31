@@ -26,17 +26,43 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:path=placementmanifestworks,shortName=pmw;pmws,scope=Namespaced
+// +kubebuilder:storageversion
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Placement",type="string",JSONPath=".status.conditions[?(@.type==\"PlacementVerified\")].reason",description="Reason"
+// +kubebuilder:printcolumn:name="Found",type="string",JSONPath=".status.conditions[?(@.type==\"PlacementVerified\")].status",description="Configured"
+// +kubebuilder:printcolumn:name="ManifestWorks",type="string",JSONPath=".status.conditions[?(@.type==\"ManifestworkApplied\")].reason",description="Reason"
+// +kubebuilder:printcolumn:name="Applied",type="string",JSONPath=".status.conditions[?(@.type==\"ManifestworkApplied\")].status",description="Applied"
+
+// PlaceManifestWork is the Schema for the PlaceManifestWorks API. This custom resource is able to apply
+// ManifestWork using Placement for 0..n ManagedCluster(in their namespaces). It will also remove the ManifestWork custom resources
+// when deleted. Lastly the specific ManifestWork custom resources created per ManagedCluster namespace will be adjusted based on PlacementDecision
+// changes.
+type PlaceManifestWork struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// Spec reperesents the desired ManifestWork payload and Placement reference to be reconciled
+	Spec PlaceManifestWorkSpec `json:"spec,omitempty"`
+
+	// Status represent the current status of Placing ManifestWork resources
+	Status PlaceManifestWorkStatus `json:"status,omitempty"`
+}
+
 // PlaceManifestWorkSpec defines the desired state of PlaceManifestWork
 type PlaceManifestWorkSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// ManifestWorkSpec is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork
-	ManifestWorkSpec work.ManifestWorkSpec `json:"manifestWorkSpec"`
+	ManifestWorkTemplate work.ManifestWorkSpec `json:"manifestWorkTemplate"`
 
 	// PacementRef is the name of the Placement resource, from which a PlacementDecision will be found and used
 	// to distribute the ManifestWork
-	PlacementRef *corev1.LocalObjectReference `json:"placementRef,omitempty"`
+	PlacementRef LocalPlacementReference `json:"placementRef,omitempty"`
 }
 
 // PlaceManifestWorkStatus defines the observed state of PlaceManifestWork
@@ -56,6 +82,12 @@ type PlaceManifestWorkStatus struct {
 
 	// Summary that reflects all relevant ManifestWorks
 	PlacedManifestWorkSummary []PlacedManifestWorkSummary `json:"summary"`
+}
+
+// localPlacementReference is the name of a Placement resource in current namespace
+type LocalPlacementReference struct {
+	// Name of the Placement resource in the current namespace
+	Name string `json:"name"`
 }
 
 type PlacedManifestWorkSummary struct {
@@ -79,35 +111,16 @@ type PlacedManifestWork struct {
 	// ManifestWorkStatus ManifestWorkStatus.Condition can be
 	// +kubebuilder:validation:Enum=Progressing;Available;Degraded;Applied
 	// +optional
-	ManifestWorkStatus ManifestWorkStatus `json:"status"`
+	// TODO: Store more precise status per ManifestWork
+	//ManifestWorkStatus ManifestWorkStatus `json:"status"`
 
 	// Timestamp is the time when the ManifestWork was last modified
 	Timestamp string `json:"timestamp"`
 }
 
-// +kubebuilder:object:root=true
-// +kubebuilder:resource:path=placementmanifestworks,shortName=pmw;pmws,scope=Namespaced
-// +kubebuilder:storageversion
-// +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Placement",type="string",JSONPath=".status.conditions[?(@.type==\"PlacementVerified\")].reason",description="Reason"
-// +kubebuilder:printcolumn:name="Found",type="string",JSONPath=".status.conditions[?(@.type==\"PlacementVerified\")].status",description="Configured"
-// +kubebuilder:printcolumn:name="ManifestWorks",type="string",JSONPath=".status.conditions[?(@.type==\"ManifestworkApplied\")].reason",description="Reason"
-// +kubebuilder:printcolumn:name="Applied",type="string",JSONPath=".status.conditions[?(@.type==\"ManifestworkApplied\")].status",description="Applied"
-
-// PlaceManifestWork is the Schema for the placementmanifestworks API
-type PlaceManifestWork struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// Spec reperesents the desired ManifestWork payload and Placement reference to be reconciled
-	Spec PlaceManifestWorkSpec `json:"spec,omitempty"`
-
-	// Status represent the current status of Placing ManifestWork resources
-	Status PlaceManifestWorkStatus `json:"status,omitempty"`
-}
-
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
-
+//
 // PlaceManifestWorkList contains a list of PlaceManifestWork
 type PlaceManifestWorkList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -115,20 +128,23 @@ type PlaceManifestWorkList struct {
 	Items           []PlaceManifestWork `json:"items"`
 }
 
-type ConditionType string
+type PlaceWorkConditionType string
 
 const (
-	PlacementDecisionVerifiedAsExpected = "PlacementDecisionVerified"
-	PlacementDecisionNotFound           = "PlacementDecisionNotFound"
-	PlacementDecisionEmpty              = "PlacementDecisionEmpty"
+	PlacementDecisionNotFound = "PlacementDecisionNotFound"
+	PlacementDecisionEmpty    = "PlacementDecisionEmpty"
 
-	AsExpected = "AsExpected"
-	Processing = "Processing"
-	Partial    = "Partial"
+	AsExpected    = "AsExpected"
+	Processing    = "Processing"
+	NotAsExpected = "NotAsExpected"
 
 	// PlacementDecisionVerified indicates if Placement is valid
-	PlacementDecisionVerified ConditionType = "PlacementVerified"
+	//
+	// Reason: AsExpected, PlacementDecisionNotFound, PlacementDecisionEmpty or NotAsExpected
+	PlacementDecisionVerified PlaceWorkConditionType = "PlacementVerified"
 
 	// ManifestWorkApplied confirms that a ManifestWork has been created in each cluster defined by PlacementDecision
-	ManifestworkApplied ConditionType = "ManifestworkApplied"
+	//
+	// Reason: AsExpected, NotAsExpected or Processing
+	ManifestworkApplied PlaceWorkConditionType = "ManifestworkApplied"
 )

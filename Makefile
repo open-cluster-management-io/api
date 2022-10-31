@@ -25,10 +25,10 @@ $(call add-crd-gen,clusterv1,./cluster/v1,./cluster/v1,./cluster/v1)
 $(call add-crd-gen,clusterv1alpha1,./cluster/v1alpha1,./cluster/v1alpha1,./cluster/v1alpha1)
 $(call add-crd-gen,clusterv1beta1,./cluster/v1alpha1 ./cluster/v1beta1,./cluster/v1beta1,./cluster/v1beta1)
 $(call add-crd-gen,clusterv1beta2,./cluster/v1alpha1 ./cluster/v1beta1 ./cluster/v1beta2,./cluster/v1beta2,./cluster/v1beta2)
-$(call add-crd-gen,work,./work/v1,./work/v1,./work/v1)
+$(call add-crd-gen,workv1,./work/v1,./work/v1,./work/v1)
+$(call add-crd-gen,workv1alpha1,./work/v1alpha1,./work/v1alpha1,./work/v1alpha1)
 $(call add-crd-gen,operator,./operator/v1,./operator/v1,./operator/v1)
 $(call add-crd-gen,addonv1alpha1,./addon/v1alpha1,./addon/v1alpha1,./addon/v1alpha1)
-$(call add-crd-gen,place-work,./place-work/v1alpha1,./place-work/v1alpha1,./place-work/v1alpha1)
 
 RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator
