@@ -51,7 +51,7 @@ spec:
               type: object
               properties:
                 manifestWorkTemplate:
-                  description: ManifestWorkSpec is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork
+                  description: ManifestWorkTemplate is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork
                   type: object
                   properties:
                     deleteOption:
@@ -279,64 +279,25 @@ spec:
                         type: string
                         maxLength: 316
                         pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                placedManifestWork:
-                  description: ManifestWorkDelivery tracks each ManifestWork that was created, including that it was applied and its overall status
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      applied:
-                        type: boolean
-                        default: false
-                      timestamp:
-                        description: Timestamp is the time when the ManifestWork was last modified
-                        type: string
-                        enum:
-                          - Progressing
-                          - Available
-                          - Degraded
-                          - Applied
-                      workRef:
-                        description: Work is an objectReference to the actual ManifestWork resource
-                        type: object
-                        properties:
-                          apiVersion:
-                            description: API version of the referent.
-                            type: string
-                          fieldPath:
-                            description: 'If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: "spec.containers{name}" (where "name" refers to the name of the container that triggered the event) or if no container name is specified "spec.containers[2]" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object. TODO: this design is not final and this field is subject to change in the future.'
-                            type: string
-                          kind:
-                            description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                            type: string
-                          name:
-                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                            type: string
-                          namespace:
-                            description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
-                            type: string
-                          resourceVersion:
-                            description: 'Specific resourceVersion to which this reference is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
-                            type: string
-                          uid:
-                            description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
-                            type: string
                 summary:
-                  description: Summary that reflects all relevant ManifestWorks
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      Applied:
-                        type: integer
-                      available:
-                        type: integer
-                      degraded:
-                        type: integer
-                      progressing:
-                        type: integer
-                      total:
-                        type: integer
+                  description: Summary totals of resulting ManifestWorks
+                  type: object
+                  properties:
+                    Applied:
+                      description: 'Applied is the number of ManifestWorks with condition Applied: true'
+                      type: integer
+                    available:
+                      description: 'Available is the number of ManifestWorks with condition Available: true'
+                      type: integer
+                    degraded:
+                      description: 'TODO: Degraded is the number of ManifestWorks with condition Degraded: true'
+                      type: integer
+                    progressing:
+                      description: 'TODO: Progressing is the number of ManifestWorks with condition Progressing: true'
+                      type: integer
+                    total:
+                      description: Total number of ManifestWorks managed by the PlaceManifestWork
+                      type: integer
       served: true
       storage: true
       subresources:

@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	work "open-cluster-management.io/api/work/v1"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -54,10 +53,7 @@ type PlaceManifestWork struct {
 
 // PlaceManifestWorkSpec defines the desired state of PlaceManifestWork
 type PlaceManifestWorkSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// ManifestWorkSpec is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork
+	// ManifestWorkTemplate is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork
 	ManifestWorkTemplate work.ManifestWorkSpec `json:"manifestWorkTemplate"`
 
 	// PacementRef is the name of the Placement resource, from which a PlacementDecision will be found and used
@@ -76,12 +72,8 @@ type PlaceManifestWorkStatus struct {
 	// 2. PlacementRefValid
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	// ManifestWorkDelivery tracks each ManifestWork that was created,
-	// including that it was applied and its overall status
-	PlacedManifestWork []PlacedManifestWork `json:"placedManifestWork,omitempty"`
-
-	// Summary that reflects all relevant ManifestWorks
-	PlacedManifestWorkSummary []PlacedManifestWorkSummary `json:"summary"`
+	// Summary totals of resulting ManifestWorks
+	PlacedManifestWorkSummary PlacedManifestWorkSummary `json:"summary"`
 }
 
 // localPlacementReference is the name of a Placement resource in current namespace
@@ -90,36 +82,23 @@ type LocalPlacementReference struct {
 	Name string `json:"name"`
 }
 
+// PlaceManifestWorkSummary provides reference counts of all ManifestWorks that are associated with a
+// given PlaceManifestWork resource, for their respective states
 type PlacedManifestWorkSummary struct {
-	Total       int `json:"total"`
+	// Total number of ManifestWorks managed by the PlaceManifestWork
+	Total int `json:"total"`
+	// TODO: Progressing is the number of ManifestWorks with condition Progressing: true
 	Progressing int `json:"progressing"`
-	Available   int `json:"available"`
-	Degraded    int `json:"degraded"`
-	Applied     int `json:"Applied"`
-}
-
-type ManifestWorkStatus string
-
-type PlacedManifestWork struct {
-
-	// Work is an objectReference to the actual ManifestWork resource
-	Work corev1.ObjectReference `json:"workRef"`
-
-	// +kubebuilder:default=false
-	Applied bool `json:"applied"`
-
-	// ManifestWorkStatus ManifestWorkStatus.Condition can be
-	// +kubebuilder:validation:Enum=Progressing;Available;Degraded;Applied
-	// +optional
-	// TODO: Store more precise status per ManifestWork
-	//ManifestWorkStatus ManifestWorkStatus `json:"status"`
-
-	// Timestamp is the time when the ManifestWork was last modified
-	Timestamp string `json:"timestamp"`
+	// Available is the number of ManifestWorks with condition Available: true
+	Available int `json:"available"`
+	// TODO: Degraded is the number of ManifestWorks with condition Degraded: true
+	Degraded int `json:"degraded"`
+	// Applied is the number of ManifestWorks with condition Applied: true
+	Applied int `json:"Applied"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 //
 // PlaceManifestWorkList contains a list of PlaceManifestWork
 type PlaceManifestWorkList struct {

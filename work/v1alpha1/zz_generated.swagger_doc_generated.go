@@ -40,7 +40,7 @@ func (PlaceManifestWorkList) SwaggerDoc() map[string]string {
 
 var map_PlaceManifestWorkSpec = map[string]string{
 	"":                     "PlaceManifestWorkSpec defines the desired state of PlaceManifestWork",
-	"manifestWorkTemplate": "ManifestWorkSpec is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork",
+	"manifestWorkTemplate": "ManifestWorkTemplate is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork",
 	"placementRef":         "PacementRef is the name of the Placement resource, from which a PlacementDecision will be found and used to distribute the ManifestWork",
 }
 
@@ -49,23 +49,24 @@ func (PlaceManifestWorkSpec) SwaggerDoc() map[string]string {
 }
 
 var map_PlaceManifestWorkStatus = map[string]string{
-	"":                   "PlaceManifestWorkStatus defines the observed state of PlaceManifestWork",
-	"conditions":         "Conditions contains the different condition statuses for distrbution of ManifestWork resources Valid condition types are: 1. AppliedManifestWorks represents ManifestWorks have been distributed as per placement All, Partial, None, Problem 2. PlacementRefValid",
-	"placedManifestWork": "ManifestWorkDelivery tracks each ManifestWork that was created, including that it was applied and its overall status",
-	"summary":            "Summary that reflects all relevant ManifestWorks",
+	"":           "PlaceManifestWorkStatus defines the observed state of PlaceManifestWork",
+	"conditions": "Conditions contains the different condition statuses for distrbution of ManifestWork resources Valid condition types are: 1. AppliedManifestWorks represents ManifestWorks have been distributed as per placement All, Partial, None, Problem 2. PlacementRefValid",
+	"summary":    "Summary totals of resulting ManifestWorks",
 }
 
 func (PlaceManifestWorkStatus) SwaggerDoc() map[string]string {
 	return map_PlaceManifestWorkStatus
 }
 
-var map_PlacedManifestWork = map[string]string{
-	"workRef":   "Work is an objectReference to the actual ManifestWork resource",
-	"timestamp": "Timestamp is the time when the ManifestWork was last modified",
+var map_PlacedManifestWorkSummary = map[string]string{
+	"":          "PlaceManifestWorkSummary provides reference counts of all ManifestWorks that are associated with a given PlaceManifestWork resource, for their respective states",
+	"total":     "Total number of ManifestWorks managed by the PlaceManifestWork",
+	"available": "Available is the number of ManifestWorks with condition Available: true",
+	"Applied":   "Applied is the number of ManifestWorks with condition Applied: true",
 }
 
-func (PlacedManifestWork) SwaggerDoc() map[string]string {
-	return map_PlacedManifestWork
+func (PlacedManifestWorkSummary) SwaggerDoc() map[string]string {
+	return map_PlacedManifestWorkSummary
 }
 
 // AUTO-GENERATED FUNCTIONS END HERE
