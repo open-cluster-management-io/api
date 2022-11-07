@@ -18,12 +18,12 @@ import (
 //
 // Here is how the placement policy combines with other selection methods to determine a matching
 // list of ManagedClusters:
-// 1) Kubernetes clusters are registered with hub as cluster-scoped ManagedClusters;
-// 2) ManagedClusters are organized into cluster-scoped ManagedClusterSets;
-// 3) ManagedClusterSets are bound to workload namespaces;
-// 4) Namespace-scoped Placements specify a slice of ManagedClusterSets which select a working set
-//    of potential ManagedClusters;
-// 5) Then Placements subselect from that working set using label/claim selection.
+//  1. Kubernetes clusters are registered with hub as cluster-scoped ManagedClusters;
+//  2. ManagedClusters are organized into cluster-scoped ManagedClusterSets;
+//  3. ManagedClusterSets are bound to workload namespaces;
+//  4. Namespace-scoped Placements specify a slice of ManagedClusterSets which select a working set
+//     of potential ManagedClusters;
+//  5. Then Placements subselect from that working set using label/claim selection.
 //
 // No ManagedCluster will be selected if no ManagedClusterSet is bound to the placement
 // namespace. User is able to bind a ManagedClusterSet to a namespace by creating a
