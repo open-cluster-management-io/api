@@ -15,10 +15,10 @@ var _ = Describe("Create Klusterlet API", func() {
 	var klusterlet *operatorv1.Klusterlet
 	BeforeEach(func() {
 		suffix := rand.String(5)
-		klusterManagerName := fmt.Sprintf("cm-%s", suffix)
+		klusterletName := fmt.Sprintf("cm-%s", suffix)
 		klusterlet = &operatorv1.Klusterlet{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: klusterManagerName,
+				Name: klusterletName,
 			},
 			Spec: operatorv1.KlusterletSpec{},
 		}
@@ -45,10 +45,10 @@ var _ = Describe("valid HubApiServerHostAlias", func() {
 
 	BeforeEach(func() {
 		suffix := rand.String(5)
-		klusterManagerName := fmt.Sprintf("cm-%s", suffix)
+		klusterletName := fmt.Sprintf("cm-%s", suffix)
 		klusterlet = &operatorv1.Klusterlet{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: klusterManagerName,
+				Name: klusterletName,
 			},
 			Spec: operatorv1.KlusterletSpec{
 				HubApiServerHostAlias: &operatorv1.HubApiServerHostAlias{},
@@ -88,5 +88,93 @@ var _ = Describe("valid HubApiServerHostAlias", func() {
 			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
 			Expect(err).To(BeNil())
 		})
+	})
+})
+
+var _ = Describe("Klusterlet API test with WorkConfiguration", func() {
+	var klusterletName string
+
+	BeforeEach(func() {
+		suffix := rand.String(5)
+		klusterletName = fmt.Sprintf("cm-%s", suffix)
+	})
+
+	It("Create a klusterlet with empty spec", func() {
+		klusterlet := &operatorv1.Klusterlet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: klusterletName,
+			},
+			Spec: operatorv1.KlusterletSpec{},
+		}
+		klusterlet, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(klusterlet.Spec.WorkConfiguration).To(BeNil())
+	})
+
+	It("Create a klusterlet with empty work feature gate mode", func() {
+		klusterlet := &operatorv1.Klusterlet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: klusterletName,
+			},
+			Spec: operatorv1.KlusterletSpec{
+				WorkConfiguration: &operatorv1.WorkConfiguration{
+					FeatureGates: []operatorv1.FeatureGate{
+						{
+							Feature: "Foo",
+						},
+					},
+				},
+			},
+		}
+		klusterlet, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(klusterlet.Spec.WorkConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
+	})
+
+	It("Create a klusterlet with wrong work feature gate mode", func() {
+		klusterlet := &operatorv1.Klusterlet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: klusterletName,
+			},
+			Spec: operatorv1.KlusterletSpec{
+				WorkConfiguration: &operatorv1.WorkConfiguration{
+					FeatureGates: []operatorv1.FeatureGate{
+						{
+							Feature: "Foo",
+							Mode:    "WrongMode",
+						},
+					},
+				},
+			},
+		}
+		_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("Create a klusterlet with right work feature gate mode", func() {
+		klusterlet := &operatorv1.Klusterlet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: klusterletName,
+			},
+			Spec: operatorv1.KlusterletSpec{
+				WorkConfiguration: &operatorv1.WorkConfiguration{
+					FeatureGates: []operatorv1.FeatureGate{
+						{
+							Feature: "Foo",
+							Mode:    "Disable",
+						},
+						{
+							Feature: "Bar",
+							Mode:    "Enable",
+						},
+					},
+				},
+			},
+		}
+		_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+		Expect(klusterlet.Spec.WorkConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
+		Expect(klusterlet.Spec.WorkConfiguration.FeatureGates[1].Mode).Should(Equal(operatorv1.FeatureGateModeTypeEnable))
 	})
 })
