@@ -3,7 +3,7 @@ FROM fedora:34
 ENV GOPATH=/go
 ENV PATH=/usr/local/go/bin:/go/bin:$PATH
 
-ARG GO_VERSION=1.18.2
+ARG GO_VERSION=1.19.3
 RUN curl -LO https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     rm -rf /usr/local/go && \
     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
