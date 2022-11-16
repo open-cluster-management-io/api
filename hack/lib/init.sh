@@ -15,6 +15,7 @@ cluster/v1alpha1 \
 cluster/v1beta1 \
 cluster/v1beta2 \
 work/v1 \
+work/v1alpha1 \
 operator/v1 \
 addon/v1alpha1 \
 "
@@ -25,6 +26,7 @@ open-cluster-management.io/api/cluster/v1alpha1,\
 open-cluster-management.io/api/cluster/v1beta1,\
 open-cluster-management.io/api/cluster/v1beta2,\
 open-cluster-management.io/api/work/v1,\
+open-cluster-management.io/api/work/v1alpha1,\
 open-cluster-management.io/api/operator/v1,\
 open-cluster-management.io/api/addon/v1alpha1\
 "
