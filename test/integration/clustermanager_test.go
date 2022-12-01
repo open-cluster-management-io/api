@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 	operatorv1 "open-cluster-management.io/api/operator/v1"
@@ -211,9 +212,8 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 				},
 			},
 		}
-		clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
-		Expect(err).ToNot(HaveOccurred())
-		Expect(clusterManager.Spec.RegistrationConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(errors.IsInvalid(err)).To(BeTrue())
 	})
 
 	It("Create a cluster manager with wrong registration feature gate mode", func() {
@@ -299,9 +299,8 @@ var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
 				},
 			},
 		}
-		clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
-		Expect(err).ToNot(HaveOccurred())
-		Expect(clusterManager.Spec.WorkConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(errors.IsInvalid(err)).To(BeTrue())
 	})
 
 	It("Create a cluster manager with wrong work feature gate mode", func() {

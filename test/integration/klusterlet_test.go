@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 	operatorv1 "open-cluster-management.io/api/operator/v1"
@@ -127,9 +128,8 @@ var _ = Describe("Klusterlet API test with WorkConfiguration", func() {
 				},
 			},
 		}
-		klusterlet, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
-		Expect(err).ToNot(HaveOccurred())
-		Expect(klusterlet.Spec.WorkConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
+		_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(errors.IsInvalid(err)).To(BeTrue())
 	})
 
 	It("Create a klusterlet with wrong work feature gate mode", func() {

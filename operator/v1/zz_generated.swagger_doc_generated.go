@@ -24,7 +24,7 @@ func (ClusterManager) SwaggerDoc() map[string]string {
 var map_ClusterManagerDeployOption = map[string]string{
 	"":       "ClusterManagerDeployOption describes the deploy options for cluster-manager",
 	"mode":   "Mode can be Default or Hosted. In Default mode, the Hub is installed as a whole and all parts of Hub are deployed in the same cluster. In Hosted mode, only crd and configurations are installed on one cluster(defined as hub-cluster). Controllers run in another cluster (defined as management-cluster) and connect to the hub with the kubeconfig in secret of \"external-hub-kubeconfig\"(a kubeconfig of hub-cluster with cluster-admin permission). Note: Do not modify the Mode field once it's applied.",
-	"hosted": "Hosted includes configurations we needs for clustermanager in the Hosted mode.",
+	"hosted": "Hosted includes configurations we need for clustermanager in the Hosted mode.",
 }
 
 func (ClusterManagerDeployOption) SwaggerDoc() map[string]string {
@@ -70,7 +70,7 @@ func (ClusterManagerStatus) SwaggerDoc() map[string]string {
 
 var map_FeatureGate = map[string]string{
 	"feature": "Feature is the key of feature gate. e.g. featuregate/Foo.",
-	"mode":    "Mode is either Enable, Disable, \"\" where \"\" is Disable by default. In Enable mode, a valid feature gate `featuregate/Foo` will be set to \"--featuregate/Foo=true\". In Disable mode, a valid feature gate `featuregate/Foo` will be set to \"--featuregate/Foo=false\".",
+	"mode":    "Mode is either Enable, Disable. In Enable mode, a valid feature gate `featuregate/Foo` will be set to \"--featuregate/Foo=true\". In Disable mode, a valid feature gate `featuregate/Foo` will be set to \"--featuregate/Foo=false\".",
 }
 
 func (FeatureGate) SwaggerDoc() map[string]string {

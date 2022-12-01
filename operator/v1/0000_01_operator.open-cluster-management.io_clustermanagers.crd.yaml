@@ -42,7 +42,7 @@ spec:
                     - mode
                   properties:
                     hosted:
-                      description: Hosted includes configurations we needs for clustermanager in the Hosted mode.
+                      description: Hosted includes configurations we need for clustermanager in the Hosted mode.
                       type: object
                       properties:
                         registrationWebhookConfiguration:
@@ -131,14 +131,14 @@ spec:
                         type: object
                         required:
                           - feature
+                          - mode
                         properties:
                           feature:
                             description: Feature is the key of feature gate. e.g. featuregate/Foo.
                             type: string
                           mode:
-                            description: Mode is either Enable, Disable, "" where "" is Disable by default. In Enable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=true". In Disable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=false".
+                            description: Mode is either Enable, Disable. In Enable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=true". In Disable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=false".
                             type: string
-                            default: Disable
                             enum:
                               - Enable
                               - Disable
@@ -157,14 +157,14 @@ spec:
                         type: object
                         required:
                           - feature
+                          - mode
                         properties:
                           feature:
                             description: Feature is the key of feature gate. e.g. featuregate/Foo.
                             type: string
                           mode:
-                            description: Mode is either Enable, Disable, "" where "" is Disable by default. In Enable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=true". In Disable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=false".
+                            description: Mode is either Enable, Disable. In Enable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=true". In Disable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=false".
                             type: string
-                            default: Disable
                             enum:
                               - Enable
                               - Disable

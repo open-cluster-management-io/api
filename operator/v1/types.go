@@ -93,19 +93,19 @@ type FeatureGate struct {
 	// +required
 	Feature string `json:"feature"`
 
-	// Mode is either Enable, Disable, "" where "" is Disable by default.
+	// Mode is either Enable, Disable.
 	// In Enable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=true".
 	// In Disable mode, a valid feature gate `featuregate/Foo` will be set to "--featuregate/Foo=false".
-	// +kubebuilder:default:=Disable
 	// +kubebuilder:validation:Enum:=Enable;Disable
-	// +optional
-	Mode FeatureGateModeType `json:"mode,omitempty"`
+	// +kubebuilder:validation:Required
+	// +required
+	Mode FeatureGateModeType `json:"mode"`
 }
 
+// FeatureGateModeType represents whether a feature is enabled or not, valid value could be "Enable", "Disable".
 type FeatureGateModeType string
 
 const (
-	// Valid FeatureGateModeType value is Enable, Disable.
 	FeatureGateModeTypeEnable  FeatureGateModeType = "Enable"
 	FeatureGateModeTypeDisable FeatureGateModeType = "Disable"
 )
@@ -166,7 +166,7 @@ type ClusterManagerDeployOption struct {
 	// +kubebuilder:validation:Enum=Default;Hosted
 	Mode InstallMode `json:"mode,omitempty"`
 
-	// Hosted includes configurations we needs for clustermanager in the Hosted mode.
+	// Hosted includes configurations we need for clustermanager in the Hosted mode.
 	// +optional
 	Hosted *HostedClusterManagerConfiguration `json:"hosted,omitempty"`
 }
