@@ -170,6 +170,16 @@ func (KlusterletStatus) SwaggerDoc() map[string]string {
 	return map_KlusterletStatus
 }
 
+var map_KlusterletWorkConfiguration = map[string]string{
+	"":             "KlusterletWorkConfiguration contains the configuration of work agent",
+	"clusterRoles": "ClusterRoles is the clusterroles that work agent binds to. If it is empty, the default admin clusterrole in kubernetes is bound to the work agent.",
+	"featureGates": "FeatureGates represents the list of feature gates for work agent If it is set empty, default feature gates will be used. If it is set, featuregate/Foo is an example of one item in FeatureGates:\n  1. If featuregate/Foo does not exist, registration-operator will discard it\n  2. If featuregate/Foo exists and is false by default. It is now possible to set featuregate/Foo=[false|true]\n  3. If featuregate/Foo exists and is true by default. If a cluster-admin upgrading from 1 to 2 wants to continue having featuregate/Foo=false,\n \the can set featuregate/Foo=false before upgrading. Let's say the cluster-admin wants featuregate/Foo=false.",
+}
+
+func (KlusterletWorkConfiguration) SwaggerDoc() map[string]string {
+	return map_KlusterletWorkConfiguration
+}
+
 var map_NodePlacement = map[string]string{
 	"":             "NodePlacement describes node scheduling configuration for the pods.",
 	"nodeSelector": "NodeSelector defines which Nodes the Pods are scheduled on. The default is an empty list.",
