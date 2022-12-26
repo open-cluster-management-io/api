@@ -61,8 +61,66 @@ spec:
                     displayName:
                       description: displayName represents the name of add-on that will be displayed.
                       type: string
+                configuration:
+                  description: configuration lists the add-on configurations and the rollout strategy when the configurations change.
+                  type: object
+                  properties:
+                    configs:
+                      description: configs is a list of add-on configurations. The add-on configurations for each cluster can be overridden by the configs of the ManagedClusterAddon spec.
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - name
+                          - resource
+                        properties:
+                          group:
+                            description: group of the add-on configuration.
+                            type: string
+                            default: ""
+                          name:
+                            description: name of the add-on configuration.
+                            type: string
+                            minLength: 1
+                          namespace:
+                            description: namespace of the add-on configuration. If this field is not set, the configuration is in the cluster scope.
+                            type: string
+                          resource:
+                            description: resource of the add-on configuration.
+                            type: string
+                            minLength: 1
+                    rolloutStrategy:
+                      description: The rollout strategy to apply new configs. The rollout strategy only watches the listed configs change. If the rollout strategy is not defined, the default strategy UpdateAll is used. If there are configs change during the rollout process, the rollout will start over. For example, configs list configA and configB. The change in configA triggers the rollout. If the configB is also changed before the rollout is complete, the current rollout stops and the rollout starts over.
+                      type: object
+                      properties:
+                        rollingUpdateWithPlacement:
+                          description: Rolling update with placement config params. Present only if the type is RollingUpdateWithPlacement.
+                          type: object
+                          required:
+                            - name
+                            - namespace
+                          properties:
+                            maxConcurrentlyUpdating:
+                              description: 'The maximum concurrently updating number of addons. Value can be an absolute number (ex: 5) or a percentage of desired addons (ex: 10%). Absolute number is calculated from percentage by rounding up. Defaults to 25%. Example: when this is set to 30%, once the addon configs change, the addon on 30% of the selected clusters will adopt the new configs. When the new configs are ready, the addon on the remaining clusters will be further updated.'
+                              anyOf:
+                                - type: integer
+                                - type: string
+                              x-kubernetes-int-or-string: true
+                            name:
+                              description: name of the placement
+                              type: string
+                            namespace:
+                              description: namespace of the placement.
+                              type: string
+                        type:
+                          description: 'Type is the type of the rollout strategy, it supports UpdateAll and RollingUpdateWithPlacement: - UpdateAll: when configs change, apply the new configs to all the clusters. - RollingUpdateWithPlacement: when configs change, rolling update new configs on the clusters   selected by placements.   If any of the configs are overridden by ManagedClusterAddOn on the specific cluster, the new configs   won''t take effect on that cluster.   This rollout strategy is only responsible for applying new configs. When the strategy is modified or   removed, the applied configs won''t be deleted from the cluster.'
+                          type: string
+                          default: UpdateAll
+                          enum:
+                            - RollingUpdateWithPlacement
+                            - UpdateAll
                 supportedConfigs:
-                  description: supportedConfigs is a list of configuration types supported by add-on. An empty list means the add-on does not require configurations. The default is an empty list
+                  description: 'Deprecated: move supportedConfigs to ManagedClusterAddOnStatus. supportedConfigs is a list of configuration types supported by add-on. An empty list means the add-on does not require configurations. The default is an empty list'
                   type: array
                   items:
                     description: ConfigMeta represents a collection of metadata information for add-on configuration.

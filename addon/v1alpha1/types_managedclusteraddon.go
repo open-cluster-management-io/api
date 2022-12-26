@@ -118,6 +118,15 @@ type ManagedClusterAddOnStatus struct {
 	// +optional
 	AddOnConfiguration ConfigCoordinates `json:"addOnConfiguration,omitempty"`
 
+	// supportedConfigs is a list of configuration types that are allowed to override the add-on configurations defined
+	// in ClusterManagementAddOn spec.
+	// The default is an empty list, which means the add-on configurations can not be overridden.
+	// +optional
+	// +listType=map
+	// +listMapKey=group
+	// +listMapKey=resource
+	SupportedConfigs []ConfigGroupResource `json:"supportedConfigs,omitempty"`
+
 	// configReferences is a list of current add-on configuration references.
 	// This will be overridden by the clustermanagementaddon configuration references.
 	// +optional
@@ -149,8 +158,8 @@ const (
 	// the managed cluster.
 	ManagedClusterAddOnConditionDegraded string = "Degraded"
 
-	// ManagedClusterAddOnCondtionConfigured represents that the addon agent is configured with its configuration
-	ManagedClusterAddOnCondtionConfigured string = "Configured"
+	// ManagedClusterAddOnCondtionProgressing represents that the addon agent is applying configurations.
+	ManagedClusterAddOnCondtionProgressing string = "Progressing"
 )
 
 // ObjectReference contains enough information to let you inspect or modify the referred object.
@@ -183,8 +192,11 @@ type ConfigReference struct {
 	// defaultConfigs.
 	ConfigReferent `json:",inline"`
 
-	// lastObservedGeneration is the observed generation of the add-on configuration.
-	LastObservedGeneration int64 `json:"lastObservedGeneration"`
+	// desiredConfigSpecHash record the desired config spec hash.
+	DesiredConfigSpecHash string `json:"desiredConfigSpecHash"`
+
+	// lastAppliedConfigSpecHash record the config spec hash when the corresponding ManifestWork is applied successfully.
+	LastAppliedConfigSpecHash string `json:"lastAppliedConfigSpecHash"`
 }
 
 // HealthCheckMode indicates the mode for the addon to check its healthiness status

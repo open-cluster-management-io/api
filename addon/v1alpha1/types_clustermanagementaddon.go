@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // +genclient
@@ -44,6 +45,7 @@ type ClusterManagementAddOnSpec struct {
 	// +optional
 	AddOnConfiguration ConfigCoordinates `json:"addOnConfiguration,omitempty"`
 
+	// Deprecated: move supportedConfigs to ManagedClusterAddOnStatus.
 	// supportedConfigs is a list of configuration types supported by add-on.
 	// An empty list means the add-on does not require configurations.
 	// The default is an empty list
@@ -52,6 +54,71 @@ type ClusterManagementAddOnSpec struct {
 	// +listMapKey=group
 	// +listMapKey=resource
 	SupportedConfigs []ConfigMeta `json:"supportedConfigs,omitempty"`
+
+	// configuration lists the add-on configurations and the rollout strategy when the configurations change.
+	// +optional
+	Configuration Configuration `json:"configuration,omitempty"`
+}
+
+// Configuration represents a list of the add-on configurations and their rollout strategy.
+type Configuration struct {
+	// configs is a list of add-on configurations.
+	// The add-on configurations for each cluster can be overridden by the configs of the ManagedClusterAddon spec.
+	// +optional
+	Configs []AddOnConfig `json:"configs,omitempty"`
+
+	// The rollout strategy to apply new configs.
+	// The rollout strategy only watches the listed configs change.
+	// If the rollout strategy is not defined, the default strategy UpdateAll is used.
+	// If there are configs change during the rollout process, the rollout will start over. For example, configs list
+	// configA and configB. The change in configA triggers the rollout. If the configB is also
+	// changed before the rollout is complete, the current rollout stops and the rollout starts over.
+	// +optional
+	RolloutStrategy RolloutStrategy `json:"rolloutStrategy,omitempty"`
+}
+
+// RolloutStrategy represents the rollout strategy of the add-on configuration.
+type RolloutStrategy struct {
+	// Type is the type of the rollout strategy, it supports UpdateAll and RollingUpdateWithPlacement:
+	// - UpdateAll: when configs change, apply the new configs to all the clusters.
+	// - RollingUpdateWithPlacement: when configs change, rolling update new configs on the clusters
+	//   selected by placements.
+	//   If any of the configs are overridden by ManagedClusterAddOn on the specific cluster, the new configs
+	//   won't take effect on that cluster.
+	//   This rollout strategy is only responsible for applying new configs. When the strategy is modified or
+	//   removed, the applied configs won't be deleted from the cluster.
+	// +kubebuilder:validation:Enum=RollingUpdateWithPlacement;UpdateAll
+	// +kubebuilder:default:=UpdateAll
+	// +optional
+	Type string `json:"type"`
+
+	// Rolling update with placement config params. Present only if the type is RollingUpdateWithPlacement.
+	// +optional
+	RollingUpdateWithPlacement *RollingUpdateWithPlacement `json:"rollingUpdateWithPlacement,omitempty"`
+}
+
+// RollingUpdateWithPlacement represents the placement and behavior to rolling update add-on configurations
+// on the selected clusters.
+type RollingUpdateWithPlacement struct {
+	// name of the placement
+	// +kubebuilder:validation:Required
+	// +required
+	Name string `json:"name"`
+
+	// namespace of the placement.
+	// +kubebuilder:validation:Required
+	// +required
+	Namespace string `json:"namespace"`
+
+	// The maximum concurrently updating number of addons.
+	// Value can be an absolute number (ex: 5) or a percentage of desired addons (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up.
+	// Defaults to 25%.
+	// Example: when this is set to 30%, once the addon configs change, the addon on 30% of the selected clusters
+	// will adopt the new configs. When the new configs are ready, the addon on the remaining clusters
+	// will be further updated.
+	// +optional
+	MaxConcurrentlyUpdating *intstr.IntOrString `json:"maxConcurrentlyUpdating,omitempty"`
 }
 
 // AddOnMeta represents a collection of metadata information for the add-on.

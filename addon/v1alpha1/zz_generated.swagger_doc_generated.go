@@ -59,6 +59,33 @@ func (NodePlacement) SwaggerDoc() map[string]string {
 	return map_NodePlacement
 }
 
+var map_AddOnHubConfig = map[string]string{
+	"":     "AddOnHubConfig represents a hub-scoped configuration for an add-on.",
+	"spec": "spec represents a desired configuration for an add-on.",
+}
+
+func (AddOnHubConfig) SwaggerDoc() map[string]string {
+	return map_AddOnHubConfig
+}
+
+var map_AddOnHubConfigList = map[string]string{
+	"":         "AddOnHubConfigList is a collection of add-on hub-scoped configuration.",
+	"metadata": "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+	"items":    "Items is a list of add-on hub-scoped configuration.",
+}
+
+func (AddOnHubConfigList) SwaggerDoc() map[string]string {
+	return map_AddOnHubConfigList
+}
+
+var map_AddOnHubConfigSpec = map[string]string{
+	"desiredVersion": "version represents the desired addon version to install.",
+}
+
+func (AddOnHubConfigSpec) SwaggerDoc() map[string]string {
+	return map_AddOnHubConfigSpec
+}
+
 var map_AddOnMeta = map[string]string{
 	"":            "AddOnMeta represents a collection of metadata information for the add-on.",
 	"displayName": "displayName represents the name of add-on that will be displayed.",
@@ -93,7 +120,8 @@ var map_ClusterManagementAddOnSpec = map[string]string{
 	"":                   "ClusterManagementAddOnSpec provides information for the add-on.",
 	"addOnMeta":          "addOnMeta is a reference to the metadata information for the add-on.",
 	"addOnConfiguration": "Deprecated: Use supportedConfigs filed instead addOnConfiguration is a reference to configuration information for the add-on. In scenario where a multiple add-ons share the same add-on CRD, multiple ClusterManagementAddOn resources need to be created and reference the same AddOnConfiguration.",
-	"supportedConfigs":   "supportedConfigs is a list of configuration types supported by add-on. An empty list means the add-on does not require configurations. The default is an empty list",
+	"supportedConfigs":   "Deprecated: move supportedConfigs to ManagedClusterAddOnStatus. supportedConfigs is a list of configuration types supported by add-on. An empty list means the add-on does not require configurations. The default is an empty list",
+	"configuration":      "configuration lists the add-on configurations and the rollout strategy when the configurations change.",
 }
 
 func (ClusterManagementAddOnSpec) SwaggerDoc() map[string]string {
@@ -148,9 +176,41 @@ func (ConfigReferent) SwaggerDoc() map[string]string {
 	return map_ConfigReferent
 }
 
+var map_Configuration = map[string]string{
+	"":                "Configuration represents a list of the add-on configurations and their rollout strategy.",
+	"configs":         "configs is a list of add-on configurations. The add-on configurations for each cluster can be overridden by the configs of the ManagedClusterAddon spec.",
+	"rolloutStrategy": "The rollout strategy to apply new configs. The rollout strategy only watches the listed configs change. If the rollout strategy is not defined, the default strategy UpdateAll is used. If there are configs change during the rollout process, the rollout will start over. For example, configs list configA and configB. The change in configA triggers the rollout. If the configB is also changed before the rollout is complete, the current rollout stops and the rollout starts over.",
+}
+
+func (Configuration) SwaggerDoc() map[string]string {
+	return map_Configuration
+}
+
+var map_RollingUpdateWithPlacement = map[string]string{
+	"":                        "RollingUpdateWithPlacement represents the placement and behavior to rolling update add-on configurations on the selected clusters.",
+	"name":                    "name of the placement",
+	"namespace":               "namespace of the placement.",
+	"maxConcurrentlyUpdating": "The maximum concurrently updating number of addons. Value can be an absolute number (ex: 5) or a percentage of desired addons (ex: 10%). Absolute number is calculated from percentage by rounding up. Defaults to 25%. Example: when this is set to 30%, once the addon configs change, the addon on 30% of the selected clusters will adopt the new configs. When the new configs are ready, the addon on the remaining clusters will be further updated.",
+}
+
+func (RollingUpdateWithPlacement) SwaggerDoc() map[string]string {
+	return map_RollingUpdateWithPlacement
+}
+
+var map_RolloutStrategy = map[string]string{
+	"":                           "RolloutStrategy represents the rollout strategy of the add-on configuration.",
+	"type":                       "Type is the type of the rollout strategy, it supports UpdateAll and RollingUpdateWithPlacement: - UpdateAll: when configs change, apply the new configs to all the clusters. - RollingUpdateWithPlacement: when configs change, rolling update new configs on the clusters\n  selected by placements.\n  If any of the configs are overridden by ManagedClusterAddOn on the specific cluster, the new configs\n  won't take effect on that cluster.\n  This rollout strategy is only responsible for applying new configs. When the strategy is modified or\n  removed, the applied configs won't be deleted from the cluster.",
+	"rollingUpdateWithPlacement": "Rolling update with placement config params. Present only if the type is RollingUpdateWithPlacement.",
+}
+
+func (RolloutStrategy) SwaggerDoc() map[string]string {
+	return map_RolloutStrategy
+}
+
 var map_ConfigReference = map[string]string{
-	"":                       "ConfigReference is a reference to the current add-on configuration. This resource is used to locate the configuration resource for the current add-on.",
-	"lastObservedGeneration": "lastObservedGeneration is the observed generation of the add-on configuration.",
+	"":                          "ConfigReference is a reference to the current add-on configuration. This resource is used to locate the configuration resource for the current add-on.",
+	"desiredConfigSpecHash":     "desiredConfigSpecHash record the desired config spec hash.",
+	"lastAppliedConfigSpecHash": "lastAppliedConfigSpecHash record the config spec hash when the corresponding ManifestWork is applied successfully.",
 }
 
 func (ConfigReference) SwaggerDoc() map[string]string {
@@ -199,6 +259,7 @@ var map_ManagedClusterAddOnStatus = map[string]string{
 	"relatedObjects":     "relatedObjects is a list of objects that are \"interesting\" or related to this operator. Common uses are: 1. the detailed resource driving the operator 2. operator namespaces 3. operand namespaces 4. related ClusterManagementAddon resource",
 	"addOnMeta":          "addOnMeta is a reference to the metadata information for the add-on. This should be same as the addOnMeta for the corresponding ClusterManagementAddOn resource.",
 	"addOnConfiguration": "Deprecated: Use configReference instead addOnConfiguration is a reference to configuration information for the add-on. This resource is use to locate the configuration resource for the add-on.",
+	"supportedConfigs":   "supportedConfigs is a list of configuration types that are allowed to override the add-on configurations defined in ClusterManagementAddOn spec. The default is an empty list, which means the add-on configurations can not be overridden.",
 	"configReferences":   "configReferences is a list of current add-on configuration references. This will be overridden by the clustermanagementaddon configuration references.",
 	"registrations":      "registrations is the conifigurations for the addon agent to register to hub. It should be set by each addon controller on hub to define how the addon agent on managedcluster is registered. With the registration defined, The addon agent can access to kube apiserver with kube style API or other endpoints on hub cluster with client certificate authentication. A csr will be created per registration configuration. If more than one registrationConfig is defined, a csr will be created for each registration configuration. It is not allowed that multiple registrationConfigs have the same signer name. After the csr is approved on the hub cluster, the klusterlet agent will create a secret in the installNamespace for the registrationConfig. If the signerName is \"kubernetes.io/kube-apiserver-client\", the secret name will be \"{addon name}-hub-kubeconfig\" whose contents includes key/cert and kubeconfig. Otherwise, the secret name will be \"{addon name}-{signer name}-client-cert\" whose contents includes key/cert.",
 	"healthCheck":        "healthCheck indicates how to check the healthiness status of the current addon. It should be set by each addon implementation, by default, the lease mode will be used.",
