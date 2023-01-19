@@ -166,7 +166,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 					Namespace: testNamespace,
 					Name:      "test",
 				},
-				LastObservedGeneration: 1,
+				//				LastObservedGeneration: 1,
 			},
 		}
 

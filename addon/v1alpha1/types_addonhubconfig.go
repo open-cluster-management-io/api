@@ -17,12 +17,23 @@ type AddOnHubConfig struct {
 	// spec represents a desired configuration for an add-on.
 	// +required
 	Spec AddOnHubConfigSpec `json:"spec"`
+
+	// status represents the current status of the configuration for an add-on.
+	// +optional
+	Status AddOnHubConfigStatus `json:"status,omitempty"`
 }
 
 type AddOnHubConfigSpec struct {
 	// version represents the desired addon version to install.
 	// +optional
 	DesiredVersion string `json:"desiredVersion,omitempty"`
+}
+
+// AddOnHubConfigStatus represents the current status of the configuration for an add-on.
+type AddOnHubConfigStatus struct {
+	// SupportedVersions lists all the valid addon versions. It's a hint for user to define desired version.
+	// +optional
+	SupportedVersions []string `json:"supportedVersions,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

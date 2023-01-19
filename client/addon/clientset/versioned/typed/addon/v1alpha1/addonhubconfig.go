@@ -24,6 +24,7 @@ type AddOnHubConfigsGetter interface {
 type AddOnHubConfigInterface interface {
 	Create(ctx context.Context, addOnHubConfig *v1alpha1.AddOnHubConfig, opts v1.CreateOptions) (*v1alpha1.AddOnHubConfig, error)
 	Update(ctx context.Context, addOnHubConfig *v1alpha1.AddOnHubConfig, opts v1.UpdateOptions) (*v1alpha1.AddOnHubConfig, error)
+	UpdateStatus(ctx context.Context, addOnHubConfig *v1alpha1.AddOnHubConfig, opts v1.UpdateOptions) (*v1alpha1.AddOnHubConfig, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.AddOnHubConfig, error)
@@ -105,6 +106,21 @@ func (c *addOnHubConfigs) Update(ctx context.Context, addOnHubConfig *v1alpha1.A
 	err = c.client.Put().
 		Resource("addonhubconfigs").
 		Name(addOnHubConfig.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(addOnHubConfig).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *addOnHubConfigs) UpdateStatus(ctx context.Context, addOnHubConfig *v1alpha1.AddOnHubConfig, opts v1.UpdateOptions) (result *v1alpha1.AddOnHubConfig, err error) {
+	result = &v1alpha1.AddOnHubConfig{}
+	err = c.client.Put().
+		Resource("addonhubconfigs").
+		Name(addOnHubConfig.Name).
+		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(addOnHubConfig).
 		Do(ctx).

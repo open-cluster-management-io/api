@@ -33,6 +33,15 @@ spec:
                 desiredVersion:
                   description: version represents the desired addon version to install.
                   type: string
+            status:
+              description: status represents the current status of the configuration for an add-on.
+              type: object
+              properties:
+                supportedVersions:
+                  description: SupportedVersions lists all the valid addon versions. It's a hint for user to define desired version.
+                  type: array
+                  items:
+                    type: string
       served: true
       storage: true
 status:

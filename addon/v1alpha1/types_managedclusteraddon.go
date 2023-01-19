@@ -187,9 +187,9 @@ type ConfigReference struct {
 	// This field is synced from ClusterManagementAddOn configGroupResource field.
 	ConfigGroupResource `json:",inline"`
 
-	// This field is synced from ClusterManagementAddOn defaultConfig and ManagedClusterAddOn config fields.
-	// If both of them are defined, the ManagedClusterAddOn configs will overwrite the ClusterManagementAddOn
-	// defaultConfigs.
+	// This field is synced from ClusterManagementAddOn Configuration and ManagedClusterAddOn config fields.
+	// If both are defined, the ManagedClusterAddOn configs will overwrite the ClusterManagementAddOn
+	// Configuration.
 	ConfigReferent `json:",inline"`
 
 	// desiredConfigSpecHash record the desired config spec hash.

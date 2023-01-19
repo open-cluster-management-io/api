@@ -1,0 +1,52 @@
+apiVersion: addon.open-cluster-management.io/v1alpha1
+kind: ClusterManagementAddOn
+metadata:
+  name: helloworld
+spec:
+  defaultConfigs:
+  - group: addon.open-cluster-management.io
+    resource: addonhubconfigs
+    name: hub-config-xxx
+  installStrategy:
+    type: Placements
+    placements:
+    - name: aws
+      placement:
+        name: aws-placement
+        namespace: default
+      addonTemplate:
+        configs:
+        - group: addon.open-cluster-management.io
+          resource: addondeploymentconfigs
+          name: aws-config-xxx
+      rolloutStrategy:
+        type: RollingUpdateWithCanary
+        rollingUpdateWithCanary:
+          placement:
+            name: aws-canary-placement
+            namespace: default
+          maxConcurrentlyUpdating: 25%
+    - name: aws-canary
+      placement:
+        name: aws-canary-placement
+        namespace: default
+      addonTemplate:
+        configs:
+        - group: addon.open-cluster-management.io
+          resource: addondeploymentconfigs
+          name: aws-config-xxx
+      rolloutStrategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxConcurrentlyUpdating: 25%
+    - name: gcp
+      placement:
+        name: gcp-placement
+        namespace: default
+      addonTemplate:
+        configs:
+        - group: addon.open-cluster-management.io
+          resource: addondeploymentconfigs
+          name: gcp-config-xxx
+      rolloutStrategy:
+        type: UpdateAll

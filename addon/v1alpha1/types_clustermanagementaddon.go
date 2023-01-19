@@ -55,70 +55,126 @@ type ClusterManagementAddOnSpec struct {
 	// +listMapKey=resource
 	SupportedConfigs []ConfigMeta `json:"supportedConfigs,omitempty"`
 
-	// configuration lists the add-on configurations and the rollout strategy when the configurations change.
+	// defaultConfigs represents a list of default add-on configurations.
+	// In scenario where all add-ons have the same configuration.
+	// User can override the default configuration by defining the configs in the
+	// install strategy for specific clusters.
 	// +optional
-	Configuration Configuration `json:"configuration,omitempty"`
+	DefaultConfigs []AddOnConfig `json:"defaultConfigs,omitempty"`
+
+	// InstallStrategy represents the install strategy of the add-on.
+	// +optional
+	InstallStrategy InstallStrategy `json:"installStrategy,omitempty"`
 }
 
-// Configuration represents a list of the add-on configurations and their rollout strategy.
-type Configuration struct {
-	// configs is a list of add-on configurations.
-	// The add-on configurations for each cluster can be overridden by the configs of the ManagedClusterAddon spec.
+type InstallStrategy struct {
+	// Type is the type of the install strategy, it can be:
+	// - Manual: no automatic install
+	// - Placements: install to clusters selected by placements.
+	// +kubebuilder:validation:Enum=Manual;Placements
+	// +kubebuilder:default:=Manual
 	// +optional
+	Type string `json:"type"`
+
+	// Placements is a list of placement references honored when install strategy type is
+	// Placements. All clusters selected by these placements will install the addon
+	// If one cluster belongs to multiple placements, it will only apply the strategy defined
+	// later in the order. That is to say, The latter strategy overrides the previous one.
+	// +optional
+	Placements []PlacementStrategy `json:"placements,omitempty"`
+}
+
+type PlacementStrategy struct {
+	// Placement is the reference to a placement
+	Placement PlacementRef `json:",inline"`
+
+	// Configs is the configuration of managedClusterAddon during installation.
+	// User can override the configuration by updating the managedClusterAddon directly.
 	Configs []AddOnConfig `json:"configs,omitempty"`
 
-	// The rollout strategy to apply new configs.
-	// The rollout strategy only watches the listed configs change.
-	// If the rollout strategy is not defined, the default strategy UpdateAll is used.
-	// If there are configs change during the rollout process, the rollout will start over. For example, configs list
-	// configA and configB. The change in configA triggers the rollout. If the configB is also
-	// changed before the rollout is complete, the current rollout stops and the rollout starts over.
+	// The rollout strategy to apply addon configurations change.
+	// The rollout strategy only watches the addon configurations defined in ClusterManagementAddOn.
 	// +optional
 	RolloutStrategy RolloutStrategy `json:"rolloutStrategy,omitempty"`
 }
 
-// RolloutStrategy represents the rollout strategy of the add-on configuration.
-type RolloutStrategy struct {
-	// Type is the type of the rollout strategy, it supports UpdateAll and RollingUpdateWithPlacement:
-	// - UpdateAll: when configs change, apply the new configs to all the clusters.
-	// - RollingUpdateWithPlacement: when configs change, rolling update new configs on the clusters
-	//   selected by placements.
-	//   If any of the configs are overridden by ManagedClusterAddOn on the specific cluster, the new configs
-	//   won't take effect on that cluster.
-	//   This rollout strategy is only responsible for applying new configs. When the strategy is modified or
-	//   removed, the applied configs won't be deleted from the cluster.
-	// +kubebuilder:validation:Enum=RollingUpdateWithPlacement;UpdateAll
-	// +kubebuilder:default:=UpdateAll
-	// +optional
-	Type string `json:"type"`
-
-	// Rolling update with placement config params. Present only if the type is RollingUpdateWithPlacement.
-	// +optional
-	RollingUpdateWithPlacement *RollingUpdateWithPlacement `json:"rollingUpdateWithPlacement,omitempty"`
-}
-
-// RollingUpdateWithPlacement represents the placement and behavior to rolling update add-on configurations
-// on the selected clusters.
-type RollingUpdateWithPlacement struct {
-	// name of the placement
+type PlacementRef struct {
+	// Name of the placement
 	// +kubebuilder:validation:Required
 	// +required
 	Name string `json:"name"`
 
-	// namespace of the placement.
+	// Namespace of the placement
 	// +kubebuilder:validation:Required
 	// +required
 	Namespace string `json:"namespace"`
+}
 
+// RolloutStrategy represents the rollout strategy of the add-on configuration.
+type RolloutStrategy struct {
+	// Type is the type of the rollout strategy, it supports UpdateAll, RollingUpdate and RollingUpdateWithCanary:
+	// - UpdateAll: when configs change, apply the new configs to all the selected clusters at once.
+	//   This is the default strategy.
+	// - RollingUpdate: when configs change, apply the new configs to all the selected clusters with
+	//   the concurrence rate defined in MaxConcurrentlyUpdating.
+	// - RollingUpdateWithCanary: when configs change, wait and check if add-ons on the canary placement
+	//   selected clusters have applied the new configs and are healthy, then apply the new configs to
+	//   all the selected clusters with the concurrence rate defined in MaxConcurrentlyUpdating.
+	//
+	//   The field lastKnownGoodConfigSpecHash in the status record the last successfully applied
+	//   spec hash of canary placement. If the config spec hash changes after the canary is passed and
+	//   before the rollout is done, the current rollout will continue, then roll out to the latest change.
+	//
+	//   For example, the addon configs have spec hash A. The canary is passed and the lastKnownGoodConfigSpecHash
+	//   would be A, and all the selected clusters are rolling out to A.
+	//   Then the config spec hash changes to B. At this time, the clusters will continue rolling out to A.
+	//   When the rollout is done and canary passed B, the lastKnownGoodConfigSpecHash would be B and
+	//   all the clusters will start rolling out to B.
+	//
+	//   The canary placement does not have to be a subset of the install placement, and it is more like a
+	//   reference for finding and checking canary clusters before upgrading all. To trigger the rollout
+	//   on the canary clusters, you can define another rollout strategy with the type RollingUpdate, or even
+	//   manually upgrade the addons on those clusters.
+	//
+	// +kubebuilder:validation:Enum=UpdateAll;RollingUpdate;RollingUpdateWithCanary
+	// +kubebuilder:default:=UpdateAll
+	// +optional
+	Type string `json:"type"`
+
+	// Rolling update with placement config params. Present only if the type is RollingUpdate.
+	// +optional
+	RollingUpdate *RollingUpdate `json:"rollingUpdate,omitempty"`
+
+	// Rolling update with placement config params. Present only if the type is RollingUpdateWithCanary.
+	// +optional
+	RollingUpdateWithCanary *RollingUpdateWithCanary `json:"rollingUpdateWithCanary,omitempty"`
+}
+
+// RollingUpdate represents the behavior to rolling update add-on configurations
+// on the selected clusters.
+type RollingUpdate struct {
 	// The maximum concurrently updating number of addons.
 	// Value can be an absolute number (ex: 5) or a percentage of desired addons (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up.
 	// Defaults to 25%.
 	// Example: when this is set to 30%, once the addon configs change, the addon on 30% of the selected clusters
-	// will adopt the new configs. When the new configs are ready, the addon on the remaining clusters
+	// will adopt the new configs. When the addons with new configs are healthy, the addon on the remaining clusters
 	// will be further updated.
+	// +kubebuilder:default:="25%"
 	// +optional
 	MaxConcurrentlyUpdating *intstr.IntOrString `json:"maxConcurrentlyUpdating,omitempty"`
+}
+
+// RollingUpdateWithCanary represents the canary placement and behavior to rolling update add-on configurations
+// on the selected clusters.
+type RollingUpdateWithCanary struct {
+	// Canary placement reference.
+	// +kubebuilder:validation:Required
+	// +required
+	Placement PlacementRef `json:"placement,omitempty"`
+
+	// the behavior to rolling update add-on configurations.
+	RollingUpdate `json:",inline"`
 }
 
 // AddOnMeta represents a collection of metadata information for the add-on.
@@ -190,6 +246,49 @@ type ConfigReferent struct {
 
 // ClusterManagementAddOnStatus represents the current status of cluster management add-on.
 type ClusterManagementAddOnStatus struct {
+	// configReferences is a list of current add-on configuration references per placement.
+	// +optional
+	InstallProgression []InstallProgression `json:"installProgression,omitempty"`
+}
+
+type InstallProgression struct {
+	// Placement reference.
+	// +optional
+	Placement PlacementRef `json:"placement,omitempty"`
+
+	// configReferences is a list of current add-on configuration references.
+	// +optional
+	ConfigReferences []InstallConfigReference `json:"configReferences,omitempty"`
+
+	// conditions describe the state of the managed and monitored components for the operator.
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"  patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+// InstallConfigReference is a reference to the current add-on configuration.
+// This resource is used to record the configuration resource for the current add-on.
+type InstallConfigReference struct {
+	// This field is synced from ClusterManagementAddOn Configurations.
+	ConfigGroupResource `json:",inline"`
+
+	// This field is synced from ClusterManagementAddOn Configurations.
+	ConfigReferent `json:",inline"`
+
+	// desiredConfigSpecHash record the desired config spec hash.
+	DesiredConfigSpecHash string `json:"desiredConfigSpecHash"`
+
+	// lastKnownGoodConfigSpecHash record the last known good config spec hash.
+	// For fresh install or rollout with type UpdateAll or RollingUpdate, the
+	// lastKnownGoodConfigSpecHash is the same as lastAppliedConfigSpecHash.
+	// For rollout with type RollingUpdateWithCanary, the lastKnownGoodConfigSpecHash
+	// is the last successfully applied config spec hash of the canary placement.
+	LastKnownGoodConfigSpecHash string `json:"lastKnownGoodConfigSpecHash"`
+
+	// lastAppliedConfigSpecHash record the config spec hash when the all the corresponding
+	// ManagedClusterAddOn are applied successfully.
+	LastAppliedConfigSpecHash string `json:"lastAppliedConfigSpecHash"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
