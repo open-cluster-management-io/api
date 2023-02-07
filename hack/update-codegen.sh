@@ -51,7 +51,7 @@ for group in addon; do
   bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
     open-cluster-management.io/api/client/${group} \
     open-cluster-management.io/api \
-    "${group}:v1alpha1" \
+    "${group}:v1alpha1,v1beta1" \
     --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
     ${verify}
 done
