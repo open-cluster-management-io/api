@@ -43,6 +43,7 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 		CRDDirectoryPaths: []string{
 			filepath.Join(".", "work", "v1", "0000_00_work.open-cluster-management.io_manifestworks.crd.yaml"),
 			filepath.Join(".", "work", "v1", "0000_01_work.open-cluster-management.io_appliedmanifestworks.crd.yaml"),
+			filepath.Join(".", "work", "v1alpha1"),
 			filepath.Join(".", "cluster", "v1"),
 			filepath.Join(".", "cluster", "v1beta1", "0000_02_clusters.open-cluster-management.io_placements.crd.yaml"),
 			filepath.Join(".", "cluster", "v1beta1", "0000_03_clusters.open-cluster-management.io_placementdecisions.crd.yaml"),

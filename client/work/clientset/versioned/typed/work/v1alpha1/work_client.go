@@ -12,7 +12,7 @@ import (
 
 type WorkV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	PlaceManifestWorksGetter
+	ManifestWorkSetsGetter
 }
 
 // WorkV1alpha1Client is used to interact with features provided by the work.open-cluster-management.io group.
@@ -20,8 +20,8 @@ type WorkV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *WorkV1alpha1Client) PlaceManifestWorks(namespace string) PlaceManifestWorkInterface {
-	return newPlaceManifestWorks(c, namespace)
+func (c *WorkV1alpha1Client) ManifestWorkSets(namespace string) ManifestWorkSetInterface {
+	return newManifestWorkSets(c, namespace)
 }
 
 // NewForConfig creates a new WorkV1alpha1Client for the given config.
