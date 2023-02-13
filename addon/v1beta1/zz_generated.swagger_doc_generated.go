@@ -143,9 +143,8 @@ func (ManagedClusterAddOnList) SwaggerDoc() map[string]string {
 }
 
 var map_ManagedClusterAddOnSpec = map[string]string{
-	"":                 "ManagedClusterAddOnSpec defines the install configuration of an addon agent on managed cluster.",
-	"installNamespace": "installNamespace is the namespace on the managed cluster to install the addon agent. If it is not set, open-cluster-management-agent-addon namespace is used to install the addon agent.",
-	"configs":          "configs is a list of add-on configurations. In scenario where the current add-on has its own configurations. An empty list means there are no defautl configurations for add-on. The default is an empty list",
+	"":        "ManagedClusterAddOnSpec defines the install configuration of an addon agent on managed cluster.",
+	"configs": "configs is a list of add-on configurations. In scenario where the current add-on has its own configurations. An empty list means there are no defautl configurations for add-on. The default is an empty list",
 }
 
 func (ManagedClusterAddOnSpec) SwaggerDoc() map[string]string {

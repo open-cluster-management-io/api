@@ -221,9 +221,10 @@ func (ObjectReference) SwaggerDoc() map[string]string {
 }
 
 var map_RegistrationConfig = map[string]string{
-	"":           "RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will create a csr for the addon agent with the registrationConfig.",
-	"signerName": "signerName is the name of signer that addon agent will use to create csr.",
-	"subject":    "subject is the user subject of the addon agent to be registered to the hub. If it is not set, the addon agent will have the default subject \"subject\": {\n\t\"user\": \"system:open-cluster-management:addon:{addonName}:{clusterName}:{agentName}\",\n\t\"groups: [\"system:open-cluster-management:addon\", \"system:open-cluster-management:addon:{addonName}\", \"system:authenticated\"]\n}",
+	"":                      "RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will create a csr for the addon agent with the registrationConfig.",
+	"signerName":            "signerName is the name of signer that addon agent will use to create csr.",
+	"subject":               "subject is the user subject of the addon agent to be registered to the hub. If it is not set, the addon agent will have the default subject \"subject\": {\n\t\"user\": \"system:open-cluster-management:addon:{addonName}:{clusterName}:{agentName}\",\n\t\"groups: [\"system:open-cluster-management:addon\", \"system:open-cluster-management:addon:{addonName}\", \"system:authenticated\"]\n}",
+	"registrationNamespace": "RegistrationNamespace is the namespace on the managed cluster to put the registration secret for the addon agent. If it is not set, open-cluster-management-agent-addon namespace is used to install the addon agent.",
 }
 
 func (RegistrationConfig) SwaggerDoc() map[string]string {

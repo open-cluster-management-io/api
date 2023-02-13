@@ -71,6 +71,8 @@ spec:
                 installStrategy:
                   description: InstallStrategy represents that related ManagedClusterAddOns should be installed on certain clusters.
                   type: object
+                  default:
+                    type: Manual
                   properties:
                     placements:
                       description: Placements is a list of placement references honored when install strategy type is Placements. All clusters selected by these placements will install the addon If one cluster belongs to multiple placements, it will only apply the strategy defined later in the order. That is to say, The latter strategy overrides the previous one.

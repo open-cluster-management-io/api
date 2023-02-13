@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 
 	addonv1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
+	addonv1beta1 "open-cluster-management.io/api/addon/v1beta1"
 )
 
 var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
@@ -22,100 +23,209 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 		clusterManagementAddOnName = fmt.Sprintf("cma-%s", rand.String(5))
 	})
 
-	ginkgo.It("Should create a ClusterManagementAddOn", func() {
-		clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: clusterManagementAddOnName,
-			},
-			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
-				AddOnMeta: addonv1alpha1.AddOnMeta{
-					DisplayName: "test",
-					Description: "for test",
+	ginkgo.Context("ClusterManagementAddOn v1alpha1 API", func() {
+		ginkgo.It("Should create a ClusterManagementAddOn", func() {
+			clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterManagementAddOnName,
 				},
-				SupportedConfigs: []addonv1alpha1.ConfigMeta{
-					{
-						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
-							Group:    "test.addon",
-							Resource: "tests",
-						},
-						DefaultConfig: &addonv1alpha1.ConfigReferent{
-							Namespace: testNamespace,
-							Name:      "test",
+				Spec: addonv1alpha1.ClusterManagementAddOnSpec{
+					AddOnMeta: addonv1alpha1.AddOnMeta{
+						DisplayName: "test",
+						Description: "for test",
+					},
+					SupportedConfigs: []addonv1alpha1.ConfigMeta{
+						{
+							ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+								Group:    "test.addon",
+								Resource: "tests",
+							},
+							DefaultConfig: &addonv1alpha1.ConfigReferent{
+								Namespace: testNamespace,
+								Name:      "test",
+							},
 						},
 					},
 				},
-			},
-		}
+			}
 
-		_, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
-			context.TODO(),
-			clusterManagementAddOn,
-			metav1.CreateOptions{},
-		)
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	})
+			_, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
+				context.TODO(),
+				clusterManagementAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		})
 
-	ginkgo.It("Should create a ClusterManagementAddOn with empty spec", func() {
-		clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: clusterManagementAddOnName,
-			},
-			Spec: addonv1alpha1.ClusterManagementAddOnSpec{},
-		}
-
-		_, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
-			context.TODO(),
-			clusterManagementAddOn,
-			metav1.CreateOptions{},
-		)
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
-	})
-
-	ginkgo.It("Should not create a ClusterManagementAddOn when its configuration resource is empty", func() {
-		clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: clusterManagementAddOnName,
-			},
-			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
-				SupportedConfigs: []addonv1alpha1.ConfigMeta{
-					{
-						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{Group: "test.addon"},
-					},
+		ginkgo.It("Should create a ClusterManagementAddOn with empty spec", func() {
+			clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterManagementAddOnName,
 				},
-			},
-		}
+				Spec: addonv1alpha1.ClusterManagementAddOnSpec{},
+			}
 
-		_, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
-			context.TODO(),
-			clusterManagementAddOn,
-			metav1.CreateOptions{},
-		)
-		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
-	})
+			_, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
+				context.TODO(),
+				clusterManagementAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		})
 
-	ginkgo.It("Should not create a ClusterManagementAddOn when its configuration name is empty", func() {
-		clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: clusterManagementAddOnName,
-			},
-			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
-				SupportedConfigs: []addonv1alpha1.ConfigMeta{
-					{
-						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
-							Group:    "test.addon",
-							Resource: "tests",
+		ginkgo.It("Should not create a ClusterManagementAddOn when its configuration resource is empty", func() {
+			clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterManagementAddOnName,
+				},
+				Spec: addonv1alpha1.ClusterManagementAddOnSpec{
+					SupportedConfigs: []addonv1alpha1.ConfigMeta{
+						{
+							ConfigGroupResource: addonv1alpha1.ConfigGroupResource{Group: "test.addon"},
 						},
-						DefaultConfig: &addonv1alpha1.ConfigReferent{},
 					},
 				},
-			},
-		}
+			}
 
-		_, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
-			context.TODO(),
-			clusterManagementAddOn,
-			metav1.CreateOptions{},
-		)
-		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+			_, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
+				context.TODO(),
+				clusterManagementAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+		})
+
+		ginkgo.It("Should not create a ClusterManagementAddOn when its configuration name is empty", func() {
+			clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterManagementAddOnName,
+				},
+				Spec: addonv1alpha1.ClusterManagementAddOnSpec{
+					SupportedConfigs: []addonv1alpha1.ConfigMeta{
+						{
+							ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+								Group:    "test.addon",
+								Resource: "tests",
+							},
+							DefaultConfig: &addonv1alpha1.ConfigReferent{},
+						},
+					},
+				},
+			}
+
+			_, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
+				context.TODO(),
+				clusterManagementAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+		})
+	})
+
+	ginkgo.Context("ClusterManagementAddOn v1beta1 API", func() {
+		ginkgo.It("Should create a ClusterManagementAddOn", func() {
+			clusterManagementAddOn := &addonv1beta1.ClusterManagementAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterManagementAddOnName,
+				},
+				Spec: addonv1beta1.ClusterManagementAddOnSpec{
+					AddOnMeta: addonv1beta1.AddOnMeta{
+						DisplayName: "test",
+						Description: "for test",
+					},
+					DefaultConfigs: []addonv1beta1.AddOnConfig{
+						{
+							ConfigGroupResource: addonv1beta1.ConfigGroupResource{
+								Group:    "test.addon",
+								Resource: "tests",
+							},
+							ConfigReferent: addonv1beta1.ConfigReferent{
+								Namespace: testNamespace,
+								Name:      "test",
+							},
+						},
+					},
+				},
+			}
+
+			_, err := hubAddonClient.AddonV1beta1().ClusterManagementAddOns().Create(
+				context.TODO(),
+				clusterManagementAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("Should create a ClusterManagementAddOn with empty spec", func() {
+			clusterManagementAddOn := &addonv1beta1.ClusterManagementAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterManagementAddOnName,
+				},
+				Spec: addonv1beta1.ClusterManagementAddOnSpec{},
+			}
+
+			_, err := hubAddonClient.AddonV1beta1().ClusterManagementAddOns().Create(
+				context.TODO(),
+				clusterManagementAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+			clusterManagementAddOn, err = hubAddonClient.AddonV1beta1().ClusterManagementAddOns().Get(
+				context.TODO(),
+				clusterManagementAddOnName,
+				metav1.GetOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+			gomega.Expect(clusterManagementAddOn.Spec.InstallStrategy.Type).To(gomega.Equal(addonv1beta1.AddonInstallStrategyManual))
+		})
+
+		ginkgo.It("Should not create a ClusterManagementAddOn when its configuration resource is empty", func() {
+			clusterManagementAddOn := &addonv1beta1.ClusterManagementAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterManagementAddOnName,
+				},
+				Spec: addonv1beta1.ClusterManagementAddOnSpec{
+					DefaultConfigs: []addonv1beta1.AddOnConfig{
+						{
+							ConfigGroupResource: addonv1beta1.ConfigGroupResource{Group: "test.addon"},
+						},
+					},
+				},
+			}
+
+			_, err := hubAddonClient.AddonV1beta1().ClusterManagementAddOns().Create(
+				context.TODO(),
+				clusterManagementAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+		})
+
+		ginkgo.It("Should not create a ClusterManagementAddOn when its configuration name is empty", func() {
+			clusterManagementAddOn := &addonv1beta1.ClusterManagementAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterManagementAddOnName,
+				},
+				Spec: addonv1beta1.ClusterManagementAddOnSpec{
+					DefaultConfigs: []addonv1beta1.AddOnConfig{
+						{
+							ConfigGroupResource: addonv1beta1.ConfigGroupResource{
+								Group:    "test.addon",
+								Resource: "tests",
+							},
+							ConfigReferent: addonv1beta1.ConfigReferent{},
+						},
+					},
+				},
+			}
+
+			_, err := hubAddonClient.AddonV1beta1().ClusterManagementAddOns().Create(
+				context.TODO(),
+				clusterManagementAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+		})
 	})
 })

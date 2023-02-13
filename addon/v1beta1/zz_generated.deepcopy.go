@@ -114,7 +114,11 @@ func (in *ClusterManagementAddOnSpec) DeepCopyInto(out *ClusterManagementAddOnSp
 		*out = make([]AddOnConfig, len(*in))
 		copy(*out, *in)
 	}
-	in.InstallStrategy.DeepCopyInto(&out.InstallStrategy)
+	if in.InstallStrategy != nil {
+		in, out := &in.InstallStrategy, &out.InstallStrategy
+		*out = new(InstallStrategy)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

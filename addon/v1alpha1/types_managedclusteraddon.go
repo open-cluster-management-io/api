@@ -66,6 +66,14 @@ type RegistrationConfig struct {
 	//
 	// +optional
 	Subject Subject `json:"subject,omitempty"`
+
+	// RegistrationNamespace is the namespace on the managed cluster to put the registration secret for the addon agent.
+	// If it is not set, open-cluster-management-agent-addon namespace is used to install the addon agent.
+	// +optional
+	// +kubebuilder:default=open-cluster-management-agent-addon
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+	RegistrationNamespace string `json:"registrationNamespace,omitempty"`
 }
 
 type AddOnConfig struct {

@@ -66,12 +66,6 @@ spec:
                         description: resource of the add-on configuration.
                         type: string
                         minLength: 1
-                installNamespace:
-                  description: installNamespace is the namespace on the managed cluster to install the addon agent. If it is not set, open-cluster-management-agent-addon namespace is used to install the addon agent.
-                  type: string
-                  default: open-cluster-management-agent-addon
-                  maxLength: 63
-                  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
             status:
               description: status holds the information about the state of an operator.  It is consistent with status information across the Kubernetes ecosystem.
               type: object
@@ -255,7 +249,7 @@ spec:
                     - resource
                   x-kubernetes-list-type: map
       served: true
-      storage: true
+      storage: false
       subresources:
         status: {}
     - additionalPrinterColumns:
@@ -437,6 +431,12 @@ spec:
                     description: RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will create a csr for the addon agent with the registrationConfig.
                     type: object
                     properties:
+                      registrationNamespace:
+                        description: RegistrationNamespace is the namespace on the managed cluster to put the registration secret for the addon agent. If it is not set, open-cluster-management-agent-addon namespace is used to install the addon agent.
+                        type: string
+                        default: open-cluster-management-agent-addon
+                        maxLength: 63
+                        pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                       signerName:
                         description: signerName is the name of signer that addon agent will use to create csr.
                         type: string
@@ -483,7 +483,7 @@ spec:
                         description: resource of the referent.
                         type: string
       served: true
-      storage: false
+      storage: true
       subresources:
         status: {}
 status:

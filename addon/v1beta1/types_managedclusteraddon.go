@@ -33,14 +33,6 @@ type ManagedClusterAddOn struct {
 // ManagedClusterAddOnSpec defines the install configuration of
 // an addon agent on managed cluster.
 type ManagedClusterAddOnSpec struct {
-	// installNamespace is the namespace on the managed cluster to install the addon agent.
-	// If it is not set, open-cluster-management-agent-addon namespace is used to install the addon agent.
-	// +optional
-	// +kubebuilder:default=open-cluster-management-agent-addon
-	// +kubebuilder:validation:MaxLength=63
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	InstallNamespace string `json:"installNamespace,omitempty"`
-
 	// configs is a list of add-on configurations.
 	// In scenario where the current add-on has its own configurations.
 	// An empty list means there are no defautl configurations for add-on.
