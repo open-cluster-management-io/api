@@ -121,4 +121,76 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 		)
 		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
 	})
+
+	ginkgo.It("Should update the ClusterManagementAddOn status", func() {
+		clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagementAddOnName,
+			},
+			Spec: addonv1alpha1.ClusterManagementAddOnSpec{},
+		}
+
+		cma, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
+			context.TODO(),
+			clusterManagementAddOn,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		cma.Status.InstallProgression = []addonv1alpha1.InstallProgression{
+			{
+				PlacementRef: addonv1alpha1.PlacementRef{
+					Name:      "test",
+					Namespace: testNamespace,
+				},
+				ConfigReferences: []addonv1alpha1.InstallConfigReference{
+					{
+						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+							Group:    "test.group",
+							Resource: "tests",
+						},
+						DesiredConfigSpecHash: &addonv1alpha1.ConfigSpecHash{
+							ConfigReferent: addonv1alpha1.ConfigReferent{
+								Namespace: testNamespace,
+								Name:      "test",
+							},
+							ConfigSpecHash: "test-spec-hash",
+						},
+					},
+				},
+			},
+		}
+
+		_, err = hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().UpdateStatus(
+			context.TODO(),
+			cma,
+			metav1.UpdateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	})
+
+	ginkgo.It("Should update the ClusterManagementAddOn status with empty status", func() {
+		clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagementAddOnName,
+			},
+			Spec: addonv1alpha1.ClusterManagementAddOnSpec{},
+		}
+
+		cma, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
+			context.TODO(),
+			clusterManagementAddOn,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		_, err = hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().UpdateStatus(
+			context.TODO(),
+			cma,
+			metav1.UpdateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	})
 })
