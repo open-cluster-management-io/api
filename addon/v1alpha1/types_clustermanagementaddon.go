@@ -170,8 +170,7 @@ type PlacementRef struct {
 }
 
 type PlacementStrategy struct {
-	// Placement is the reference to a placement
-	Placement PlacementRef `json:",inline"`
+	PlacementRef `json:",inline"`
 	// Configs is the configuration of managedClusterAddon during installation.
 	// User can override the configuration by updating the managedClusterAddon directly.
 	// +optional
