@@ -20,25 +20,25 @@ var _ = ginkgo.Describe("ManifestWorkSet API test", func() {
 
 	ginkgo.Context("Placement refs", func() {
 		ginkgo.It("Create a ManifestWorkSet with empty placement refs", func() {
-			workSet := &workv1alpha1.ManifestWorkSet{
+			workSet := &workv1alpha1.ManifestWorkReplicaSet{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: manifestWorkSetName,
 				},
-				Spec: workv1alpha1.ManifestWorkSetSpec{
+				Spec: workv1alpha1.ManifestWorkReplicaSetSpec{
 					PlacementRefs: []workv1alpha1.LocalPlacementReference{},
 				},
 			}
-			_, err := hubWorkClient.WorkV1alpha1().ManifestWorkSets(testNamespace).
+			_, err := hubWorkClient.WorkV1alpha1().ManifestWorkReplicaSets(testNamespace).
 				Create(context.TODO(), workSet, metav1.CreateOptions{})
 			gomega.Expect(err).To(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("Create a ManifestWorkSet with a placement refs and empty name", func() {
-			workSet := &workv1alpha1.ManifestWorkSet{
+			workSet := &workv1alpha1.ManifestWorkReplicaSet{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: manifestWorkSetName,
 				},
-				Spec: workv1alpha1.ManifestWorkSetSpec{
+				Spec: workv1alpha1.ManifestWorkReplicaSetSpec{
 					PlacementRefs: []workv1alpha1.LocalPlacementReference{
 						{
 							Name: "",
@@ -46,17 +46,17 @@ var _ = ginkgo.Describe("ManifestWorkSet API test", func() {
 					},
 				},
 			}
-			_, err := hubWorkClient.WorkV1alpha1().ManifestWorkSets(testNamespace).
+			_, err := hubWorkClient.WorkV1alpha1().ManifestWorkReplicaSets(testNamespace).
 				Create(context.TODO(), workSet, metav1.CreateOptions{})
 			gomega.Expect(err).To(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("Create a ManifestWorkSet successfully", func() {
-			workSet := &workv1alpha1.ManifestWorkSet{
+			workSet := &workv1alpha1.ManifestWorkReplicaSet{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: manifestWorkSetName,
 				},
-				Spec: workv1alpha1.ManifestWorkSetSpec{
+				Spec: workv1alpha1.ManifestWorkReplicaSetSpec{
 					PlacementRefs: []workv1alpha1.LocalPlacementReference{
 						{
 							Name: "testPlacement",
@@ -64,7 +64,7 @@ var _ = ginkgo.Describe("ManifestWorkSet API test", func() {
 					},
 				},
 			}
-			_, err := hubWorkClient.WorkV1alpha1().ManifestWorkSets(testNamespace).
+			_, err := hubWorkClient.WorkV1alpha1().ManifestWorkReplicaSets(testNamespace).
 				Create(context.TODO(), workSet, metav1.CreateOptions{})
 			gomega.Expect(err).ToNot(gomega.HaveOccurred())
 		})

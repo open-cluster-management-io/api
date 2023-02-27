@@ -1,17 +1,16 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: manifestworksets.work.open-cluster-management.io
+  name: manifestworkreplicasets.work.open-cluster-management.io
 spec:
   group: work.open-cluster-management.io
   names:
-    kind: ManifestWorkSet
-    listKind: PlaceManifestWorkList
-    plural: manifestworksets
+    kind: ManifestWorkReplicaSet
+    listKind: ManifestWorkReplicaSetList
+    plural: manifestworkreplicasets
     shortNames:
-      - mwset
-      - mwsets
-    singular: manifestworkset
+      - mwrs
+    singular: manifestworkreplicaset
   scope: Namespaced
   preserveUnknownFields: false
   versions:
@@ -35,7 +34,7 @@ spec:
       name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: ManifestWorkSet is the Schema for the ManifestWorkSet API. This custom resource is able to apply ManifestWork using Placement for 0..n ManagedCluster(in their namespaces). It will also remove the ManifestWork custom resources when deleted. Lastly the specific ManifestWork custom resources created per ManagedCluster namespace will be adjusted based on PlacementDecision changes.
+          description: ManifestWorkReplicaSet is the Schema for the ManifestWorkReplicaSet API. This custom resource is able to apply ManifestWork using Placement for 0..n ManagedCluster(in their namespaces). It will also remove the ManifestWork custom resources when deleted. Lastly the specific ManifestWork custom resources created per ManagedCluster namespace will be adjusted based on PlacementDecision changes.
           type: object
           properties:
             apiVersion:
@@ -305,7 +304,7 @@ spec:
                       description: 'TODO: Progressing is the number of ManifestWorks with condition Progressing: true'
                       type: integer
                     total:
-                      description: Total number of ManifestWorks managed by the ManifestWorkSet
+                      description: Total number of ManifestWorks managed by the ManifestWorkReplicaSet
                       type: integer
       served: true
       storage: true

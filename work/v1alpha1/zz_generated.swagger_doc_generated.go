@@ -20,53 +20,53 @@ func (LocalPlacementReference) SwaggerDoc() map[string]string {
 	return map_LocalPlacementReference
 }
 
-var map_ManifestWorkSet = map[string]string{
-	"":       "ManifestWorkSet is the Schema for the ManifestWorkSet API. This custom resource is able to apply ManifestWork using Placement for 0..n ManagedCluster(in their namespaces). It will also remove the ManifestWork custom resources when deleted. Lastly the specific ManifestWork custom resources created per ManagedCluster namespace will be adjusted based on PlacementDecision changes.",
+var map_ManifestWorkReplicaSet = map[string]string{
+	"":       "ManifestWorkReplicaSet is the Schema for the ManifestWorkReplicaSet API. This custom resource is able to apply ManifestWork using Placement for 0..n ManagedCluster(in their namespaces). It will also remove the ManifestWork custom resources when deleted. Lastly the specific ManifestWork custom resources created per ManagedCluster namespace will be adjusted based on PlacementDecision changes.",
 	"spec":   "Spec reperesents the desired ManifestWork payload and Placement reference to be reconciled",
 	"status": "Status represent the current status of Placing ManifestWork resources",
 }
 
-func (ManifestWorkSet) SwaggerDoc() map[string]string {
-	return map_ManifestWorkSet
+func (ManifestWorkReplicaSet) SwaggerDoc() map[string]string {
+	return map_ManifestWorkReplicaSet
 }
 
-var map_ManifestWorkSetList = map[string]string{
-	"": "\n\nManifestWorkSetList contains a list of ManifestWorkSet",
+var map_ManifestWorkReplicaSetList = map[string]string{
+	"": "\n\nManifestWorkReplicaSetList contains a list of ManifestWorkReplicaSet",
 }
 
-func (ManifestWorkSetList) SwaggerDoc() map[string]string {
-	return map_ManifestWorkSetList
+func (ManifestWorkReplicaSetList) SwaggerDoc() map[string]string {
+	return map_ManifestWorkReplicaSetList
 }
 
-var map_ManifestWorkSetSpec = map[string]string{
-	"":                     "ManifestWorkSetSpec defines the desired state of ManifestWorkSet",
+var map_ManifestWorkReplicaSetSpec = map[string]string{
+	"":                     "ManifestWorkReplicaSetSpec defines the desired state of ManifestWorkReplicaSet",
 	"manifestWorkTemplate": "ManifestWorkTemplate is the ManifestWorkSpec that will be used to generate a per-cluster ManifestWork",
 	"placementRefs":        "PacementRefs is a list of the names of the Placement resource, from which a PlacementDecision will be found and used to distribute the ManifestWork.",
 }
 
-func (ManifestWorkSetSpec) SwaggerDoc() map[string]string {
-	return map_ManifestWorkSetSpec
+func (ManifestWorkReplicaSetSpec) SwaggerDoc() map[string]string {
+	return map_ManifestWorkReplicaSetSpec
 }
 
-var map_ManifestWorkSetStatus = map[string]string{
-	"":           "ManifestWorkSetStatus defines the observed state of ManifestWorkSet",
+var map_ManifestWorkReplicaSetStatus = map[string]string{
+	"":           "ManifestWorkReplicaSetStatus defines the observed state of ManifestWorkReplicaSet",
 	"conditions": "Conditions contains the different condition statuses for distrbution of ManifestWork resources Valid condition types are: 1. AppliedManifestWorks represents ManifestWorks have been distributed as per placement All, Partial, None, Problem 2. PlacementRefValid",
 	"summary":    "Summary totals of resulting ManifestWorks",
 }
 
-func (ManifestWorkSetStatus) SwaggerDoc() map[string]string {
-	return map_ManifestWorkSetStatus
+func (ManifestWorkReplicaSetStatus) SwaggerDoc() map[string]string {
+	return map_ManifestWorkReplicaSetStatus
 }
 
-var map_ManifestWorkSetSummary = map[string]string{
-	"":          "ManifestWorkSetSummary provides reference counts of all ManifestWorks that are associated with a given ManifestWorkSet resource, for their respective states",
-	"total":     "Total number of ManifestWorks managed by the ManifestWorkSet",
+var map_ManifestWorkReplicaSetSummary = map[string]string{
+	"":          "ManifestWorkReplicaSetSummary provides reference counts of all ManifestWorks that are associated with a given ManifestWorkReplicaSet resource, for their respective states",
+	"total":     "Total number of ManifestWorks managed by the ManifestWorkReplicaSet",
 	"available": "Available is the number of ManifestWorks with condition Available: true",
 	"Applied":   "Applied is the number of ManifestWorks with condition Applied: true",
 }
 
-func (ManifestWorkSetSummary) SwaggerDoc() map[string]string {
-	return map_ManifestWorkSetSummary
+func (ManifestWorkReplicaSetSummary) SwaggerDoc() map[string]string {
+	return map_ManifestWorkReplicaSetSummary
 }
 
 // AUTO-GENERATED FUNCTIONS END HERE
