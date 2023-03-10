@@ -80,6 +80,9 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 				Name: clusterManagementAddOnName,
 			},
 			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
+				InstallStrategy: addonv1alpha1.InstallStrategy{
+					Type: addonv1alpha1.AddonInstallStrategyManual,
+				},
 				SupportedConfigs: []addonv1alpha1.ConfigMeta{
 					{
 						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{Group: "test.addon"},
@@ -102,6 +105,9 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 				Name: clusterManagementAddOnName,
 			},
 			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
+				InstallStrategy: addonv1alpha1.InstallStrategy{
+					Type: addonv1alpha1.AddonInstallStrategyManual,
+				},
 				SupportedConfigs: []addonv1alpha1.ConfigMeta{
 					{
 						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
@@ -127,7 +133,11 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: clusterManagementAddOnName,
 			},
-			Spec: addonv1alpha1.ClusterManagementAddOnSpec{},
+			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
+				InstallStrategy: addonv1alpha1.InstallStrategy{
+					Type: addonv1alpha1.AddonInstallStrategyManual,
+				},
+			},
 		}
 
 		cma, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(
@@ -137,7 +147,22 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 		)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
-		cma.Status.InstallProgression = []addonv1alpha1.InstallProgression{
+		cma.Status.DefaultConfigReferences = []addonv1alpha1.DefaultConfigReference{
+			{
+				ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
+					Group:    "test.group",
+					Resource: "tests",
+				},
+				DesiredConfig: &addonv1alpha1.ConfigSpecHash{
+					ConfigReferent: addonv1alpha1.ConfigReferent{
+						Namespace: testNamespace,
+						Name:      "test1",
+					},
+					SpecHash: "test-spec-hash",
+				},
+			},
+		}
+		cma.Status.InstallProgressions = []addonv1alpha1.InstallProgression{
 			{
 				PlacementRef: addonv1alpha1.PlacementRef{
 					Name:      "test",
@@ -149,12 +174,12 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 							Group:    "test.group",
 							Resource: "tests",
 						},
-						DesiredConfigSpecHash: &addonv1alpha1.ConfigSpecHash{
+						DesiredConfig: &addonv1alpha1.ConfigSpecHash{
 							ConfigReferent: addonv1alpha1.ConfigReferent{
 								Namespace: testNamespace,
-								Name:      "test",
+								Name:      "test2",
 							},
-							ConfigSpecHash: "test-spec-hash",
+							SpecHash: "test-spec-hash",
 						},
 					},
 				},
@@ -175,7 +200,11 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: clusterManagementAddOnName,
 			},
-			Spec: addonv1alpha1.ClusterManagementAddOnSpec{},
+			Spec: addonv1alpha1.ClusterManagementAddOnSpec{
+				InstallStrategy: addonv1alpha1.InstallStrategy{
+					Type: addonv1alpha1.AddonInstallStrategyManual,
+				},
+			},
 		}
 
 		cma, err := hubAddonClient.AddonV1alpha1().ClusterManagementAddOns().Create(

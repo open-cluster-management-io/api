@@ -180,21 +180,23 @@ type ConfigReference struct {
 	// This field is synced from ClusterManagementAddOn configGroupResource field.
 	ConfigGroupResource `json:",inline"`
 
+	// Deprecated: Use DesiredConfig instead
 	// This field is synced from ClusterManagementAddOn defaultConfig and ManagedClusterAddOn config fields.
 	// If both of them are defined, the ManagedClusterAddOn configs will overwrite the ClusterManagementAddOn
 	// defaultConfigs.
 	ConfigReferent `json:",inline"`
 
+	// Deprecated: Use LastAppliedConfig instead
 	// lastObservedGeneration is the observed generation of the add-on configuration.
 	LastObservedGeneration int64 `json:"lastObservedGeneration"`
 
-	// desiredConfigSpecHash record the desired config spec hash.
+	// desiredConfig record the desired config spec hash.
 	// +optional
-	DesiredConfigSpecHash *ConfigSpecHash `json:"desiredConfigSpecHash"`
+	DesiredConfig *ConfigSpecHash `json:"desiredConfig"`
 
-	// lastAppliedConfigSpecHash record the config spec hash when the corresponding ManifestWork is applied successfully.
+	// lastAppliedConfig record the config spec hash when the corresponding ManifestWork is applied successfully.
 	// +optional
-	LastAppliedConfigSpecHash *ConfigSpecHash `json:"lastAppliedConfigSpecHash"`
+	LastAppliedConfig *ConfigSpecHash `json:"lastAppliedConfig"`
 }
 
 // HealthCheckMode indicates the mode for the addon to check its healthiness status

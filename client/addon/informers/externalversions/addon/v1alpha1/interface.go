@@ -10,8 +10,6 @@ import (
 type Interface interface {
 	// AddOnDeploymentConfigs returns a AddOnDeploymentConfigInformer.
 	AddOnDeploymentConfigs() AddOnDeploymentConfigInformer
-	// AddOnHubConfigs returns a AddOnHubConfigInformer.
-	AddOnHubConfigs() AddOnHubConfigInformer
 	// ClusterManagementAddOns returns a ClusterManagementAddOnInformer.
 	ClusterManagementAddOns() ClusterManagementAddOnInformer
 	// ManagedClusterAddOns returns a ManagedClusterAddOnInformer.
@@ -32,11 +30,6 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // AddOnDeploymentConfigs returns a AddOnDeploymentConfigInformer.
 func (v *version) AddOnDeploymentConfigs() AddOnDeploymentConfigInformer {
 	return &addOnDeploymentConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// AddOnHubConfigs returns a AddOnHubConfigInformer.
-func (v *version) AddOnHubConfigs() AddOnHubConfigInformer {
-	return &addOnHubConfigInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
 // ClusterManagementAddOns returns a ClusterManagementAddOnInformer.

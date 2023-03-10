@@ -16,10 +16,6 @@ func (c *FakeAddonV1alpha1) AddOnDeploymentConfigs(namespace string) v1alpha1.Ad
 	return &FakeAddOnDeploymentConfigs{c, namespace}
 }
 
-func (c *FakeAddonV1alpha1) AddOnHubConfigs() v1alpha1.AddOnHubConfigInterface {
-	return &FakeAddOnHubConfigs{c}
-}
-
 func (c *FakeAddonV1alpha1) ClusterManagementAddOns() v1alpha1.ClusterManagementAddOnInterface {
 	return &FakeClusterManagementAddOns{c}
 }

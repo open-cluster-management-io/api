@@ -134,7 +134,7 @@ type ConfigSpecHash struct {
 	ConfigReferent `json:",inline"`
 
 	// spec hash for an add-on configuration.
-	ConfigSpecHash string `json:"configSpecHash"`
+	SpecHash string `json:"specHash"`
 }
 
 // InstallStrategy represents that related ManagedClusterAddOns should be installed
@@ -161,9 +161,9 @@ type InstallStrategy struct {
 const (
 	// AddonInstallStrategyManual is the addon install strategy representing no automatic addon installation
 	AddonInstallStrategyManual string = "Manual"
-	// AddonInstallStrategyManualPlacements is the addon install strategy representing the addon installation
+	// AddonInstallStrategyPlacements is the addon install strategy representing the addon installation
 	// is based on placement decisions.
-	AddonInstallStrategyManualPlacements string = "Placements"
+	AddonInstallStrategyPlacements string = "Placements"
 )
 
 type PlacementRef struct {
@@ -187,6 +187,7 @@ type PlacementStrategy struct {
 	Configs []AddOnConfig `json:"configs,omitempty"`
 	// The rollout strategy to apply addon configurations change.
 	// The rollout strategy only watches the addon configurations defined in ClusterManagementAddOn.
+	// +kubebuilder:default={type: UpdateAll}
 	// +optional
 	RolloutStrategy RolloutStrategy `json:"rolloutStrategy,omitempty"`
 }
@@ -202,14 +203,14 @@ type RolloutStrategy struct {
 	//   selected clusters have applied the new configs and are healthy, then apply the new configs to
 	//   all the selected clusters with the concurrence rate defined in MaxConcurrency.
 	//
-	//   The field lastKnownGoodConfigSpecHash in the status record the last successfully applied
+	//   The field lastKnownGoodConfig in the status record the last successfully applied
 	//   spec hash of canary placement. If the config spec hash changes after the canary is passed and
 	//   before the rollout is done, the current rollout will continue, then roll out to the latest change.
 	//
-	//   For example, the addon configs have spec hash A. The canary is passed and the lastKnownGoodConfigSpecHash
+	//   For example, the addon configs have spec hash A. The canary is passed and the lastKnownGoodConfig
 	//   would be A, and all the selected clusters are rolling out to A.
 	//   Then the config spec hash changes to B. At this time, the clusters will continue rolling out to A.
-	//   When the rollout is done and canary passed B, the lastKnownGoodConfigSpecHash would be B and
+	//   When the rollout is done and canary passed B, the lastKnownGoodConfig would be B and
 	//   all the clusters will start rolling out to B.
 	//
 	//   The canary placement does not have to be a subset of the install placement, and it is more like a
@@ -247,7 +248,7 @@ const (
 // RollingUpdate represents the behavior to rolling update add-on configurations
 // on the selected clusters.
 type RollingUpdate struct {
-	// The maximum concurrently updating number of addons.
+	// The maximum concurrently updating number of clusters.
 	// Value can be an absolute number (ex: 5) or a percentage of desired addons (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up.
 	// Defaults to 25%.
@@ -256,7 +257,7 @@ type RollingUpdate struct {
 	// will be further updated.
 	// +kubebuilder:default:="25%"
 	// +optional
-	MaxConcurrency *intstr.IntOrString `json:"maxConcurrency,omitempty"`
+	MaxConcurrency intstr.IntOrString `json:"maxConcurrency,omitempty"`
 }
 
 // RollingUpdateWithCanary represents the canary placement and behavior to rolling update add-on configurations
@@ -278,7 +279,7 @@ type ClusterManagementAddOnStatus struct {
 	DefaultConfigReferences []DefaultConfigReference `json:"defaultconfigReferences,omitempty"`
 	// installProgression is a list of current add-on configuration references per placement.
 	// +optional
-	InstallProgression []InstallProgression `json:"installProgression,omitempty"`
+	InstallProgressions []InstallProgression `json:"installProgressions,omitempty"`
 }
 
 type InstallProgression struct {
@@ -301,8 +302,8 @@ type DefaultConfigReference struct {
 	// This field is synced from ClusterManagementAddOn Configurations.
 	ConfigGroupResource `json:",inline"`
 
-	// desiredConfigSpecHash record the desired config spec hash.
-	DesiredConfigSpecHash *ConfigSpecHash `json:"desiredConfigSpecHash"`
+	// desiredConfig record the desired config spec hash.
+	DesiredConfig *ConfigSpecHash `json:"desiredConfig"`
 }
 
 // InstallConfigReference is a reference to the current add-on configuration.
@@ -311,19 +312,19 @@ type InstallConfigReference struct {
 	// This field is synced from ClusterManagementAddOn Configurations.
 	ConfigGroupResource `json:",inline"`
 
-	// desiredConfigSpecHash record the desired config spec hash.
-	DesiredConfigSpecHash *ConfigSpecHash `json:"desiredConfigSpecHash"`
+	// desiredConfig record the desired config name and spec hash.
+	DesiredConfig *ConfigSpecHash `json:"desiredConfig"`
 
-	// lastKnownGoodConfigSpecHash record the last known good config spec hash.
+	// lastKnownGoodConfig records the last known good config spec hash.
 	// For fresh install or rollout with type UpdateAll or RollingUpdate, the
-	// lastKnownGoodConfigSpecHash is the same as lastAppliedConfigSpecHash.
-	// For rollout with type RollingUpdateWithCanary, the lastKnownGoodConfigSpecHash
+	// lastKnownGoodConfig is the same as lastAppliedConfig.
+	// For rollout with type RollingUpdateWithCanary, the lastKnownGoodConfig
 	// is the last successfully applied config spec hash of the canary placement.
-	LastKnownGoodConfigSpecHash *ConfigSpecHash `json:"lastKnownGoodConfigSpecHash"`
+	LastKnownGoodConfig *ConfigSpecHash `json:"lastKnownGoodConfig"`
 
-	// lastAppliedConfigSpecHash record the config spec hash when the all the corresponding
+	// lastAppliedConfig records the config spec hash when the all the corresponding
 	// ManagedClusterAddOn are applied successfully.
-	LastAppliedConfigSpecHash *ConfigSpecHash `json:"lastAppliedConfigSpecHash"`
+	LastAppliedConfig *ConfigSpecHash `json:"lastAppliedConfig"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
