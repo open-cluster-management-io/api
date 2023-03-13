@@ -59,6 +59,43 @@ func (NodePlacement) SwaggerDoc() map[string]string {
 	return map_NodePlacement
 }
 
+var map_AddOnHubConfig = map[string]string{
+	"":       "AddOnHubConfig represents a hub-scoped configuration for an add-on.",
+	"spec":   "spec represents a desired configuration for an add-on.",
+	"status": "status represents the current status of the configuration for an add-on.",
+}
+
+func (AddOnHubConfig) SwaggerDoc() map[string]string {
+	return map_AddOnHubConfig
+}
+
+var map_AddOnHubConfigList = map[string]string{
+	"":         "AddOnHubConfigList is a collection of add-on hub-scoped configuration.",
+	"metadata": "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+	"items":    "Items is a list of add-on hub-scoped configuration.",
+}
+
+func (AddOnHubConfigList) SwaggerDoc() map[string]string {
+	return map_AddOnHubConfigList
+}
+
+var map_AddOnHubConfigSpec = map[string]string{
+	"desiredVersion": "version represents the desired addon version to install.",
+}
+
+func (AddOnHubConfigSpec) SwaggerDoc() map[string]string {
+	return map_AddOnHubConfigSpec
+}
+
+var map_AddOnHubConfigStatus = map[string]string{
+	"":                  "AddOnHubConfigStatus represents the current status of the configuration for an add-on.",
+	"supportedVersions": "SupportedVersions lists all the valid addon versions. It's a hint for user to define desired version.",
+}
+
+func (AddOnHubConfigStatus) SwaggerDoc() map[string]string {
+	return map_AddOnHubConfigStatus
+}
+
 var map_AddOnMeta = map[string]string{
 	"":            "AddOnMeta represents a collection of metadata information for the add-on.",
 	"displayName": "displayName represents the name of add-on that will be displayed.",

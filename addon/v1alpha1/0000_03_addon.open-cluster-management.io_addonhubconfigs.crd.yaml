@@ -1,0 +1,52 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: addonhubconfigs.addon.open-cluster-management.io
+spec:
+  group: addon.open-cluster-management.io
+  names:
+    kind: AddOnHubConfig
+    listKind: AddOnHubConfigList
+    plural: addonhubconfigs
+    singular: addonhubconfig
+  scope: Cluster
+  preserveUnknownFields: false
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: AddOnHubConfig represents a hub-scoped configuration for an add-on.
+          type: object
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: spec represents a desired configuration for an add-on.
+              type: object
+              properties:
+                desiredVersion:
+                  description: version represents the desired addon version to install.
+                  type: string
+            status:
+              description: status represents the current status of the configuration for an add-on.
+              type: object
+              properties:
+                supportedVersions:
+                  description: SupportedVersions lists all the valid addon versions. It's a hint for user to define desired version.
+                  type: array
+                  items:
+                    type: string
+      served: true
+      storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
