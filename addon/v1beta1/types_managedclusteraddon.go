@@ -1,4 +1,4 @@
-package v1alpha1
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -7,6 +7,7 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:subresource:status
+// +kubebuilder:storageversion
 // +kubebuilder:printcolumn:name="Available",type=string,JSONPath=`.status.conditions[?(@.type=="Available")].status`
 // +kubebuilder:printcolumn:name="Degraded",type=string,JSONPath=`.status.conditions[?(@.type=="Degraded")].status`
 // +kubebuilder:printcolumn:name="Progressing",type=string,JSONPath=`.status.conditions[?(@.type=="Progressing")].status`
@@ -32,14 +33,6 @@ type ManagedClusterAddOn struct {
 // ManagedClusterAddOnSpec defines the install configuration of
 // an addon agent on managed cluster.
 type ManagedClusterAddOnSpec struct {
-	// installNamespace is the namespace on the managed cluster to install the addon agent.
-	// If it is not set, open-cluster-management-agent-addon namespace is used to install the addon agent.
-	// +optional
-	// +kubebuilder:default=open-cluster-management-agent-addon
-	// +kubebuilder:validation:MaxLength=63
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	InstallNamespace string `json:"installNamespace,omitempty"`
-
 	// configs is a list of add-on configurations.
 	// In scenario where the current add-on has its own configurations.
 	// An empty list means there are no defautl configurations for add-on.
@@ -55,6 +48,7 @@ type RegistrationConfig struct {
 	// +required
 	// +kubebuilder:validation:MaxLength=571
 	// +kubebuilder:validation:MinLength=5
+	// +kubebuilder:validation:Required
 	SignerName string `json:"signerName"`
 
 	// subject is the user subject of the addon agent to be registered to the hub.
@@ -120,12 +114,6 @@ type ManagedClusterAddOnStatus struct {
 	// +optional
 	AddOnMeta AddOnMeta `json:"addOnMeta,omitempty"`
 
-	// Deprecated: Use configReferences instead.
-	// addOnConfiguration is a reference to configuration information for the add-on.
-	// This resource is used to locate the configuration resource for the add-on.
-	// +optional
-	AddOnConfiguration ConfigCoordinates `json:"addOnConfiguration,omitempty"`
-
 	// SupportedConfigs is a list of configuration types that are allowed to override the add-on configurations defined
 	// in ClusterManagementAddOn spec.
 	// The default is an empty list, which means the add-on configurations can not be overridden.
@@ -140,12 +128,7 @@ type ManagedClusterAddOnStatus struct {
 	// +optional
 	ConfigReferences []ConfigReference `json:"configReferences,omitempty"`
 
-	// namespace is the namespace on the managedcluster to put registration secret or lease for the addon. It is
-	// required when registration is set or healthcheck mode is Lease.
-	// +optional
-	Namespace string `json:"namespace,omitempty"`
-
-	// registrations is the configurations for the addon agent to register to hub. It should be set by each addon controller
+	// registrations is the conifigurations for the addon agent to register to hub. It should be set by each addon controller
 	// on hub to define how the addon agent on managedcluster is registered. With the registration defined,
 	// The addon agent can access to kube apiserver with kube style API or other endpoints on hub cluster with client
 	// certificate authentication. A csr will be created per registration configuration. If more than one
@@ -155,6 +138,8 @@ type ManagedClusterAddOnStatus struct {
 	// "kubernetes.io/kube-apiserver-client", the secret name will be "{addon name}-hub-kubeconfig" whose contents includes
 	// key/cert and kubeconfig. Otherwise, the secret name will be "{addon name}-{signer name}-client-cert" whose contents includes key/cert.
 	// +optional
+	// +listType=map
+	// +listMapKey=signerName
 	Registrations []RegistrationConfig `json:"registrations,omitempty"`
 
 	// healthCheck indicates how to check the healthiness status of the current addon. It should be
@@ -162,6 +147,18 @@ type ManagedClusterAddOnStatus struct {
 	// +optional
 	HealthCheck HealthCheck `json:"healthCheck,omitempty"`
 }
+
+const (
+	// ManagedClusterAddOnConditionAvailable represents that the addon agent is running on the managed cluster
+	ManagedClusterAddOnConditionAvailable string = "Available"
+
+	// ManagedClusterAddOnConditionDegraded represents that the addon agent is providing degraded service on
+	// the managed cluster.
+	ManagedClusterAddOnConditionDegraded string = "Degraded"
+
+	// ManagedClusterAddOnCondtionConfigured represents that the addon agent is configured with its configuration
+	ManagedClusterAddOnCondtionConfigured string = "Configured"
+)
 
 // ObjectReference contains enough information to let you inspect or modify the referred object.
 type ObjectReference struct {
@@ -276,142 +273,7 @@ const (
 	// HostedManifestLocationHostingValue is a value of the annotation HostedManifestLocationAnnotationKey,
 	// indicates the manifest will be deployed on the hosting cluster in Hosted mode.
 	HostedManifestLocationHostingValue = "hosting"
-	// HostedManifestLocationNoneValue is a value of the annotation HostedManifestLocationAnnotationKey,
+	// HostedManifestLocationNoneValue is a value of the annotation HostedManifestLocationAnnotationKey,,
 	// indicates the manifest will not be deployed in Hosted mode.
 	HostedManifestLocationNoneValue = "none"
-
-	// Finalizers on the managedClusterAddon.
-
-	// AddonDeprecatedPreDeleteHookFinalizer is the finalizer for an addon which has deployed hook objects.
-	// Deprecated: please use the AddonPreDeleteHookFinalizer instead.
-	AddonDeprecatedPreDeleteHookFinalizer = "cluster.open-cluster-management.io/addon-pre-delete"
-	// AddonDeprecatedHostingPreDeleteHookFinalizer is the finalizer for an addon which has deployed hook objects
-	// on hosting cluster.
-	// Deprecated: please use the AddonHostingPreDeleteHookFinalizer instead.
-	AddonDeprecatedHostingPreDeleteHookFinalizer = "cluster.open-cluster-management.io/hosting-addon-pre-delete"
-	// AddonDeprecatedHostingManifestFinalizer is the finalizer for an addon which has deployed manifests on the external
-	// hosting cluster in Hosted mode.
-	// Deprecated: please use the AddonHostingPreDeleteHookFinalizer instead.
-	AddonDeprecatedHostingManifestFinalizer = "cluster.open-cluster-management.io/hosting-manifests-cleanup"
-
-	// AddonPreDeleteHookFinalizer is the finalizer for an addon which has deployed hook objects.
-	AddonPreDeleteHookFinalizer = "addon.open-cluster-management.io/addon-pre-delete"
-	// AddonHostingPreDeleteHookFinalizer is the finalizer for an addon which has deployed hook objects
-	// on hosting cluster.
-	AddonHostingPreDeleteHookFinalizer = "addon.open-cluster-management.io/hosting-addon-pre-delete"
-	// AddonHostingManifestFinalizer is the finalizer for an addon which has deployed manifests on the external
-	// hosting cluster in Hosted mode.
-	AddonHostingManifestFinalizer = "addon.open-cluster-management.io/hosting-manifests-cleanup"
-)
-
-// addon status condition types
-const (
-	// ManagedClusterAddOnConditionAvailable represents that the addon agent is running on the managed cluster
-	ManagedClusterAddOnConditionAvailable string = "Available"
-
-	// ManagedClusterAddOnConditionDegraded represents that the addon agent is providing degraded service on
-	// the managed cluster.
-	ManagedClusterAddOnConditionDegraded string = "Degraded"
-
-	// ManagedClusterAddOnConditionConfigured represents that the addon agent is configured with its configuration
-	ManagedClusterAddOnConditionConfigured string = "Configured"
-
-	// ManagedClusterAddOnManifestApplied is a condition type representing whether the manifest of an addon is
-	// applied correctly.
-	ManagedClusterAddOnManifestApplied = "ManifestApplied"
-
-	// ManagedClusterAddOnHookManifestCompleted is a condition type representing whether the addon hook is completed.
-	ManagedClusterAddOnHookManifestCompleted = "HookManifestCompleted"
-
-	// ManagedClusterAddOnHostingManifestApplied is a condition type representing whether the manifest of an addon
-	// is applied on the hosting cluster correctly.
-	ManagedClusterAddOnHostingManifestApplied = "HostingManifestApplied"
-
-	// ManagedClusterAddOnHostingClusterValidity is a condition type representing whether the hosting cluster is
-	// valid in Hosted mode.
-	ManagedClusterAddOnHostingClusterValidity = "HostingClusterValidity"
-
-	// ManagedClusterAddOnUnsupportedConfigurationType is a condition type representing whether the config resources
-	// are supported.
-	ManagedClusterAddOnUnsupportedConfigurationType = "UnsupportedConfiguration"
-)
-
-// the reasons of condition ManagedClusterAddOnConditionAvailable
-const (
-	// AddonAvailableReasonWorkNotFound is the reason of condition Available indicating the addon manifestWorks
-	// are not found.
-	AddonAvailableReasonWorkNotFound = "WorkNotFound"
-
-	// AddonAvailableReasonWorkApplyFailed is the reason of condition Available indicating the addon manifestWorks
-	// are failed to apply.
-	AddonAvailableReasonWorkApplyFailed = "WorkApplyFailed"
-
-	// AddonAvailableReasonWorkNotApply is the reason of condition Available indicating the addon manifestWorks
-	// are not applied.
-	AddonAvailableReasonWorkNotApply = "WorkNotApplied"
-
-	// AddonAvailableReasonWorkApply is the reason of condition Available indicating the addon manifestWorks
-	// are applied.
-	AddonAvailableReasonWorkApply = "WorkApplied"
-
-	// AddonAvailableReasonNoProbeResult is the reason of condition Available indicating no probe result found in
-	// the manifestWorks for the health check.
-	AddonAvailableReasonNoProbeResult = "NoProbeResult"
-
-	// AddonAvailableReasonProbeUnavailable is the reason of condition Available indicating the probe result found
-	// does not meet the health check.
-	AddonAvailableReasonProbeUnavailable = "ProbeUnavailable"
-
-	// AddonAvailableReasonProbeAvailable is the reason of condition Available indicating the probe result found
-	// meets the health check.
-	AddonAvailableReasonProbeAvailable = "ProbeAvailable"
-
-	// AddonAvailableReasonLeaseUpdateStopped is the reason if condition Available indicating the lease stops updating
-	// during health check.
-	AddonAvailableReasonLeaseUpdateStopped = "ManagedClusterAddOnLeaseUpdateStopped"
-
-	// AddonAvailableReasonLeaseLeaseNotFound is the reason if condition Available indicating the lease is not found
-	// during health check.
-	AddonAvailableReasonLeaseLeaseNotFound = "ManagedClusterAddOnLeaseNotFound"
-
-	// AddonAvailableReasonLeaseLeaseUpdated is the reason if condition Available indicating the lease is updated
-	// during health check.
-	AddonAvailableReasonLeaseLeaseUpdated = "ManagedClusterAddOnLeaseUpdated"
-)
-
-// the reasons of condition ManagedClusterAddOnManifestApplied
-const (
-	// AddonManifestAppliedReasonWorkApplyFailed is the reason of condition AddonManifestApplied indicating
-	// the failure of apply manifestWork of the manifests.
-	AddonManifestAppliedReasonWorkApplyFailed = "ManifestWorkApplyFailed"
-
-	// AddonManifestAppliedReasonManifestsApplied is the reason of condition AddonManifestApplied indicating
-	// the manifests is applied on the managedCluster.
-	AddonManifestAppliedReasonManifestsApplied = "AddonManifestApplied"
-
-	// AddonManifestAppliedReasonManifestsApplyFailed is the reason of condition AddonManifestApplied indicating
-	// the failure to apply manifests on the managedCluster.
-	AddonManifestAppliedReasonManifestsApplyFailed = "AddonManifestAppliedFailed"
-)
-
-// the reasons of condition ManagedClusterAddOnHostingClusterValidity
-const (
-	// HostingClusterValidityReasonValid is the reason of condition HostingClusterValidity indicating the hosting
-	// cluster is valid.
-	HostingClusterValidityReasonValid = "HostingClusterValid"
-
-	// HostingClusterValidityReasonInvalid is the reason of condition HostingClusterValidity indicating the hosting
-	// cluster is invalid.
-	HostingClusterValidityReasonInvalid = "HostingClusterInvalid"
-)
-
-// the reason of condition ManagedClusterAddOnUnsupportedConfigurationType
-const (
-	// AddonReasonConfigurationSupported is the reason of condition UnsupportedConfiguration indicating the configuration
-	// in clusterManagementAddon is supported.
-	AddonReasonConfigurationSupported = "ConfigurationSupported"
-
-	// AddonReasonConfigurationUnsupported is the reason of condition UnsupportedConfiguration indicating the configuration
-	// in clusterManagementAddon is not supported.
-	AddonReasonConfigurationUnsupported = "ConfigurationUnsupported"
 )

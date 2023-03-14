@@ -51,7 +51,8 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 
 			filepath.Join(".", "cluster", "v1alpha1", "0000_02_clusters.open-cluster-management.io_clusterclaims.crd.yaml"),
 			filepath.Join(".", "cluster", "v1alpha1", "0000_05_clusters.open-cluster-management.io_addonplacementscores.crd.yaml"),
-			filepath.Join(".", "addon", "v1alpha1"),
+			filepath.Join(".", "addon", "v1beta1"),
+			filepath.Join(".", "addon", "v1alpha1", "0000_02_addon.open-cluster-management.io_addondeploymentconfigs.crd.yaml"),
 			filepath.Join(".", "operator", "v1", "0000_00_operator.open-cluster-management.io_klusterlets.crd.yaml"),
 			filepath.Join(".", "operator", "v1", "0000_01_operator.open-cluster-management.io_clustermanagers.crd.yaml"),
 		},
