@@ -44,6 +44,9 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 						},
 					},
 				},
+				InstallStrategy: addonv1alpha1.InstallStrategy{
+					Type: addonv1alpha1.AddonInstallStrategyManual,
+				},
 			},
 		}
 
@@ -55,7 +58,7 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	})
 
-	ginkgo.It("Should create a ClusterManagementAddOn with empty spec", func() {
+	ginkgo.It("Should not create a ClusterManagementAddOn with empty spec via client", func() {
 		clusterManagementAddOn := &addonv1alpha1.ClusterManagementAddOn{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: clusterManagementAddOnName,
@@ -68,7 +71,7 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 			clusterManagementAddOn,
 			metav1.CreateOptions{},
 		)
-		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(err).To(gomega.HaveOccurred())
 	})
 
 	ginkgo.It("Should not create a ClusterManagementAddOn when its configuration resource is empty", func() {
