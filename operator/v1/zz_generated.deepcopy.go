@@ -434,6 +434,11 @@ func (in *RegistrationConfiguration) DeepCopyInto(out *RegistrationConfiguration
 		*out = make([]FeatureGate, len(*in))
 		copy(*out, *in)
 	}
+	if in.Args != nil {
+		in, out := &in.Args, &out.Args
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
