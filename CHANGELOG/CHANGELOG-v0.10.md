@@ -1,7 +1,13 @@
-# Changelog since v0.9.0
-All notable changes to this project will be documented in this file.
+# v0.10.1
 
-## v0.10.0
+## Changelog since v0.10.0
+
+### Added
+* Add evictionStartTime for appliedmanifestwork. ([#221](https://github.com/open-cluster-management-io/api/pull/221) [@skeeey](https://github.com/skeeey))
+
+# v0.10.0
+
+## Changelog since v0.9.0
 
 ### New Features
 * Add spread policy ([#181](https://github.com/open-cluster-management-io/api/pull/181) [@huaouo](https://github.com/huaouo))

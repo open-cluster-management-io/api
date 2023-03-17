@@ -1,7 +1,6 @@
-# Changelog since v0.6.0
-All notable changes to this project will be documented in this file.
+# v0.7.0
 
-## v0.7.0
+## Changelog since v0.6.0
 
 ### New Features 
 * Upgrade Placement and PlacementDecision to v1beta1. ([#136](https://github.com/open-cluster-management-io/api/pull/136) [@haoqing0110](https://github.com/haoqing0110))
