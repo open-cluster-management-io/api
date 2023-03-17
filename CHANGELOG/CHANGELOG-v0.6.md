@@ -1,7 +1,6 @@
-# Changelog since v0.5.0
-All notable changes to this project will be documented in this file.
+# v0.6.0
 
-## v0.6.0
+## Changelog since v0.5.0
 
 ### New Features 
 * Add API AddOnPlacementScore. ([#109](https://github.com/open-cluster-management-io/api/pull/109) [@haoqing0110](https://github.com/haoqing0110))

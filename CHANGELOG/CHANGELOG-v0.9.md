@@ -1,7 +1,6 @@
-# Changelog since v0.8.0
-All notable changes to this project will be documented in this file.
+# v0.9.0
 
-## v0.9.0
+# Changelog since v0.8.0
 
 ### New Features 
 * Add AddOnDeploymentConfig v1alpha1 API ([#176](https://github.com/open-cluster-management-io/api/pull/176) [@skeeey](https://github.com/skeeey))

@@ -1,7 +1,6 @@
-# Changelog since v0.7.0
-All notable changes to this project will be documented in this file.
+# v0.8.0
 
-## v0.8.0
+## Changelog since v0.7.0
 
 ### New Features 
 * Support Registration FeatureGates to pass feature gates ([#149](https://github.com/open-cluster-management-io/api/pull/149) [@ivan-cai](https://github.com/ivan-cai))
