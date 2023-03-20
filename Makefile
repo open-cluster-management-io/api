@@ -15,7 +15,13 @@ GO_BUILD_PACKAGES :=$(GO_PACKAGES)
 GO_BUILD_PACKAGES_EXPANDED :=$(GO_BUILD_PACKAGES)
 # LDFLAGS are not needed for dummy builds (saving time on calling git commands)
 GO_LD_FLAGS:=
-CONTROLLER_GEN_VERSION :=v0.6.0
+# controller-gen setup
+CONTROLLER_GEN_VERSION :=v0.11.3
+CONTROLLER_GEN :=$(PERMANENT_TMP_GOPATH)/bin/controller-gen
+ifneq "" "$(wildcard $(CONTROLLER_GEN))"
+_controller_gen_installed_version = $(shell $(CONTROLLER_GEN) --version | awk '{print $$2}')
+endif
+controller_gen_dir :=$(abspath $(PERMANENT_TMP_GOPATH)/bin)
 
 # $1 - target name
 # $2 - apis
@@ -45,6 +51,7 @@ update-scripts:
 	hack/update-deepcopy.sh
 	hack/update-swagger-docs.sh
 	hack/update-codegen.sh
+	hack/update-v1beta1-crds.sh
 .PHONY: update-scripts
 update: check-env update-scripts update-codegen-crds
 
@@ -62,3 +69,16 @@ ifeq ($(GOPATH),)
 export GOPATH=$(shell go env GOPATH)
 endif
 .PHONY: check-env
+
+# override ensure-controller-gen
+ensure-controller-gen:
+ifeq "" "$(wildcard $(CONTROLLER_GEN))"
+	$(info Installing controller-gen into '$(CONTROLLER_GEN)')
+	mkdir -p '$(controller_gen_dir)'
+	GOBIN='$(controller_gen_dir)' go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
+	chmod +x '$(CONTROLLER_GEN)';
+else
+	$(info Using existing controller-gen from "$(CONTROLLER_GEN)")
+	@[[ "$(_controller_gen_installed_version)" == $(CONTROLLER_GEN_VERSION) ]] || \
+	echo "Warning: Installed controller-gen version $(_controller_gen_installed_version) does not match expected version $(CONTROLLER_GEN_VERSION)."
+endif
