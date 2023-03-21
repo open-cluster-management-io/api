@@ -138,8 +138,14 @@ var existingClusters = []*v1.ManagedCluster{
 }
 
 func TestMain(m *testing.M) {
-	v1.AddToScheme(cliScheme.Scheme)
-	AddToScheme(cliScheme.Scheme)
+	if err := v1.AddToScheme(cliScheme.Scheme); err != nil {
+		klog.Errorf("Failed adding cluster to scheme, %v", err)
+		os.Exit(1)
+	}
+	if err := AddToScheme(cliScheme.Scheme); err != nil {
+		klog.Errorf("Failed adding set to scheme, %v", err)
+		os.Exit(1)
+	}
 
 	if err := v1.Install(scheme); err != nil {
 		klog.Errorf("Failed adding cluster to scheme, %v", err)
@@ -199,7 +205,7 @@ func TestGetClustersFromClusterSet(t *testing.T) {
 	tests := []struct {
 		name               string
 		clusterset         *ManagedClusterSet
-		expectClustersName sets.String
+		expectClustersName sets.Set[string]
 		expectError        bool
 	}{
 		{
@@ -210,7 +216,7 @@ func TestGetClustersFromClusterSet(t *testing.T) {
 				},
 				Spec: ManagedClusterSetSpec{},
 			},
-			expectClustersName: sets.NewString("c1", "c2"),
+			expectClustersName: sets.New[string]("c1", "c2"),
 		},
 		{
 			name: "test label selector(openshift) cluster set",
@@ -229,7 +235,7 @@ func TestGetClustersFromClusterSet(t *testing.T) {
 					},
 				},
 			},
-			expectClustersName: sets.NewString("c1", "c2"),
+			expectClustersName: sets.New[string]("c1", "c2"),
 		},
 		{
 			name: "test global cluster set",
@@ -244,7 +250,7 @@ func TestGetClustersFromClusterSet(t *testing.T) {
 					},
 				},
 			},
-			expectClustersName: sets.NewString("c1", "c2", "c3"),
+			expectClustersName: sets.New[string]("c1", "c2", "c3"),
 		},
 		{
 			name: "test label selector cluster set",
@@ -291,7 +297,7 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 	tests := []struct {
 		name                 string
 		cluster              v1.ManagedCluster
-		expectClusterSetName sets.String
+		expectClusterSetName sets.Set[string]
 		expectError          bool
 	}{
 		{
@@ -306,7 +312,7 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 				},
 				Spec: v1.ManagedClusterSpec{},
 			},
-			expectClusterSetName: sets.NewString("dev", "openshift", "global"),
+			expectClusterSetName: sets.New[string]("dev", "openshift", "global"),
 		},
 		{
 			name: "test c2 cluster",
@@ -321,7 +327,7 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 				},
 				Spec: v1.ManagedClusterSpec{},
 			},
-			expectClusterSetName: sets.NewString("dev", "openshift", "global"),
+			expectClusterSetName: sets.New[string]("dev", "openshift", "global"),
 		},
 		{
 			name: "test c3 cluster",
@@ -334,7 +340,7 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 				},
 				Spec: v1.ManagedClusterSpec{},
 			},
-			expectClusterSetName: sets.NewString("global"),
+			expectClusterSetName: sets.New[string]("global"),
 		},
 		{
 			name: "test nonexist cluster in client",
@@ -348,7 +354,7 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 				},
 				Spec: v1.ManagedClusterSpec{},
 			},
-			expectClusterSetName: sets.NewString("openshift", "global"),
+			expectClusterSetName: sets.New[string]("openshift", "global"),
 		},
 	}
 
@@ -406,11 +412,11 @@ func TestPlacementDecisionClustersTracker(t *testing.T) {
 		name                            string
 		placement                       Placement
 		existingDecisions               []*PlacementDecision
-		expectExistingScheduledClusters sets.String
+		expectExistingScheduledClusters sets.Set[string]
 		updateDecisions                 []*PlacementDecision
-		expectUpdatedScheduledClusters  sets.String
-		expectAddedScheduledClusters    sets.String
-		expectDeletedScheduledClusters  sets.String
+		expectUpdatedScheduledClusters  sets.Set[string]
+		expectAddedScheduledClusters    sets.Set[string]
+		expectDeletedScheduledClusters  sets.Set[string]
 	}{
 		{
 			name: "test placementdecisions",
@@ -476,10 +482,10 @@ func TestPlacementDecisionClustersTracker(t *testing.T) {
 					},
 				},
 			},
-			expectExistingScheduledClusters: sets.NewString("cluster1", "cluster2"),
-			expectUpdatedScheduledClusters:  sets.NewString("cluster1", "cluster3"),
-			expectAddedScheduledClusters:    sets.NewString("cluster3"),
-			expectDeletedScheduledClusters:  sets.NewString("cluster2"),
+			expectExistingScheduledClusters: sets.New[string]("cluster1", "cluster2"),
+			expectUpdatedScheduledClusters:  sets.New[string]("cluster1", "cluster3"),
+			expectAddedScheduledClusters:    sets.New[string]("cluster3"),
+			expectDeletedScheduledClusters:  sets.New[string]("cluster2"),
 		},
 		{
 			name: "test empty placementdecision",
@@ -514,10 +520,10 @@ func TestPlacementDecisionClustersTracker(t *testing.T) {
 					},
 				},
 			},
-			expectExistingScheduledClusters: sets.NewString(),
-			expectUpdatedScheduledClusters:  sets.NewString("cluster1", "cluster2"),
-			expectAddedScheduledClusters:    sets.NewString("cluster1", "cluster2"),
-			expectDeletedScheduledClusters:  sets.NewString(),
+			expectExistingScheduledClusters: sets.New[string](),
+			expectUpdatedScheduledClusters:  sets.New[string]("cluster1", "cluster2"),
+			expectAddedScheduledClusters:    sets.New[string]("cluster1", "cluster2"),
+			expectDeletedScheduledClusters:  sets.New[string](),
 		},
 	}
 
@@ -551,9 +557,13 @@ func TestPlacementDecisionClustersTracker(t *testing.T) {
 			err := pdl.client.Get(context.Background(), types.NamespacedName{Namespace: d.Namespace, Name: d.Name}, existDecision)
 			if err == nil {
 				existDecision.Status = d.Status
-				pdl.client.Status().Update(context.Background(), existDecision)
+				if err = pdl.client.Status().Update(context.Background(), existDecision); err != nil {
+					t.Errorf("Case: %v, Failed to run Update(): %v", test.name, err)
+				}
 			} else {
-				pdl.client.Create(context.Background(), d)
+				if err = pdl.client.Create(context.Background(), d); err != nil {
+					t.Errorf("Case: %v, Failed to run Create(): %v", test.name, err)
+				}
 			}
 		}
 
@@ -577,33 +587,33 @@ func TestPlacementDecisionClustersTracker(t *testing.T) {
 	}
 }
 
-func convertClusterToSet(clusters []*v1.ManagedCluster) sets.String {
+func convertClusterToSet(clusters []*v1.ManagedCluster) sets.Set[string] {
 	if len(clusters) == 0 {
 		return nil
 	}
-	retSet := sets.NewString()
+	retSet := sets.New[string]()
 	for _, cluster := range clusters {
 		retSet.Insert(cluster.Name)
 	}
 	return retSet
 }
 
-func convertClusterSetToSet(clustersets []*ManagedClusterSet) sets.String {
+func convertClusterSetToSet(clustersets []*ManagedClusterSet) sets.Set[string] {
 	if len(clustersets) == 0 {
 		return nil
 	}
-	retSet := sets.NewString()
+	retSet := sets.New[string]()
 	for _, clusterset := range clustersets {
 		retSet.Insert(clusterset.Name)
 	}
 	return retSet
 }
 
-func convertClusterSetBindingsToSet(clusterSetBindings []*ManagedClusterSetBinding) sets.String {
+func convertClusterSetBindingsToSet(clusterSetBindings []*ManagedClusterSetBinding) sets.Set[string] {
 	if len(clusterSetBindings) == 0 {
 		return nil
 	}
-	retSet := sets.NewString()
+	retSet := sets.New[string]()
 	for _, clusterSetBinding := range clusterSetBindings {
 		retSet.Insert(clusterSetBinding.Name)
 	}
@@ -614,13 +624,13 @@ func TestGetValidManagedClusterSetBindings(t *testing.T) {
 	tests := []struct {
 		name                          string
 		namespace                     string
-		expectClusterSetBindingsNames sets.String
+		expectClusterSetBindingsNames sets.Set[string]
 		expectError                   bool
 	}{
 		{
 			name:                          "test found valid cluster bindings only",
 			namespace:                     "default",
-			expectClusterSetBindingsNames: sets.NewString("dev"),
+			expectClusterSetBindingsNames: sets.New[string]("dev"),
 		},
 
 		{
