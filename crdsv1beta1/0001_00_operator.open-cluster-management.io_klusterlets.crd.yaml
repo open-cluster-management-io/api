@@ -33,6 +33,8 @@ spec:
             clusterName:
               description: ClusterName is the name of the managed cluster to be created on hub. The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on OpenShift.
               type: string
+              maxLength: 63
+              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
             deployOption:
               description: DeployOption contains the options of deploying a klusterlet
               type: object
