@@ -200,6 +200,7 @@ func Test_Build(t *testing.T) {
 				ManifestWorkExecutorOption(&workapiv1.ManifestWorkExecutor{Subject: workapiv1.ManifestWorkExecutorSubject{
 					Type: workapiv1.ExecutorSubjectTypeServiceAccount,
 				}}),
+				ManifestAnnotations(map[string]string{workapiv1.ManifestConfigSpecHashAnnotationKey: "{\"addondeploymentconfigs.addon.open-cluster-management.io/open-cluster-management/test\":\"<hash>\"}"}),
 			},
 			validateWorks: func(t *testing.T, appliedWorks, deletedWorks []*workapiv1.ManifestWork, err error) {
 				assert.NoError(t, err)
@@ -210,18 +211,22 @@ func Test_Build(t *testing.T) {
 				assert.Equal(t, workapiv1.DeletePropagationPolicyTypeForeground, appliedWorks[0].Spec.DeleteOption.PropagationPolicy)
 				assert.Equal(t, 1, len(appliedWorks[0].Spec.ManifestConfigs))
 				assert.Equal(t, workapiv1.ExecutorSubjectTypeServiceAccount, appliedWorks[0].Spec.Executor.Subject.Type)
+				assert.Equal(t, 1, len(appliedWorks[0].Annotations))
 
 				assert.Equal(t, "test-work-1", appliedWorks[1].Name)
 				assert.Equal(t, 2, len(appliedWorks[1].Spec.Workload.Manifests))
 				assert.Equal(t, workapiv1.DeletePropagationPolicyTypeForeground, appliedWorks[1].Spec.DeleteOption.PropagationPolicy)
 				assert.Equal(t, 1, len(appliedWorks[1].Spec.ManifestConfigs))
 				assert.Equal(t, workapiv1.ExecutorSubjectTypeServiceAccount, appliedWorks[1].Spec.Executor.Subject.Type)
+				assert.Equal(t, 1, len(appliedWorks[1].Annotations))
 
 				assert.Equal(t, "test-work-2", appliedWorks[2].Name)
 				assert.Equal(t, 4, len(appliedWorks[2].Spec.Workload.Manifests))
 				assert.Equal(t, workapiv1.DeletePropagationPolicyTypeForeground, appliedWorks[2].Spec.DeleteOption.PropagationPolicy)
 				assert.Equal(t, 1, len(appliedWorks[2].Spec.ManifestConfigs))
 				assert.Equal(t, workapiv1.ExecutorSubjectTypeServiceAccount, appliedWorks[2].Spec.Executor.Subject.Type)
+				assert.Equal(t, 1, len(appliedWorks[2].Annotations))
+
 			},
 		},
 		{
