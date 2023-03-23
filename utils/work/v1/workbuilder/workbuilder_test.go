@@ -10,10 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
 	workapiv1 "open-cluster-management.io/api/work/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func newFakeData(size int) string {
@@ -103,17 +100,6 @@ func newFakeManifest(object runtime.Object) workapiv1.Manifest {
 		panic(err)
 	}
 	return manifest
-}
-
-func newFakeWorkClient(works []workapiv1.ManifestWork) client.Client {
-	s := scheme.Scheme
-	s.AddKnownTypes(workapiv1.GroupVersion, &workapiv1.ManifestWork{}, &workapiv1.ManifestWorkList{})
-	var objects []runtime.Object
-	for i := 0; i < len(works); i++ {
-		objects = append(objects, &works[i])
-	}
-	return fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objects...).Build()
-
 }
 
 func generateManifestWorkObjectMeta(index int) metav1.ObjectMeta {

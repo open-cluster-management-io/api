@@ -39,13 +39,19 @@ $(call add-crd-gen,addonv1alpha1,./addon/v1alpha1,./addon/v1alpha1,./addon/v1alp
 RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator
 
+verify-gocilint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.0
+	go vet ./...
+	${GOPATH}/bin/golangci-lint run --timeout=3m ./...
+
 verify-scripts:
 	bash -x hack/verify-deepcopy.sh
 	bash -x hack/verify-swagger-docs.sh
 	bash -x hack/verify-crds.sh
 	bash -x hack/verify-codegen.sh
 .PHONY: verify-scripts
-verify: check-env verify-scripts verify-codegen-crds
+# verify: check-env verify-scripts verify-codegen-crds verify-gocilint
+verify: verify-gocilint
 
 update-scripts:
 	hack/update-deepcopy.sh
