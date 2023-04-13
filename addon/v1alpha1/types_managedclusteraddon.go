@@ -336,10 +336,6 @@ const (
 	// ManagedClusterAddOnHostingClusterValidity is a condition type representing whether the hosting cluster is
 	// valid in Hosted mode.
 	ManagedClusterAddOnHostingClusterValidity = "HostingClusterValidity"
-
-	// ManagedClusterAddOnUnsupportedConfigurationType is a condition type representing whether the config resources
-	// are supported.
-	ManagedClusterAddOnUnsupportedConfigurationType = "UnsupportedConfiguration"
 )
 
 // the reasons of condition ManagedClusterAddOnConditionAvailable
@@ -411,13 +407,37 @@ const (
 	HostingClusterValidityReasonInvalid = "HostingClusterInvalid"
 )
 
-// the reason of condition ManagedClusterAddOnUnsupportedConfigurationType
+// the reason of condition ManagedClusterAddOnConditionProgressing
 const (
-	// AddonReasonConfigurationSupported is the reason of condition UnsupportedConfiguration indicating the configuration
-	// in clusterManagementAddon is supported.
-	AddonReasonConfigurationSupported = "ConfigurationSupported"
+	// ProgressingReasonInstalling is the reason of condition Progressing indicating the addon configuration is
+	// installing.
+	ProgressingReasonInstalling = "Installing"
 
-	// AddonReasonConfigurationUnsupported is the reason of condition UnsupportedConfiguration indicating the configuration
-	// in clusterManagementAddon is not supported.
-	AddonReasonConfigurationUnsupported = "ConfigurationUnsupported"
+	// ProgressingReasonInstallSucceed is the reason of condition Progressing indicating the addon configuration is
+	// installed successfully.
+	ProgressingReasonInstallSucceed = "InstallSucceed"
+
+	// ProgressingReasonInstallFailed is the reason of condition Progressing indicating the addon configuration is
+	// installed failed.
+	ProgressingReasonInstallFailed = "InstallFailed"
+
+	// ProgressingReasonUpgrading is the reason of condition Progressing indicating the addon configuration is
+	// upgrading.
+	ProgressingReasonUpgrading = "Upgrading"
+
+	// ProgressingReasonUpgradeSucceed is the reason of condition Progressing indicating the addon configuration is
+	// upgraded successfully.
+	ProgressingReasonUpgradeSucceed = "UpgradeSucceed"
+
+	// ProgressingReasonUpgradeFailed is the reason of condition Progressing indicating the addon configuration is
+	// upgraded failed.
+	ProgressingReasonUpgradeFailed = "UpgradeFailed"
+
+	// ProgressingReasonWaitingForCanary is the reason of condition Progressing indicating the addon configuration
+	// upgrade is pending and waiting for canary is done.
+	ProgressingReasonWaitingForCanary = "WaitingForCanary"
+
+	// ProgressingReasonConfigurationUnsupported is the reason of condition Progressing indicating the addon configuration
+	// is not supported.
+	ProgressingReasonConfigurationUnsupported = "ConfigurationUnsupported"
 )
