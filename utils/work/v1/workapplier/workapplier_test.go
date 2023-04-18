@@ -77,15 +77,14 @@ func TestWorkApplierWithTypedClient(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to apply work with err %v", err)
 	}
-
 	assertActions(t, fakeWorkClient.Actions(), "create")
+	if err := workInformerFactory.Work().V1().ManifestWorks().Informer().GetStore().Add(work); err != nil {
+		t.Errorf("failed to add work to store with err %v", err)
+	}
 
 	// IF work is not changed, we should not update
 	newWorkCopy := work.DeepCopy()
 	fakeWorkClient.ClearActions()
-	if err := workInformerFactory.Work().V1().ManifestWorks().Informer().GetStore().Add(work); err != nil {
-		t.Errorf("failed to add work to store with err %v", err)
-	}
 	_, err = workApplier.Apply(context.TODO(), newWorkCopy)
 	if err != nil {
 		t.Errorf("failed to apply work with err %v", err)
@@ -95,6 +94,19 @@ func TestWorkApplierWithTypedClient(t *testing.T) {
 	// Update work spec to update it
 	newWork := newFakeWork("test", "test", newUnstructured("batch/v1", "Job", "default", "test"))
 	newWork.Spec.DeleteOption = &workapiv1.DeleteOption{PropagationPolicy: workapiv1.DeletePropagationPolicyTypeOrphan}
+	fakeWorkClient.ClearActions()
+	newWork, err = workApplier.Apply(context.TODO(), newWork)
+	if err != nil {
+		t.Errorf("failed to apply work with err %v", err)
+	}
+	assertActions(t, fakeWorkClient.Actions(), "patch")
+	if err := workInformerFactory.Work().V1().ManifestWorks().Informer().GetStore().Add(newWork); err != nil {
+		t.Errorf("failed to add work to store with err %v", err)
+	}
+
+	// Update work annotation to update it
+	newWork = newWork.DeepCopy()
+	newWork.SetAnnotations(map[string]string{workapiv1.ManifestConfigSpecHashAnnotationKey: "hash"})
 	fakeWorkClient.ClearActions()
 	_, err = workApplier.Apply(context.TODO(), newWork)
 	if err != nil {
