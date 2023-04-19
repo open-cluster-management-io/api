@@ -2,16 +2,17 @@ package workapplier
 
 import (
 	"context"
-	"testing"
-	"time"
-
+	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	clienttesting "k8s.io/client-go/testing"
 	fakework "open-cluster-management.io/api/client/work/clientset/versioned/fake"
 	workinformers "open-cluster-management.io/api/client/work/informers/externalversions"
 	workapiv1 "open-cluster-management.io/api/work/v1"
+	"testing"
+	"time"
 )
 
 // assertActions asserts the actual actions have the expected action verb
@@ -152,5 +153,159 @@ func TestWorkApplierWithTypedClient(t *testing.T) {
 		t.Errorf("failed to delete work with err %v", err)
 	}
 	assertActions(t, fakeWorkClient.Actions(), "delete")
+}
 
+var deploymentJson = `{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "labels": {
+            "app": "helloworld-agent"
+        },
+        "name": "helloworld-agent",
+        "namespace": "default"
+    },
+    "spec": {
+        "replicas": 1,
+        "selector": {
+            "matchLabels": {
+                "app": "helloworld-agent"
+            }
+        },
+		"strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "labels": {
+                    "app": "helloworld-agent"
+                }
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "args": [
+                            "/helloworld"
+                        ],
+                        "image": "quay.io/open-cluster-management/addon-examples:latest",
+						"imagePullPolicy": "IfNotPresent",
+                        "name": "helloworld-agent",
+                        "resources": {}
+                    }
+                ]
+            }
+        }
+    },
+    "status":{}
+}
+`
+
+// the raw in object has no creationTimestamp
+func NewManifestFromJson() runtime.Object {
+	obj := &unstructured.Unstructured{}
+	_ = obj.UnmarshalJSON([]byte(deploymentJson))
+	return obj
+}
+
+// the raw in object has creationTimestamp
+func NewManifestFromDecoder() runtime.Object {
+	scheme := runtime.NewScheme()
+	_ = v1.AddToScheme(scheme)
+	decoder := serializer.NewCodecFactory(scheme).UniversalDeserializer()
+	object, _, _ := decoder.Decode([]byte(deploymentJson), nil, nil)
+	return object
+}
+
+func Test_Temp(t *testing.T) {
+	t.Logf("%+v", NewManifestFromDecoder())
+}
+
+func Test_ManifestWorkEqual(t *testing.T) {
+	cases := []struct {
+		name         string
+		requiredWork func() *workapiv1.ManifestWork
+		existingWork func() *workapiv1.ManifestWork
+		expected     bool
+	}{
+		{
+			name: "required and existing without update labels",
+			requiredWork: func() *workapiv1.ManifestWork {
+				work := newFakeWork("test", "test", NewManifestFromJson())
+				work.SetLabels(map[string]string{"test": "test"})
+				work.SetAnnotations(map[string]string{"test": "test"})
+				return work
+			},
+			existingWork: func() *workapiv1.ManifestWork {
+				work := newFakeWork("test", "test", NewManifestFromDecoder())
+				work.SetLabels(map[string]string{"addonname": "test"})
+				work.SetLabels(map[string]string{"test": "test"})
+				work.SetAnnotations(map[string]string{"test": "test"})
+				return work
+			},
+			expected: true,
+		},
+		{
+			name: "required and existing with different labels",
+			requiredWork: func() *workapiv1.ManifestWork {
+				work := newFakeWork("test", "test", NewManifestFromJson())
+				work.SetLabels(map[string]string{"test": "test"})
+				return work
+			},
+			existingWork: func() *workapiv1.ManifestWork {
+				work := newFakeWork("test", "test", NewManifestFromDecoder())
+				work.SetLabels(map[string]string{"addonname": "test"})
+				return work
+			},
+			expected: false,
+		},
+		{
+			name: "required and existing with same spec",
+			requiredWork: func() *workapiv1.ManifestWork {
+				work := newFakeWork("test", "test", NewManifestFromJson())
+				work.SetLabels(map[string]string{"test": "test"})
+				work.Spec.ManifestConfigs = []workapiv1.ManifestConfigOption{
+					{
+						ResourceIdentifier: workapiv1.ResourceIdentifier{},
+						FeedbackRules: []workapiv1.FeedbackRule{
+							{
+								Type: workapiv1.WellKnownStatusType,
+							},
+						},
+					},
+				}
+
+				return work
+			},
+			existingWork: func() *workapiv1.ManifestWork {
+				work := newFakeWork("test", "test", NewManifestFromDecoder())
+				work.SetLabels(map[string]string{"test": "test"})
+				work.Spec.ManifestConfigs = []workapiv1.ManifestConfigOption{
+					{
+						ResourceIdentifier: workapiv1.ResourceIdentifier{},
+						FeedbackRules: []workapiv1.FeedbackRule{
+							{
+								Type: "WellKnownStatus",
+							},
+						},
+					},
+				}
+				return work
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			actual := ManifestWorkEqual(c.requiredWork(), c.existingWork())
+			if c.expected != actual {
+				t.Errorf("expected %v, but got %v", c.expected, actual)
+			}
+
+		})
+	}
 }
