@@ -3,6 +3,7 @@ package workapplier
 import (
 	"context"
 	v1 "k8s.io/api/apps/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -220,10 +221,6 @@ func NewManifestFromDecoder() runtime.Object {
 	return object
 }
 
-func Test_Temp(t *testing.T) {
-	t.Logf("%+v", NewManifestFromDecoder())
-}
-
 func Test_ManifestWorkEqual(t *testing.T) {
 	cases := []struct {
 		name         string
@@ -307,5 +304,34 @@ func Test_ManifestWorkEqual(t *testing.T) {
 			}
 
 		})
+	}
+}
+
+func TestCreateWork(t *testing.T) {
+	fakeWorkClient := fakework.NewSimpleClientset()
+	fakeWorkClient.ClearActions()
+
+	workInformerFactory := workinformers.NewSharedInformerFactory(fakeWorkClient, 10*time.Minute)
+	fakeWorkLister := workInformerFactory.Work().V1().ManifestWorks().Lister()
+	workApplier := NewWorkApplierWithTypedClient(fakeWorkClient, fakeWorkLister)
+
+	fakeWorkClient.PrependReactor("create", "manifestworks", func(action clienttesting.Action) (handled bool, ret runtime.Object, err error) {
+		return true, nil, apierrors.NewAlreadyExists(workapiv1.Resource("manifestworks"), "test")
+	})
+	work := newFakeWork("test", "test", newUnstructured("batch/v1", "Job", "default", "test"))
+	_, err := workApplier.Apply(context.TODO(), work)
+	if err != nil {
+		t.Errorf("failed to apply work with err %v", err)
+	}
+	if workApplier.cache.safeToSkipApply(work, work) {
+		t.Errorf("should not create work")
+	}
+	fakeWorkClient.ReactionChain = []clienttesting.Reactor{}
+	_, err = workApplier.Apply(context.TODO(), work)
+	if err != nil {
+		t.Errorf("failed to apply work with err %v", err)
+	}
+	if !workApplier.cache.safeToSkipApply(work, work) {
+		t.Errorf("should create work")
 	}
 }
