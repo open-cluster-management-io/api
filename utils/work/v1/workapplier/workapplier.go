@@ -48,15 +48,20 @@ func NewWorkApplierWithTypedClient(workClient workv1client.Interface,
 func (w *WorkApplier) Apply(ctx context.Context, work *workapiv1.ManifestWork) (*workapiv1.ManifestWork, error) {
 	existingWork, err := w.getWork(ctx, work.Namespace, work.Name)
 	existingWork = existingWork.DeepCopy()
-	if err != nil {
-		if errors.IsNotFound(err) {
-			existingWork, err = w.createWork(ctx, work)
-			if err == nil {
-				w.cache.updateCache(work, existingWork)
-				return existingWork, nil
-			}
+	if errors.IsNotFound(err) {
+		existingWork, err = w.createWork(ctx, work)
+		switch {
+		case errors.IsAlreadyExists(err):
+			return work, nil
+		case err != nil:
 			return nil, err
+		default:
+			w.cache.updateCache(work, existingWork)
+			return existingWork, nil
 		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
