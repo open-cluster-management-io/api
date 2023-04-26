@@ -512,6 +512,11 @@ spec:
                                           when type is integer.
                                         format: int64
                                         type: integer
+                                      jsonRaw:
+                                        description: JsonRaw is a json string when
+                                          type is a list or object
+                                        maxLength: 1024
+                                        type: string
                                       string:
                                         description: String is the string value when
                                           when type is string.
@@ -523,6 +528,7 @@ spec:
                                         - Integer
                                         - String
                                         - Boolean
+                                        - JsonRaw
                                         type: string
                                     required:
                                     - type

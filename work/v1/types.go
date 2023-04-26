@@ -459,15 +459,20 @@ type FieldValue struct {
 	// Boolean is bool value when type is boolean.
 	// +optional
 	Boolean *bool `json:"boolean,omitempty"`
+
+	// JsonRaw is a json string when type is a list or object
+	// +kubebuilder:validation:MaxLength=1024
+	JsonRaw *string `json:"jsonRaw,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=Integer;String;Boolean
+// +kubebuilder:validation:Enum=Integer;String;Boolean;JsonRaw
 type ValueType string
 
 const (
 	Integer ValueType = "Integer"
 	String  ValueType = "String"
 	Boolean ValueType = "Boolean"
+	JsonRaw ValueType = "JsonRaw"
 )
 
 // ManifestConditionType represents the condition type of a single

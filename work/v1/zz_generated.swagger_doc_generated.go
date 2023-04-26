@@ -95,6 +95,7 @@ var map_FieldValue = map[string]string{
 	"integer": "Integer is the integer value when type is integer.",
 	"string":  "String is the string value when when type is string.",
 	"boolean": "Boolean is bool value when type is boolean.",
+	"jsonRaw": "JsonRaw is a json string when type is a list or object",
 }
 
 func (FieldValue) SwaggerDoc() map[string]string {
