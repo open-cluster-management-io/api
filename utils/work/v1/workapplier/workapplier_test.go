@@ -2,7 +2,11 @@ package workapplier
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	v1 "k8s.io/api/apps/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -12,8 +16,6 @@ import (
 	fakework "open-cluster-management.io/api/client/work/clientset/versioned/fake"
 	workinformers "open-cluster-management.io/api/client/work/informers/externalversions"
 	workapiv1 "open-cluster-management.io/api/work/v1"
-	"testing"
-	"time"
 )
 
 // assertActions asserts the actual actions have the expected action verb
@@ -97,22 +99,28 @@ func TestWorkApplierWithTypedClient(t *testing.T) {
 	newWork := newFakeWork("test", "test", newUnstructured("batch/v1", "Job", "default", "test"))
 	newWork.Spec.DeleteOption = &workapiv1.DeleteOption{PropagationPolicy: workapiv1.DeletePropagationPolicyTypeOrphan}
 	fakeWorkClient.ClearActions()
-	newWork, err = workApplier.Apply(context.TODO(), newWork)
+	appliedWork, err := workApplier.Apply(context.TODO(), newWork)
 	if err != nil {
 		t.Errorf("failed to apply work with err %v", err)
 	}
 	assertActions(t, fakeWorkClient.Actions(), "patch")
+	if !apiequality.Semantic.DeepEqual(appliedWork.Spec.DeleteOption, newWork.Spec.DeleteOption) {
+		t.Errorf("unexpected applied work %v", appliedWork.Spec.DeleteOption)
+	}
 	if err := workInformerFactory.Work().V1().ManifestWorks().Informer().GetStore().Add(newWork); err != nil {
 		t.Errorf("failed to add work to store with err %v", err)
 	}
 
 	// Update work annotation to update it
-	newWork = newWork.DeepCopy()
+	newWork = appliedWork.DeepCopy()
 	newWork.SetAnnotations(map[string]string{workapiv1.ManifestConfigSpecHashAnnotationKey: "hash"})
 	fakeWorkClient.ClearActions()
-	_, err = workApplier.Apply(context.TODO(), newWork)
+	appliedWork, err = workApplier.Apply(context.TODO(), newWork)
 	if err != nil {
 		t.Errorf("failed to apply work with err %v", err)
+	}
+	if !apiequality.Semantic.DeepEqual(appliedWork.Annotations, newWork.Annotations) {
+		t.Errorf("unexpected applied work %v", appliedWork.Annotations)
 	}
 	assertActions(t, fakeWorkClient.Actions(), "patch")
 
