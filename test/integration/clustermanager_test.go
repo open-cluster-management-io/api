@@ -202,7 +202,7 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 				Name: clusterManagerName,
 			},
 			Spec: operatorv1.ClusterManagerSpec{
-				RegistrationConfiguration: &operatorv1.RegistrationConfiguration{
+				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
 					FeatureGates: []operatorv1.FeatureGate{
 						{
 							Feature: "Foo",
@@ -222,7 +222,7 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 				Name: clusterManagerName,
 			},
 			Spec: operatorv1.ClusterManagerSpec{
-				RegistrationConfiguration: &operatorv1.RegistrationConfiguration{
+				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
 					FeatureGates: []operatorv1.FeatureGate{
 						{
 							Feature: "Foo",
@@ -242,7 +242,7 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 				Name: clusterManagerName,
 			},
 			Spec: operatorv1.ClusterManagerSpec{
-				RegistrationConfiguration: &operatorv1.RegistrationConfiguration{
+				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
 					FeatureGates: []operatorv1.FeatureGate{
 						{
 							Feature: "Foo",
