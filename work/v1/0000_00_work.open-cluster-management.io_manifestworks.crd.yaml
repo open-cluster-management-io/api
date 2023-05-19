@@ -519,7 +519,7 @@ spec:
                                         type: string
                                       string:
                                         description: String is the string value when
-                                          when type is string.
+                                          type is string.
                                         type: string
                                       type:
                                         description: Type represents the type of the

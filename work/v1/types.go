@@ -452,7 +452,7 @@ type FieldValue struct {
 	// +optional
 	Integer *int64 `json:"integer,omitempty"`
 
-	// String is the string value when when type is string.
+	// String is the string value when type is string.
 	// +optional
 	String *string `json:"string,omitempty"`
 
