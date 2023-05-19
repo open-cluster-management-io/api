@@ -90,10 +90,10 @@ func (AddOnTemplateList) SwaggerDoc() map[string]string {
 }
 
 var map_AddOnTemplateSpec = map[string]string{
-	"":               "AddOnTemplateSpec defines the template of an addon agent which will be deployed on managed clusters.",
-	"addonName":      "AddonName represents the name of the addon which the template belongs to",
-	"agentManifests": "AgentManifests represents the kubernetes resources of the addon agent to be deployed on a managed cluster.",
-	"registration":   "Registration holds the registration configuration for the addon",
+	"":             "AddOnTemplateSpec defines the template of an addon agent which will be deployed on managed clusters.",
+	"addonName":    "AddonName represents the name of the addon which the template belongs to",
+	"agentSpec":    "AgentSpec describes what/how the kubernetes resources of the addon agent to be deployed on a managed cluster.",
+	"registration": "Registration holds the registration configuration for the addon",
 }
 
 func (AddOnTemplateSpec) SwaggerDoc() map[string]string {
@@ -112,7 +112,7 @@ func (CustomSignerRegistrationConfig) SwaggerDoc() map[string]string {
 
 var map_HubPermissionConfig = map[string]string{
 	"":                "HubPermissionConfig configures the permission of the addon agent to access the hub cluster. Will create a RoleBinding in the same namespace as the managedClusterAddon to bind the user provided ClusterRole/Role to the \"system:open-cluster-management:cluster:<cluster-name>:addon:<addon-name>\" Group.",
-	"type":            "Type of the permissions setting. It defines how to bind the roleRef",
+	"type":            "Type of the permissions setting. It defines how to bind the roleRef on the hub cluster. It can be: - CurrentCluster: Bind the roleRef to the namespace with the same name as the managedCluster. - SingleNamespace: Bind the roleRef to the namespace specified by SingleNamespaceBindingConfig.",
 	"roleRef":         "RoleRef is an reference to the permission resource. it could be a role or a cluster role, the user must make sure it exist on the hub cluster.",
 	"singleNamespace": "SingleNamespace contains the configuration of SingleNamespace type binding. It is required when the type is SingleNamespace",
 }
@@ -129,16 +129,8 @@ func (KubeClientRegistrationConfig) SwaggerDoc() map[string]string {
 	return map_KubeClientRegistrationConfig
 }
 
-var map_Manifest = map[string]string{
-	"": "Manifest represents a resource to be deployed on the managed cluster.",
-}
-
-func (Manifest) SwaggerDoc() map[string]string {
-	return map_Manifest
-}
-
 var map_RegistrationSpec = map[string]string{
-	"":             "RegistrationSpec describes how to register an addon agent to the hub cluster. With the registration defined, The addon agent can access to kube apiserver with kube style API or other endpoints on hub cluster with client certificate authentication. During the addon registration process, a csr will be created for each RegistrationSpec on the hub cluster. The CSR can be approved automatically(Auto) or manually(None), After the csr is approved on the hub cluster, the klusterlet agent will create a secret in the installNamespace for the addon agent. If the RegistrationType type is KubeClient, the secret name will be \"{addon name}-hub-kubeconfig\" whose content includes key/cert and kubeconfig. Otherwise, If the RegistrationType type is CustomSigner the secret name will be \"{addon name}-{signer name}-client-cert\" whose content includes key/cert.",
+	"":             "RegistrationSpec describes how to register an addon agent to the hub cluster. With the registration defined, The addon agent can access to kube apiserver with kube style API or other endpoints on hub cluster with client certificate authentication. During the addon registration process, a csr will be created for each Registration on the hub cluster. The CSR will be approved automatically, After the csr is approved on the hub cluster, the klusterlet agent will create a secret in the installNamespace for the addon agent. If the RegistrationType type is KubeClient, the secret name will be \"{addon name}-hub-kubeconfig\" whose content includes key/cert and kubeconfig. Otherwise, If the RegistrationType type is CustomSigner the secret name will be \"{addon name}-{signer name}-client-cert\" whose content includes key/cert.",
 	"type":         "Type of the registration configuration, it supports: - KubeClient: the addon agent can access the hub kube apiserver with kube style API.\n  the signer name should be \"kubernetes.io/kube-apiserver-client\". When this type is\n  used, the KubeClientRegistrationConfig can be used to define the permission of the\n  addon agent to access the hub cluster\n- CustomSigner: the addon agent can access the hub cluster through user-defined endpoints.\n  When this type is used, the CustomSignerRegistrationConfig can be used to define how\n  to issue the client certificate for the addon agent.",
 	"kubeClient":   "KubeClient holds the configuration of the KubeClient type registration",
 	"customSigner": "CustomSigner holds the configuration of the CustomSigner type registration required when the Type is CustomSigner",

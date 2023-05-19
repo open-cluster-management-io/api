@@ -3,7 +3,8 @@ package v1alpha1
 import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+
+	work "open-cluster-management.io/api/work/v1"
 )
 
 // +genclient
@@ -35,20 +36,14 @@ type AddOnTemplateSpec struct {
 	// +required
 	AddonName string `json:"addonName"`
 
-	// AgentManifests represents the kubernetes resources of the addon agent to be deployed on a managed cluster.
+	// AgentSpec describes what/how the kubernetes resources of the addon agent to be deployed on a managed cluster.
 	// +kubebuilder:validation:Required
 	// +required
-	AgentManifests []Manifest `json:"agentManifests"`
+	AgentSpec work.ManifestWorkSpec `json:"agentSpec"`
 
 	// Registration holds the registration configuration for the addon
 	// +optional
 	Registration []RegistrationSpec `json:"registration"`
-}
-
-// Manifest represents a resource to be deployed on the managed cluster.
-type Manifest struct {
-	// +kubebuilder:pruning:PreserveUnknownFields
-	runtime.RawExtension `json:",inline"`
 }
 
 // RegistrationType represents the type of the registration configuration,
@@ -80,9 +75,9 @@ const (
 // RegistrationSpec describes how to register an addon agent to the hub cluster.
 // With the registration defined, The addon agent can access to kube apiserver with kube style API
 // or other endpoints on hub cluster with client certificate authentication. During the addon
-// registration process, a csr will be created for each RegistrationSpec on the hub cluster. The
-// CSR can be approved automatically(Auto) or manually(None), After the csr is approved on the hub
-// cluster, the klusterlet agent will create a secret in the installNamespace for the addon agent.
+// registration process, a csr will be created for each Registration on the hub cluster. The
+// CSR will be approved automatically, After the csr is approved on the hub cluster, the klusterlet
+// agent will create a secret in the installNamespace for the addon agent.
 // If the RegistrationType type is KubeClient, the secret name will be "{addon name}-hub-kubeconfig"
 // whose content includes key/cert and kubeconfig. Otherwise, If the RegistrationType type is
 // CustomSigner the secret name will be "{addon name}-{signer name}-client-cert" whose content
@@ -120,7 +115,10 @@ type KubeClientRegistrationConfig struct {
 // provided ClusterRole/Role to the "system:open-cluster-management:cluster:<cluster-name>:addon:<addon-name>"
 // Group.
 type HubPermissionConfig struct {
-	// Type of the permissions setting. It defines how to bind the roleRef
+	// Type of the permissions setting. It defines how to bind the roleRef on the hub cluster. It can be:
+	// - CurrentCluster: Bind the roleRef to the namespace with the same name as the managedCluster.
+	// - SingleNamespace: Bind the roleRef to the namespace specified by SingleNamespaceBindingConfig.
+	//
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:=CurrentCluster;SingleNamespace
 	Type HubPermissionsBindingType `json:"type"`
