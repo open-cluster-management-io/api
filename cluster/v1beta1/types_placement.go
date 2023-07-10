@@ -101,8 +101,53 @@ type PlacementSpec struct {
 	DecisionStrategy DecisionStrategy `json:"decisionStrategy,omitempty"`
 }
 
+// DecisionStrategy divide the created placement decision to groups and define number of clusters per decision group.
+type DecisionStrategy struct {
+	// GroupStrategy define strategies to divide selected clusters to decision groups.
+	// +optional
+	GroupStrategy GroupStrategy `json:"groupStrategy,omitempty"`
+}
+
+// Group the created placementDecision into decision groups based on cluster label selector or
+// a specific number or percentage of the total selected clusters.
+type GroupStrategy struct {
+	// DecisionGroups represents a list of predefined groups to put decision results.
+	// +optional
+	DecisionGroups []DecisionGroup `json:"decisionGroups,omitempty"`
+}
+
 // DecisionGroup define a subset of clusters that will be added to placementDecisions with groupName label.
 type DecisionGroup struct {
+	// DecisionGroup Types are Static and Dynamic
+	// 1) Static means clusters in each decision group are selected by a label selector. The items of each group is static.
+	// One or more static decision group fileds are allowed to define.
+	// 2) Dynamic means divide the created placementDecision into decision groups based a specific number or percentage of
+	// the total selected clusters. Only one dynamic decision group filed is allowed to define.
+	// When both static and dynamic decision groups are defined, static decision group will select the clustes first, and the
+	// rest of the clusters will be divided by the specific number or percentage defined in dynamic decision group.
+	// works on the clusters
+	// +kubebuilder:default:=Dynamic
+	// +optional
+	Type DecisionGroupType `json:"type,omitempty"`
+
+	// Static DecisionGroupType
+	// +optional
+	Static *StaticDecisionGroup `json:"static,omitempty"`
+
+	// Static DecisionGroupType
+	// +optional
+	Dynamic *DynamicDecisionGroup `json:"dynamic,omitempty"`
+}
+
+// DecisionGroupType Types
+type DecisionGroupType string
+
+const (
+	Static      DecisionGroupType = "Static"
+	Progressive DecisionGroupType = "Dynamic"
+)
+
+type StaticDecisionGroup struct {
 	// Group name to be added as label value to the created placement Decisions labels with label key cluster.open-cluster-management.io/decision-group-name
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern="^[a-zA-Z0-9][-A-Za-z0-9_.]{0,61}[a-zA-Z0-9]$"
@@ -115,29 +160,18 @@ type DecisionGroup struct {
 	ClusterSelector ClusterSelector `json:"groupClusterSelector,omitempty"`
 }
 
-// Group the created placementDecision into decision groups based on the number of clusters per decision group.
-type GroupStrategy struct {
-	// DecisionGroups represents a list of predefined groups to put decision results.
-	// +optional
-	DecisionGroups []DecisionGroup `json:"decisionGroups,omitempty"`
-
+type DynamicDecisionGroup struct {
 	// ClustersPerDecisionGroup is a specific number or percentage of the total selected clusters.
 	// The specific number will divide the placementDecisions to decisionGroups each group has max number of clusters equal to that specific number.
 	// The percentage will divide the placementDecisions to decisionGroups each group has max number of clusters based on the total num of selected clusters and percentage.
 	// ex; for a total 100 clusters selected, ClustersPerDecisionGroup equal to 20% will divide the placement decision to 5 groups each group should have 20 clusters.
 	// Default is having all clusters in a single group.
 	// If the DecisionGroups field defined, it will be considered first to create the decisionGroups then the ClustersPerDecisionGroup will be used to determine the rest of decisionGroups.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XIntOrString
+	// +kubebuilder:validation:Pattern=`^((100|[1-9][0-9]{0,1})%|[1-9][0-9]*)$`
 	// +kubebuilder:default:="100%"
 	// +optional
 	ClustersPerDecisionGroup intstr.IntOrString `json:"clustersPerDecisionGroup,omitempty"`
-}
-
-// DecisionStrategy divide the created placement decision to groups and define number of clusters per decision group.
-type DecisionStrategy struct {
-	// GroupStrategy define strategies to divide selected clusters to decision groups.
-	// +optional
-	GroupStrategy GroupStrategy `json:"groupStrategy,omitempty"`
 }
 
 // ClusterPredicate represents a predicate to select ManagedClusters.

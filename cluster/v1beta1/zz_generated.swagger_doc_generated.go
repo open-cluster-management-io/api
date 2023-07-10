@@ -136,9 +136,10 @@ func (ClusterSelector) SwaggerDoc() map[string]string {
 }
 
 var map_DecisionGroup = map[string]string{
-	"":                     "DecisionGroup define a subset of clusters that will be added to placementDecisions with groupName label.",
-	"groupName":            "Group name to be added as label value to the created placement Decisions labels with label key cluster.open-cluster-management.io/decision-group-name",
-	"groupClusterSelector": "LabelSelector to select clusters subset by label.",
+	"":        "DecisionGroup define a subset of clusters that will be added to placementDecisions with groupName label.",
+	"type":    "DecisionGroup Types are Static and Dynamic 1) Static means clusters in each decision group are selected by a label selector. The items of each group is static. One or more static decision group fileds are allowed to define. 2) Dynamic means divide the created placementDecision into decision groups based a specific number or percentage of the total selected clusters. Only one dynamic decision group filed is allowed to define. When both static and dynamic decision groups are defined, static decision group will select the clustes first, and the rest of the clusters will be divided by the specific number or percentage defined in dynamic decision group. works on the clusters",
+	"static":  "Static DecisionGroupType",
+	"dynamic": "Static DecisionGroupType",
 }
 
 func (DecisionGroup) SwaggerDoc() map[string]string {
@@ -166,10 +167,17 @@ func (DecisionStrategy) SwaggerDoc() map[string]string {
 	return map_DecisionStrategy
 }
 
-var map_GroupStrategy = map[string]string{
-	"":                         "Group the created placementDecision into decision groups based on the number of clusters per decision group.",
-	"decisionGroups":           "DecisionGroups represents a list of predefined groups to put decision results.",
+var map_DynamicDecisionGroup = map[string]string{
 	"clustersPerDecisionGroup": "ClustersPerDecisionGroup is a specific number or percentage of the total selected clusters. The specific number will divide the placementDecisions to decisionGroups each group has max number of clusters equal to that specific number. The percentage will divide the placementDecisions to decisionGroups each group has max number of clusters based on the total num of selected clusters and percentage. ex; for a total 100 clusters selected, ClustersPerDecisionGroup equal to 20% will divide the placement decision to 5 groups each group should have 20 clusters. Default is having all clusters in a single group. If the DecisionGroups field defined, it will be considered first to create the decisionGroups then the ClustersPerDecisionGroup will be used to determine the rest of decisionGroups.",
+}
+
+func (DynamicDecisionGroup) SwaggerDoc() map[string]string {
+	return map_DynamicDecisionGroup
+}
+
+var map_GroupStrategy = map[string]string{
+	"":               "Group the created placementDecision into decision groups based on cluster label selector or a specific number or percentage of the total selected clusters.",
+	"decisionGroups": "DecisionGroups represents a list of predefined groups to put decision results.",
 }
 
 func (GroupStrategy) SwaggerDoc() map[string]string {
@@ -270,6 +278,15 @@ var map_SpreadPolicy = map[string]string{
 
 func (SpreadPolicy) SwaggerDoc() map[string]string {
 	return map_SpreadPolicy
+}
+
+var map_StaticDecisionGroup = map[string]string{
+	"groupName":            "Group name to be added as label value to the created placement Decisions labels with label key cluster.open-cluster-management.io/decision-group-name",
+	"groupClusterSelector": "LabelSelector to select clusters subset by label.",
+}
+
+func (StaticDecisionGroup) SwaggerDoc() map[string]string {
+	return map_StaticDecisionGroup
 }
 
 var map_Toleration = map[string]string{

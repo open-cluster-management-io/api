@@ -77,26 +77,6 @@ spec:
                     description: GroupStrategy define strategies to divide selected
                       clusters to decision groups.
                     properties:
-                      clustersPerDecisionGroup:
-                        anyOf:
-                        - type: integer
-                        - type: string
-                        default: 100%
-                        description: ClustersPerDecisionGroup is a specific number
-                          or percentage of the total selected clusters. The specific
-                          number will divide the placementDecisions to decisionGroups
-                          each group has max number of clusters equal to that specific
-                          number. The percentage will divide the placementDecisions
-                          to decisionGroups each group has max number of clusters
-                          based on the total num of selected clusters and percentage.
-                          ex; for a total 100 clusters selected, ClustersPerDecisionGroup
-                          equal to 20% will divide the placement decision to 5 groups
-                          each group should have 20 clusters. Default is having all
-                          clusters in a single group. If the DecisionGroups field
-                          defined, it will be considered first to create the decisionGroups
-                          then the ClustersPerDecisionGroup will be used to determine
-                          the rest of decisionGroups.
-                        x-kubernetes-int-or-string: true
                       decisionGroups:
                         description: DecisionGroups represents a list of predefined
                           groups to put decision results.
@@ -104,117 +84,164 @@ spec:
                           description: DecisionGroup define a subset of clusters that
                             will be added to placementDecisions with groupName label.
                           properties:
-                            groupClusterSelector:
-                              description: LabelSelector to select clusters subset
-                                by label.
+                            dynamic:
+                              description: Static DecisionGroupType
                               properties:
-                                claimSelector:
-                                  description: ClaimSelector represents a selector
-                                    of ManagedClusters by clusterClaims in status
-                                  properties:
-                                    matchExpressions:
-                                      description: matchExpressions is a list of cluster
-                                        claim selector requirements. The requirements
-                                        are ANDed.
-                                      items:
-                                        description: A label selector requirement
-                                          is a selector that contains values, a key,
-                                          and an operator that relates the key and
-                                          values.
-                                        properties:
-                                          key:
-                                            description: key is the label key that
-                                              the selector applies to.
-                                            type: string
-                                          operator:
-                                            description: operator represents a key's
-                                              relationship to a set of values. Valid
-                                              operators are In, NotIn, Exists and
-                                              DoesNotExist.
-                                            type: string
-                                          values:
-                                            description: values is an array of string
-                                              values. If the operator is In or NotIn,
-                                              the values array must be non-empty.
-                                              If the operator is Exists or DoesNotExist,
-                                              the values array must be empty. This
-                                              array is replaced during a strategic
-                                              merge patch.
-                                            items:
-                                              type: string
-                                            type: array
-                                        required:
-                                        - key
-                                        - operator
-                                        type: object
-                                      type: array
-                                  type: object
-                                labelSelector:
-                                  description: LabelSelector represents a selector
-                                    of ManagedClusters by label
-                                  properties:
-                                    matchExpressions:
-                                      description: matchExpressions is a list of label
-                                        selector requirements. The requirements are
-                                        ANDed.
-                                      items:
-                                        description: A label selector requirement
-                                          is a selector that contains values, a key,
-                                          and an operator that relates the key and
-                                          values.
-                                        properties:
-                                          key:
-                                            description: key is the label key that
-                                              the selector applies to.
-                                            type: string
-                                          operator:
-                                            description: operator represents a key's
-                                              relationship to a set of values. Valid
-                                              operators are In, NotIn, Exists and
-                                              DoesNotExist.
-                                            type: string
-                                          values:
-                                            description: values is an array of string
-                                              values. If the operator is In or NotIn,
-                                              the values array must be non-empty.
-                                              If the operator is Exists or DoesNotExist,
-                                              the values array must be empty. This
-                                              array is replaced during a strategic
-                                              merge patch.
-                                            items:
-                                              type: string
-                                            type: array
-                                        required:
-                                        - key
-                                        - operator
-                                        type: object
-                                      type: array
-                                    matchLabels:
-                                      additionalProperties:
-                                        type: string
-                                      description: matchLabels is a map of {key,value}
-                                        pairs. A single {key,value} in the matchLabels
-                                        map is equivalent to an element of matchExpressions,
-                                        whose key field is "key", the operator is
-                                        "In", and the values array contains only "value".
-                                        The requirements are ANDed.
-                                      type: object
-                                  type: object
-                                  x-kubernetes-map-type: atomic
+                                clustersPerDecisionGroup:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  default: 100%
+                                  description: ClustersPerDecisionGroup is a specific
+                                    number or percentage of the total selected clusters.
+                                    The specific number will divide the placementDecisions
+                                    to decisionGroups each group has max number of
+                                    clusters equal to that specific number. The percentage
+                                    will divide the placementDecisions to decisionGroups
+                                    each group has max number of clusters based on
+                                    the total num of selected clusters and percentage.
+                                    ex; for a total 100 clusters selected, ClustersPerDecisionGroup
+                                    equal to 20% will divide the placement decision
+                                    to 5 groups each group should have 20 clusters.
+                                    Default is having all clusters in a single group.
+                                    If the DecisionGroups field defined, it will be
+                                    considered first to create the decisionGroups
+                                    then the ClustersPerDecisionGroup will be used
+                                    to determine the rest of decisionGroups.
+                                  pattern: ^((100|[1-9][0-9]{0,1})%|[1-9][0-9]*)$
+                                  x-kubernetes-int-or-string: true
                               type: object
-                            groupName:
-                              description: Group name to be added as label value to
-                                the created placement Decisions labels with label
-                                key cluster.open-cluster-management.io/decision-group-name
-                              pattern: ^[a-zA-Z0-9][-A-Za-z0-9_.]{0,61}[a-zA-Z0-9]$
+                            static:
+                              description: Static DecisionGroupType
+                              properties:
+                                groupClusterSelector:
+                                  description: LabelSelector to select clusters subset
+                                    by label.
+                                  properties:
+                                    claimSelector:
+                                      description: ClaimSelector represents a selector
+                                        of ManagedClusters by clusterClaims in status
+                                      properties:
+                                        matchExpressions:
+                                          description: matchExpressions is a list
+                                            of cluster claim selector requirements.
+                                            The requirements are ANDed.
+                                          items:
+                                            description: A label selector requirement
+                                              is a selector that contains values,
+                                              a key, and an operator that relates
+                                              the key and values.
+                                            properties:
+                                              key:
+                                                description: key is the label key
+                                                  that the selector applies to.
+                                                type: string
+                                              operator:
+                                                description: operator represents a
+                                                  key's relationship to a set of values.
+                                                  Valid operators are In, NotIn, Exists
+                                                  and DoesNotExist.
+                                                type: string
+                                              values:
+                                                description: values is an array of
+                                                  string values. If the operator is
+                                                  In or NotIn, the values array must
+                                                  be non-empty. If the operator is
+                                                  Exists or DoesNotExist, the values
+                                                  array must be empty. This array
+                                                  is replaced during a strategic merge
+                                                  patch.
+                                                items:
+                                                  type: string
+                                                type: array
+                                            required:
+                                            - key
+                                            - operator
+                                            type: object
+                                          type: array
+                                      type: object
+                                    labelSelector:
+                                      description: LabelSelector represents a selector
+                                        of ManagedClusters by label
+                                      properties:
+                                        matchExpressions:
+                                          description: matchExpressions is a list
+                                            of label selector requirements. The requirements
+                                            are ANDed.
+                                          items:
+                                            description: A label selector requirement
+                                              is a selector that contains values,
+                                              a key, and an operator that relates
+                                              the key and values.
+                                            properties:
+                                              key:
+                                                description: key is the label key
+                                                  that the selector applies to.
+                                                type: string
+                                              operator:
+                                                description: operator represents a
+                                                  key's relationship to a set of values.
+                                                  Valid operators are In, NotIn, Exists
+                                                  and DoesNotExist.
+                                                type: string
+                                              values:
+                                                description: values is an array of
+                                                  string values. If the operator is
+                                                  In or NotIn, the values array must
+                                                  be non-empty. If the operator is
+                                                  Exists or DoesNotExist, the values
+                                                  array must be empty. This array
+                                                  is replaced during a strategic merge
+                                                  patch.
+                                                items:
+                                                  type: string
+                                                type: array
+                                            required:
+                                            - key
+                                            - operator
+                                            type: object
+                                          type: array
+                                        matchLabels:
+                                          additionalProperties:
+                                            type: string
+                                          description: matchLabels is a map of {key,value}
+                                            pairs. A single {key,value} in the matchLabels
+                                            map is equivalent to an element of matchExpressions,
+                                            whose key field is "key", the operator
+                                            is "In", and the values array contains
+                                            only "value". The requirements are ANDed.
+                                          type: object
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                  type: object
+                                groupName:
+                                  description: Group name to be added as label value
+                                    to the created placement Decisions labels with
+                                    label key cluster.open-cluster-management.io/decision-group-name
+                                  pattern: ^[a-zA-Z0-9][-A-Za-z0-9_.]{0,61}[a-zA-Z0-9]$
+                                  type: string
+                              required:
+                              - groupClusterSelector
+                              - groupName
+                              type: object
+                            type:
+                              default: Dynamic
+                              description: DecisionGroup Types are Static and Dynamic
+                                1) Static means clusters in each decision group are
+                                selected by a label selector. The items of each group
+                                is static. One or more static decision group fileds
+                                are allowed to define. 2) Dynamic means divide the
+                                created placementDecision into decision groups based
+                                a specific number or percentage of the total selected
+                                clusters. Only one dynamic decision group filed is
+                                allowed to define. When both static and dynamic decision
+                                groups are defined, static decision group will select
+                                the clustes first, and the rest of the clusters will
+                                be divided by the specific number or percentage defined
+                                in dynamic decision group. works on the clusters
                               type: string
-                          required:
-                          - groupClusterSelector
-                          - groupName
                           type: object
                         type: array
-                    required:
-                    - clustersPerDecisionGroup
                     type: object
                 type: object
               numberOfClusters:
