@@ -103,6 +103,11 @@ spec:
                 description: ImagePullSpec represents the desired image configuration
                   of agent, it takes effect only when singleton mode is set. quay.io/open-cluster-management.io/registration-operator:latest
                   will be used if unspecified
+              initClusterSet:
+                description: InitClusterSet is the name of the cluste set that the
+                  managed cluster belongs to.
+                maxLength: 63
+                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                 type: string
               namespace:
                 description: Namespace is the namespace to deploy the agent on the
