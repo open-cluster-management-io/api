@@ -382,11 +382,11 @@ type KlusterletSpec struct {
 	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 	ClusterName string `json:"clusterName,omitempty"`
 
-	// InitClusterSet is the name of the cluste set that the managed cluster belongs to.
+	// InitKlusterletConfig is the name of the KlusterletConfig that used to create the manged cluster.
 	// +optional
 	// +kubebuilder:validation:MaxLength=63
 	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	InitClusterSet string `json:"initClusterSet,omitempty"`
+	InitKlusterletConfig string `json:"initKlusterletConfig,omitempty"`
 
 	// ExternalServerURLs represents the a list of apiserver urls and ca bundles that is accessible externally
 	// If it is set empty, managed cluster has no externally accessible url that hub cluster can visit.
