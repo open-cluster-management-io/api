@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 
 	cliScheme "k8s.io/client-go/kubernetes/scheme"
@@ -13,7 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 	v1 "open-cluster-management.io/api/cluster/v1"
@@ -388,184 +388,89 @@ func TestGetClusterSetsOfCluster(t *testing.T) {
 	}
 }
 
-type placementDecisionGetter struct {
-	client client.Client
+type FakePlacementDecisionGetter struct {
+	FakeDecisions []*PlacementDecision
 }
 
-func (pdl placementDecisionGetter) List(selector labels.Selector, namespace string) ([]*PlacementDecision, error) {
-	decisionList := PlacementDecisionList{}
-	err := pdl.client.List(context.Background(), &decisionList, &client.ListOptions{
-		Namespace:     namespace,
-		LabelSelector: selector})
-	if err != nil {
-		return nil, err
-	}
-	var decisions []*PlacementDecision
-	for i := range decisionList.Items {
-		decisions = append(decisions, &decisionList.Items[i])
-	}
-	return decisions, nil
+func (f *FakePlacementDecisionGetter) List(selector labels.Selector, namespace string) (ret []*PlacementDecision, err error) {
+	return f.FakeDecisions, nil
 }
 
-func TestPlacementDecisionClustersTracker(t *testing.T) {
+func (f *FakePlacementDecisionGetter) Update(newPlacementDecisions []*PlacementDecision) (ret []*PlacementDecision, err error) {
+	f.FakeDecisions = newPlacementDecisions
+	return f.FakeDecisions, nil
+}
+
+func newFakePlacementDecision(placementName, groupName string, groupIndex int, clusterNames ...string) *PlacementDecision {
+	decisions := make([]ClusterDecision, len(clusterNames))
+	for i, clusterName := range clusterNames {
+		decisions[i] = ClusterDecision{ClusterName: clusterName}
+	}
+
+	return &PlacementDecision{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels: map[string]string{
+				PlacementLabel:          placementName,
+				DecisionGroupNameLabel:  groupName,
+				DecisionGroupIndexLabel: strconv.Itoa(groupIndex),
+			},
+		},
+		Status: PlacementDecisionStatus{
+			Decisions: decisions,
+		},
+	}
+}
+
+func TestPlacementDecisionClustersTracker_Get(t *testing.T) {
 	tests := []struct {
-		name                            string
-		placement                       Placement
-		existingDecisions               []*PlacementDecision
-		expectExistingScheduledClusters sets.Set[string]
-		updateDecisions                 []*PlacementDecision
-		expectUpdatedScheduledClusters  sets.Set[string]
-		expectAddedScheduledClusters    sets.Set[string]
-		expectDeletedScheduledClusters  sets.Set[string]
+		name                           string
+		placement                      Placement
+		existingScheduledClusters      sets.Set[string]
+		existingScheduledClusterGroups map[GroupKey]sets.Set[string]
+		updateDecisions                []*PlacementDecision
+		expectAddedScheduledClusters   sets.Set[string]
+		expectDeletedScheduledClusters sets.Set[string]
 	}{
 		{
 			name: "test placementdecisions",
 			placement: Placement{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "placement1",
-					Namespace: "default",
-				},
-				Spec: PlacementSpec{},
+				ObjectMeta: metav1.ObjectMeta{Name: "placement1", Namespace: "default"},
+				Spec:       PlacementSpec{},
 			},
-			existingDecisions: []*PlacementDecision{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "placement1-decision-1",
-						Namespace: "default",
-						Labels: map[string]string{
-							PlacementLabel: "placement1",
-						},
-					},
-					Status: PlacementDecisionStatus{
-						Decisions: []ClusterDecision{
-							{
-								ClusterName: "cluster1",
-								Reason:      "reason1",
-							},
-						},
-					},
-				},
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "placement1-decision-2",
-						Namespace: "default",
-						Labels: map[string]string{
-							PlacementLabel: "placement1",
-						},
-					},
-					Status: PlacementDecisionStatus{
-						Decisions: []ClusterDecision{
-							{
-								ClusterName: "cluster2",
-								Reason:      "reason2",
-							},
-						},
-					},
-				},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2"),
+			existingScheduledClusterGroups: map[GroupKey]sets.Set[string]{
+				{GroupName: "", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 			},
 			updateDecisions: []*PlacementDecision{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "placement1-decision-2",
-						Namespace: "default",
-						Labels: map[string]string{
-							PlacementLabel: "placement1",
-						},
-					},
-					Status: PlacementDecisionStatus{
-						Decisions: []ClusterDecision{
-							{
-								ClusterName: "cluster3",
-								Reason:      "reason3",
-							},
-						},
-					},
-				},
+				newFakePlacementDecision("placement1", "", 0, "cluster1"),
+				newFakePlacementDecision("placement1", "", 0, "cluster3"),
 			},
-			expectExistingScheduledClusters: sets.New[string]("cluster1", "cluster2"),
-			expectUpdatedScheduledClusters:  sets.New[string]("cluster1", "cluster3"),
-			expectAddedScheduledClusters:    sets.New[string]("cluster3"),
-			expectDeletedScheduledClusters:  sets.New[string]("cluster2"),
+			expectAddedScheduledClusters:   sets.New[string]("cluster3"),
+			expectDeletedScheduledClusters: sets.New[string]("cluster2"),
 		},
 		{
 			name: "test empty placementdecision",
 			placement: Placement{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "placement2",
-					Namespace: "default",
-				},
-				Spec: PlacementSpec{},
+				ObjectMeta: metav1.ObjectMeta{Name: "placement2", Namespace: "default"},
+				Spec:       PlacementSpec{},
 			},
-			existingDecisions: []*PlacementDecision{},
+			existingScheduledClusters:      sets.New[string](),
+			existingScheduledClusterGroups: map[GroupKey]sets.Set[string]{},
 			updateDecisions: []*PlacementDecision{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "placement2-decision-1",
-						Namespace: "default",
-						Labels: map[string]string{
-							PlacementLabel: "placement2",
-						},
-					},
-					Status: PlacementDecisionStatus{
-						Decisions: []ClusterDecision{
-							{
-								ClusterName: "cluster1",
-								Reason:      "reason1",
-							},
-							{
-								ClusterName: "cluster2",
-								Reason:      "reason2",
-							},
-						},
-					},
-				},
+				newFakePlacementDecision("placement2", "", 0, "cluster1", "cluster2"),
 			},
-			expectExistingScheduledClusters: sets.New[string](),
-			expectUpdatedScheduledClusters:  sets.New[string]("cluster1", "cluster2"),
-			expectAddedScheduledClusters:    sets.New[string]("cluster1", "cluster2"),
-			expectDeletedScheduledClusters:  sets.New[string](),
+			expectAddedScheduledClusters:   sets.New[string]("cluster1", "cluster2"),
+			expectDeletedScheduledClusters: sets.New[string](),
 		},
 	}
 
 	for _, test := range tests {
-		// init decisions
-		var existingObjs []client.Object
-		for _, d := range test.existingDecisions {
-			existingObjs = append(existingObjs, d)
+		// init fake placement decision getter
+		fakeGetter := FakePlacementDecisionGetter{
+			FakeDecisions: test.updateDecisions,
 		}
-
-		pdl := placementDecisionGetter{
-			client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(existingObjs...).Build(),
-		}
-
 		// init tracker
-		tracker := NewPlacementDecisionClustersTracker(&test.placement, pdl, nil)
-
-		// check decision clusters
-		_, _, err := tracker.Get()
-		if err != nil {
-			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
-		}
-		if !reflect.DeepEqual(tracker.Existing(), test.expectExistingScheduledClusters) {
-			t.Errorf("Case: %v, expect decisions: %v, return decisions: %v", test.name, test.expectExistingScheduledClusters, tracker.Existing())
-			return
-		}
-
-		// update decisions
-		for _, d := range test.updateDecisions {
-			existDecision := &PlacementDecision{}
-			err := pdl.client.Get(context.Background(), types.NamespacedName{Namespace: d.Namespace, Name: d.Name}, existDecision)
-			if err == nil {
-				existDecision.Status = d.Status
-				if err = pdl.client.Status().Update(context.Background(), existDecision); err != nil {
-					t.Errorf("Case: %v, Failed to run Update(): %v", test.name, err)
-				}
-			} else {
-				if err = pdl.client.Create(context.Background(), d); err != nil {
-					t.Errorf("Case: %v, Failed to run Create(): %v", test.name, err)
-				}
-			}
-		}
+		tracker := NewPlacementDecisionClustersTracker(&test.placement, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
 
 		// check changed decision clusters
 		addedClusters, deletedClusters, err := tracker.Get()
@@ -580,9 +485,223 @@ func TestPlacementDecisionClustersTracker(t *testing.T) {
 			t.Errorf("Case: %v, expect deleted decisions: %v, return decisions: %v", test.name, test.expectDeletedScheduledClusters, deletedClusters)
 			return
 		}
-		if !reflect.DeepEqual(tracker.Existing(), test.expectUpdatedScheduledClusters) {
-			t.Errorf("Case: %v, expect updated decisions: %v, return decisions: %v", test.name, test.expectUpdatedScheduledClusters, tracker.Existing())
-			return
+	}
+}
+
+func TestPlacementDecisionClustersTracker_Existing(t *testing.T) {
+	tests := []struct {
+		name                            string
+		placement                       Placement
+		placementDecisions              []*PlacementDecision
+		groupKeys                       []GroupKey
+		expectedExistingClusters        sets.Set[string]
+		expectedExistingBesidesClusters sets.Set[string]
+	}{
+		{
+			name: "test full group key",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{Name: "placement1", Namespace: "default"},
+				Spec:       PlacementSpec{},
+			},
+			placementDecisions: []*PlacementDecision{
+				newFakePlacementDecision("placement1", "group1", 0, "cluster1", "cluster2"),
+				newFakePlacementDecision("placement1", "group2", 1, "cluster3", "cluster4"),
+			},
+			groupKeys: []GroupKey{
+				{GroupName: "group1"},
+				{GroupIndex: 1},
+				{GroupName: "group3"},
+			},
+			expectedExistingClusters:        sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4"),
+			expectedExistingBesidesClusters: sets.New[string](),
+		},
+		{
+			name: "test part of group key",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{Name: "placement1", Namespace: "default"},
+				Spec:       PlacementSpec{},
+			},
+			placementDecisions: []*PlacementDecision{
+				newFakePlacementDecision("placement1", "group1", 0, "cluster1", "cluster2"),
+				newFakePlacementDecision("placement1", "group2", 1, "cluster3", "cluster4"),
+			},
+			groupKeys: []GroupKey{
+				{GroupName: "group1"},
+			},
+			expectedExistingClusters:        sets.New[string]("cluster1", "cluster2"),
+			expectedExistingBesidesClusters: sets.New[string]("cluster3", "cluster4"),
+		},
+		{
+			name: "test empty group key",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{Name: "placement1", Namespace: "default"},
+				Spec:       PlacementSpec{},
+			},
+			placementDecisions: []*PlacementDecision{
+				newFakePlacementDecision("placement1", "group1", 0, "cluster1", "cluster2"),
+				newFakePlacementDecision("placement1", "group2", 1, "cluster3", "cluster4"),
+			},
+			groupKeys:                       []GroupKey{},
+			expectedExistingClusters:        sets.New[string](),
+			expectedExistingBesidesClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4"),
+		},
+	}
+
+	for _, test := range tests {
+		// init fake placement decision getter
+		fakeGetter := FakePlacementDecisionGetter{
+			FakeDecisions: test.placementDecisions,
+		}
+		// init tracker
+		tracker := NewPlacementDecisionClustersTracker(&test.placement, &fakeGetter, nil, nil)
+		_, _, err := tracker.Get()
+		if err != nil {
+			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
+		}
+
+		// Call the Existing method with different groupKeys inputs.
+		existingClusters := tracker.Existing(test.groupKeys)
+		existingBesidesClusters := tracker.ExistingBesides(test.groupKeys)
+
+		// Assert the existingClusters
+		if !test.expectedExistingClusters.Equal(existingClusters) {
+			t.Errorf("Expected: %v, Actual: %v", test.expectedExistingClusters.UnsortedList(), existingClusters.UnsortedList())
+		}
+		if !test.expectedExistingBesidesClusters.Equal(existingBesidesClusters) {
+			t.Errorf("Expected: %v, Actual: %v", test.expectedExistingBesidesClusters.UnsortedList(), existingBesidesClusters.UnsortedList())
+		}
+	}
+}
+
+func TestPlacementDecisionClustersTracker_ExistingClusterGroups(t *testing.T) {
+	tests := []struct {
+		name                                 string
+		placement                            Placement
+		placementDecisions                   []*PlacementDecision
+		groupKeys                            []GroupKey
+		expectedGroupKeys                    []GroupKey
+		expectedExistingClusterGroups        map[GroupKey]sets.Set[string]
+		expectedBesidesGroupKeys             []GroupKey
+		expectedExistingBesidesClusterGroups map[GroupKey]sets.Set[string]
+	}{
+		{
+			name: "test full group key",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{Name: "placement1", Namespace: "default"},
+				Spec:       PlacementSpec{},
+			},
+			placementDecisions: []*PlacementDecision{
+				newFakePlacementDecision("placement1", "group1", 0, "cluster1", "cluster2"),
+				newFakePlacementDecision("placement1", "group1", 1, "cluster3", "cluster4"),
+				newFakePlacementDecision("placement1", "group2", 2, "cluster5", "cluster6"),
+			},
+			groupKeys: []GroupKey{
+				{GroupName: "group1"},
+				{GroupIndex: 2},
+				{GroupName: "group3"},
+			},
+			expectedGroupKeys: []GroupKey{
+				{GroupName: "group1", GroupIndex: 0},
+				{GroupName: "group1", GroupIndex: 1},
+				{GroupName: "group2", GroupIndex: 2},
+			},
+			expectedExistingClusterGroups: map[GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "group1", GroupIndex: 1}: sets.New[string]("cluster3", "cluster4"),
+				{GroupName: "group2", GroupIndex: 2}: sets.New[string]("cluster5", "cluster6"),
+			},
+			expectedBesidesGroupKeys:             []GroupKey{},
+			expectedExistingBesidesClusterGroups: map[GroupKey]sets.Set[string]{},
+		},
+		{
+			name: "test part of group key",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{Name: "placement1", Namespace: "default"},
+				Spec:       PlacementSpec{},
+			},
+			placementDecisions: []*PlacementDecision{
+				newFakePlacementDecision("placement1", "group1", 0, "cluster1", "cluster2"),
+				newFakePlacementDecision("placement1", "group1", 1, "cluster3", "cluster4"),
+				newFakePlacementDecision("placement1", "group2", 2, "cluster5", "cluster6"),
+			},
+			groupKeys: []GroupKey{
+				{GroupName: "group1"},
+			},
+			expectedGroupKeys: []GroupKey{
+				{GroupName: "group1", GroupIndex: 0},
+				{GroupName: "group1", GroupIndex: 1},
+			},
+			expectedExistingClusterGroups: map[GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "group1", GroupIndex: 1}: sets.New[string]("cluster3", "cluster4"),
+			},
+			expectedBesidesGroupKeys: []GroupKey{
+				{GroupName: "group2", GroupIndex: 2},
+			},
+			expectedExistingBesidesClusterGroups: map[GroupKey]sets.Set[string]{
+				{GroupName: "group2", GroupIndex: 2}: sets.New[string]("cluster5", "cluster6"),
+			},
+		},
+		{
+			name: "test empty group key",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{Name: "placement1", Namespace: "default"},
+				Spec:       PlacementSpec{},
+			},
+			placementDecisions: []*PlacementDecision{
+				newFakePlacementDecision("placement1", "group1", 0, "cluster1", "cluster2"),
+				newFakePlacementDecision("placement1", "group1", 1, "cluster3", "cluster4"),
+				newFakePlacementDecision("placement1", "group2", 2, "cluster5", "cluster6"),
+			},
+			groupKeys:                     []GroupKey{},
+			expectedGroupKeys:             []GroupKey{},
+			expectedExistingClusterGroups: map[GroupKey]sets.Set[string]{},
+			expectedBesidesGroupKeys: []GroupKey{
+				{GroupName: "group1", GroupIndex: 0},
+				{GroupName: "group1", GroupIndex: 1},
+				{GroupName: "group2", GroupIndex: 2},
+			},
+			expectedExistingBesidesClusterGroups: map[GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "group1", GroupIndex: 1}: sets.New[string]("cluster3", "cluster4"),
+				{GroupName: "group2", GroupIndex: 2}: sets.New[string]("cluster5", "cluster6"),
+			},
+		},
+	}
+
+	for _, test := range tests {
+		// init fake placement decision getter
+		fakeGetter := FakePlacementDecisionGetter{
+			FakeDecisions: test.placementDecisions,
+		}
+		// init tracker
+		tracker := NewPlacementDecisionClustersTracker(&test.placement, &fakeGetter, nil, nil)
+		_, _, err := tracker.Get()
+		if err != nil {
+			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
+		}
+
+		// Call the Existing method with different groupKeys inputs.
+		existingGroupKeys, existingClusterGroups := tracker.ExistingClusterGroups(test.groupKeys)
+		existingBesidesGroupKeys, existingBesidesClusterGroups := tracker.ExistingClusterGroupsBesides(test.groupKeys)
+
+		// Assert the existingClustersGroups
+		if !reflect.DeepEqual(existingGroupKeys, test.expectedGroupKeys) {
+			t.Errorf("Expected: %v, Actual: %v", test.expectedGroupKeys, existingGroupKeys)
+		}
+		for _, gk := range existingGroupKeys {
+			if !test.expectedExistingClusterGroups[gk].Equal(existingClusterGroups[gk]) {
+				t.Errorf("Expected: %v, Actual: %v", test.expectedExistingClusterGroups[gk], existingClusterGroups[gk])
+			}
+		}
+
+		if !reflect.DeepEqual(existingBesidesGroupKeys, test.expectedBesidesGroupKeys) {
+			t.Errorf("Expected: %v, Actual: %v", test.expectedBesidesGroupKeys, existingBesidesGroupKeys)
+		}
+		for _, gk := range existingBesidesGroupKeys {
+			if !test.expectedExistingBesidesClusterGroups[gk].Equal(existingBesidesClusterGroups[gk]) {
+				t.Errorf("Expected: %v, Actual: %v", test.expectedExistingBesidesClusterGroups[gk], existingClusterGroups[gk])
+			}
 		}
 	}
 }

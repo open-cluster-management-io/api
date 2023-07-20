@@ -1,0 +1,911 @@
+package v1alpha1
+
+import (
+	"fmt"
+	"math"
+	"reflect"
+	"testing"
+	"time"
+
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
+	testingclock "k8s.io/utils/clock/testing"
+	clusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
+)
+
+var fakeTime = time.Date(2022, time.January, 01, 0, 0, 0, 0, time.UTC)
+var fakeTime_1m = fakeTime.Add(-time.Minute)
+var fakeTime_2m = fakeTime.Add(-2 * time.Minute)
+
+type FakePlacementDecisionGetter struct {
+	FakeDecisions []*clusterv1beta1.PlacementDecision
+}
+
+func (f *FakePlacementDecisionGetter) List(selector labels.Selector, namespace string) (ret []*clusterv1beta1.PlacementDecision, err error) {
+	return f.FakeDecisions, nil
+}
+
+func TestGetRolloutCluster_All(t *testing.T) {
+	tests := []struct {
+		name                           string
+		rolloutStrategy                RolloutStrategy
+		existingScheduledClusters      sets.Set[string]
+		existingScheduledClusterGroups map[clusterv1beta1.GroupKey]sets.Set[string]
+		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
+		expectRolloutStrategy          *RolloutStrategy
+		expectRolloutClusters          map[string]ClusterRolloutStatus
+	}{
+		{
+			name:                      "test rollout all with timeout 90s",
+			rolloutStrategy:           RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"90s"}}},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster2": {status: Progressing, lastTransitionTime: &fakeTime_1m},
+					"cluster3": {status: Succeed, lastTransitionTime: &fakeTime_1m},
+					"cluster4": {status: Failed, lastTransitionTime: &fakeTime_1m},
+					"cluster5": {status: Failed, lastTransitionTime: &fakeTime_2m},
+					"cluster6": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"90s"}}},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+				"cluster2": {status: Progressing, lastTransitionTime: &fakeTime_1m},
+				"cluster4": {status: Failed, lastTransitionTime: &fakeTime_1m},
+				"cluster6": {},
+			},
+		},
+		{
+			name:                      "test rollout all (default timeout None)",
+			rolloutStrategy:           RolloutStrategy{Type: All},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: ToApply},
+					"cluster2": {status: Progressing},
+					"cluster3": {status: Succeed},
+					"cluster4": {status: Failed},
+					"cluster5": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{""}}},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: ToApply},
+				"cluster2": {status: Progressing},
+				"cluster4": {status: Failed},
+				"cluster5": {},
+			},
+		},
+		{
+			name:                      "test rollout all with timeout 0s",
+			rolloutStrategy:           RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"0s"}}},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: ToApply},
+					"cluster2": {status: Progressing},
+					"cluster3": {status: Succeed},
+					"cluster4": {status: Failed},
+					"cluster5": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"0s"}}},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: ToApply},
+				"cluster2": {status: Progressing},
+				"cluster5": {},
+			},
+		},
+	}
+
+	RolloutClock = testingclock.NewFakeClock(fakeTime)
+	for _, test := range tests {
+		// init fake placement decision tracker
+		fakeGetter := FakePlacementDecisionGetter{}
+		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
+
+		rolloutHandler := NewRolloutHandler(test.rolloutStrategy, tracker, test.clusterRolloutStatusFunc)
+		actualRolloutStrategy, actualRolloutClusters, _ := rolloutHandler.GetRolloutCluster()
+
+		if !reflect.DeepEqual(actualRolloutStrategy.All, test.expectRolloutStrategy.All) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect strategy : %v, actual : %v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
+			return
+		}
+		if !reflect.DeepEqual(actualRolloutClusters, test.expectRolloutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutClusters)
+			return
+		}
+	}
+}
+
+func TestGetRolloutCluster_Progressive(t *testing.T) {
+	tests := []struct {
+		name                           string
+		rolloutStrategy                RolloutStrategy
+		existingScheduledClusters      sets.Set[string]
+		existingScheduledClusterGroups map[clusterv1beta1.GroupKey]sets.Set[string]
+		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
+		expectRolloutStrategy          *RolloutStrategy
+		expectRolloutClusters          map[string]ClusterRolloutStatus
+	}{
+		{
+			name: "test progressive rollout with timeout 90s",
+			rolloutStrategy: RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					Timeout: Timeout{"90s"},
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster2": {status: Progressing, lastTransitionTime: &fakeTime_1m},
+					"cluster3": {status: Succeed, lastTransitionTime: &fakeTime_1m},
+					"cluster4": {status: Failed, lastTransitionTime: &fakeTime_1m},
+					"cluster5": {status: Failed, lastTransitionTime: &fakeTime_2m},
+					"cluster6": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					Timeout: Timeout{"90s"},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+				"cluster2": {status: Progressing, lastTransitionTime: &fakeTime_1m},
+				"cluster4": {status: Failed, lastTransitionTime: &fakeTime_1m},
+				"cluster6": {},
+			},
+		},
+		{
+			name: "test progressive rollout with timeout None and MaxConcurrency 50%",
+			rolloutStrategy: RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					Timeout:        Timeout{""},
+					MaxConcurrency: intstr.FromString("50%"), // 50% of total clusters
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: ToApply},
+					"cluster2": {status: Progressing},
+					"cluster3": {status: Succeed},
+					"cluster4": {status: Failed},
+					"cluster5": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					Timeout:        Timeout{""},
+					MaxConcurrency: intstr.FromString("50%"), // 50% of total clusters
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: ToApply},
+				"cluster2": {status: Progressing},
+				"cluster4": {status: Failed},
+			},
+		},
+		{
+			name: "test progressive rollout with timeout 0s and MaxConcurrency 3",
+			rolloutStrategy: RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					Timeout:        Timeout{"0s"},
+					MaxConcurrency: intstr.FromInt(3), // Maximum 3 clusters concurrently
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: ToApply},
+					"cluster2": {status: Progressing},
+					"cluster3": {status: Succeed},
+					"cluster4": {status: Failed},
+					"cluster5": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					Timeout:        Timeout{"0s"},
+					MaxConcurrency: intstr.FromInt(3), // Maximum 3 clusters concurrently
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: ToApply},
+				"cluster2": {status: Progressing},
+				"cluster5": {},
+			},
+		},
+		{
+			name: "test progressive rollout with mandatory decision groups",
+			rolloutStrategy: RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					MaxConcurrency: intstr.FromString("50%"),
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: ToApply},
+					"cluster2": {status: ToApply},
+					"cluster3": {status: ToApply},
+					"cluster4": {status: ToApply},
+					"cluster5": {status: ToApply},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					MaxConcurrency: intstr.FromString("50%"),
+					Timeout:        Timeout{""},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: ToApply},
+				"cluster2": {status: ToApply},
+			},
+		},
+		{
+			name: "test progressive rollout with mandatory decision groups Succeed",
+			rolloutStrategy: RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					MaxConcurrency: intstr.FromInt(2),
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: Succeed},
+					"cluster2": {status: Succeed},
+					"cluster3": {status: ToApply},
+					"cluster4": {status: Succeed},
+					"cluster5": {status: ToApply},
+					"cluster6": {status: ToApply},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					MaxConcurrency: intstr.FromInt(2),
+					Timeout:        Timeout{""},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster3": {status: ToApply},
+				"cluster5": {status: ToApply},
+			},
+		},
+		{
+			name: "test progressive rollout with mandatory decision groups failed",
+			rolloutStrategy: RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					MaxConcurrency: intstr.FromString("50%"), // 50% of total clusters
+					Timeout:        Timeout{"0s"},
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: Failed},
+					"cluster2": {status: Failed},
+					"cluster3": {status: ToApply},
+					"cluster4": {status: ToApply},
+					"cluster5": {status: ToApply},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: Progressive,
+				Progressive: &RolloutProgressive{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					MaxConcurrency: intstr.FromString("50%"), // 50% of total clusters
+					Timeout:        Timeout{"0s"},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: Failed},
+				"cluster2": {status: Failed},
+			},
+		},
+	}
+
+	// Set the fake time for testing
+	RolloutClock = testingclock.NewFakeClock(fakeTime)
+
+	for _, test := range tests {
+		// Init fake placement decision tracker
+		fakeGetter := FakePlacementDecisionGetter{}
+		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
+
+		rolloutHandler := NewRolloutHandler(test.rolloutStrategy, tracker, test.clusterRolloutStatusFunc)
+		actualRolloutStrategy, actualRolloutClusters, _ := rolloutHandler.GetRolloutCluster()
+
+		if !reflect.DeepEqual(actualRolloutStrategy.Progressive, test.expectRolloutStrategy.Progressive) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect strategy : %v, actual : %v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
+			return
+		}
+		if !reflect.DeepEqual(actualRolloutClusters, test.expectRolloutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutClusters)
+			return
+		}
+	}
+}
+
+func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
+	tests := []struct {
+		name                           string
+		rolloutStrategy                RolloutStrategy
+		existingScheduledClusters      sets.Set[string]
+		existingScheduledClusterGroups map[clusterv1beta1.GroupKey]sets.Set[string]
+		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
+		expectRolloutStrategy          *RolloutStrategy
+		expectRolloutClusters          map[string]ClusterRolloutStatus
+	}{
+		{
+			name: "test progressive per group rollout with timeout 90s",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					Timeout: Timeout{"90s"},
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
+					"cluster2": {status: Failed, lastTransitionTime: &fakeTime_2m},
+					"cluster3": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster4": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster5": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster6": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					Timeout: Timeout{"90s"},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
+			},
+		},
+		{
+			name: "test progressive per group rollout with timeout None",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
+					"cluster2": {status: Failed, lastTransitionTime: &fakeTime_2m},
+					"cluster3": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster4": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster5": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster6": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					Timeout: Timeout{""},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
+				"cluster2": {status: Failed, lastTransitionTime: &fakeTime_2m},
+			},
+		},
+		{
+			name: "test progressive per group rollout with timeout 0s",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					Timeout: Timeout{"0s"},
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
+					"cluster2": {status: Failed, lastTransitionTime: &fakeTime_2m},
+					"cluster3": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster4": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster5": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster6": {},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					Timeout: Timeout{"0s"},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster3": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+				"cluster4": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+				"cluster5": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+				"cluster6": {},
+			},
+		},
+		{
+			name: "test progressive per group rollout with mandatory decision groups",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: ToApply},
+					"cluster2": {status: ToApply},
+					"cluster3": {status: ToApply},
+					"cluster4": {status: ToApply},
+					"cluster5": {status: ToApply},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: ToApply},
+				"cluster2": {status: ToApply},
+			},
+		},
+		{
+			name: "test progressive per group rollout with mandatory decision groups Succeed",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4"),
+				{GroupName: "", GroupIndex: 2}:       sets.New[string]("cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: Succeed},
+					"cluster2": {status: Succeed},
+					"cluster3": {status: ToApply},
+					"cluster4": {status: Succeed},
+					"cluster5": {status: ToApply},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster3": {status: ToApply},
+			},
+		},
+		{
+			name: "test progressive per group rollout with mandatory decision groups failed",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					Timeout: Timeout{"0s"},
+				},
+			},
+			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
+			},
+			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
+				clustersRolloutStatus := map[string]ClusterRolloutStatus{
+					"cluster1": {status: Failed},
+					"cluster2": {status: Failed},
+					"cluster3": {status: ToApply},
+					"cluster4": {status: ToApply},
+					"cluster5": {status: ToApply},
+				}
+				return clustersRolloutStatus[clusterName]
+			},
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					Timeout: Timeout{"0s"},
+				},
+			},
+			expectRolloutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {status: Failed},
+				"cluster2": {status: Failed},
+			},
+		},
+	}
+
+	// Set the fake time for testing
+	RolloutClock = testingclock.NewFakeClock(fakeTime)
+
+	for _, test := range tests {
+		// Init fake placement decision tracker
+		fakeGetter := FakePlacementDecisionGetter{}
+		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
+
+		rolloutHandler := NewRolloutHandler(test.rolloutStrategy, tracker, test.clusterRolloutStatusFunc)
+		actualRolloutStrategy, actualRolloutClusters, _ := rolloutHandler.GetRolloutCluster()
+
+		if !reflect.DeepEqual(actualRolloutStrategy.ProgressivePerGroup, test.expectRolloutStrategy.ProgressivePerGroup) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect strategy : %v, actual : %v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
+			return
+		}
+		if !reflect.DeepEqual(actualRolloutClusters, test.expectRolloutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutClusters)
+			return
+		}
+	}
+}
+
+func TestNeedToUpdate(t *testing.T) {
+	testCases := []struct {
+		name           string
+		status         RolloutStatus
+		lastTransition *time.Time
+		timeout        time.Duration
+		expectedResult bool
+	}{
+		{
+			name:           "ToApply status",
+			status:         ToApply,
+			lastTransition: nil,
+			timeout:        time.Minute,
+			expectedResult: true,
+		},
+		{
+			name:           "Progressing status",
+			status:         Progressing,
+			lastTransition: nil,
+			timeout:        time.Minute,
+			expectedResult: true,
+		},
+		{
+			name:           "Succeed status",
+			status:         Succeed,
+			lastTransition: nil,
+			timeout:        time.Minute,
+			expectedResult: false,
+		},
+		{
+			name:           "Failed status, timeout is None",
+			status:         Failed,
+			lastTransition: &fakeTime,
+			timeout:        maxTimeDuration,
+			expectedResult: true,
+		},
+		{
+			name:           "Failed status, timeout is 0",
+			status:         Failed,
+			lastTransition: &fakeTime,
+			timeout:        0,
+			expectedResult: false,
+		},
+		{
+			name:           "Failed status, within the timeout duration",
+			status:         Failed,
+			lastTransition: &fakeTime_1m,
+			timeout:        2 * time.Minute,
+			expectedResult: true,
+		},
+		{
+			name:           "Failed status, outside the timeout duration",
+			status:         Failed,
+			lastTransition: &fakeTime_2m,
+			timeout:        time.Minute,
+			expectedResult: false,
+		},
+	}
+
+	RolloutClock = testingclock.NewFakeClock(fakeTime)
+	// Run the tests
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a ClusterRolloutStatus instance
+			status := ClusterRolloutStatus{
+				status:             tc.status,
+				lastTransitionTime: tc.lastTransition,
+			}
+
+			// Call the needToUpdate function
+			result := needToUpdate(status, tc.timeout)
+
+			// Compare the result with the expected result
+			if result != tc.expectedResult {
+				t.Errorf("Expected result: %v, got: %v", tc.expectedResult, result)
+			}
+		})
+	}
+}
+
+func TestCalculateLength(t *testing.T) {
+	total := 100
+
+	tests := []struct {
+		name           string
+		maxConcurrency intstr.IntOrString
+		expected       int
+		expectedError  error
+	}{
+		{"maxConcurrency type is int", intstr.FromInt(50), 50, nil},
+		{"maxConcurrency type is string with percentage", intstr.FromString("30%"), int(math.Ceil(0.3 * float64(total))), nil},
+		{"maxConcurrency type is string without percentage", intstr.FromString("invalid"), total, fmt.Errorf("%v invalid type: string is not a percentage", intstr.FromString("invalid"))},
+		{"maxConcurrency type is int 0", intstr.FromInt(0), total, nil},
+		{"maxConcurrency type is int but out of range", intstr.FromInt(total + 1), total, nil},
+		{"maxConcurrency type is string with percentage but out of range", intstr.FromString("200%"), total, nil},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			length, err := calculateLength(test.maxConcurrency, total)
+
+			// Compare the result with the expected result
+			if length != test.expected {
+				t.Errorf("Expected result: %v, got: %v", test.expected, length)
+			}
+
+			// Compare the error with the expected error
+			if err != nil && test.expectedError != nil {
+				if err.Error() != test.expectedError.Error() {
+					t.Errorf("Expected error: %v, got: %v", test.expectedError, err)
+				}
+			} else if err != nil || test.expectedError != nil {
+				t.Errorf("Expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}
+
+func TestParseTimeout(t *testing.T) {
+	maxTimeDuration := time.Duration(int64(^uint64(0) >> 1))
+
+	tests := []struct {
+		name          string
+		timeoutStr    string
+		expected      time.Duration
+		expectedError error
+	}{
+		{"Valid timeout with hours", "2h", 2 * time.Hour, nil},
+		{"Valid timeout with minutes", "30m", 30 * time.Minute, nil},
+		{"Valid timeout with seconds", "10s", 10 * time.Second, nil},
+		{"\"None\" timeout", "None", maxTimeDuration, nil},
+		{"Empty string timeout", "", maxTimeDuration, nil},
+		{"Invalid format", "2d", maxTimeDuration, fmt.Errorf("invalid timeout format")},
+		{"Invalid format", "0", maxTimeDuration, fmt.Errorf("invalid timeout format")},
+		{"Invalid numeric value", "2d0s", maxTimeDuration, fmt.Errorf("invalid timeout format")},
+		{"Invalid unit", "10g", maxTimeDuration, fmt.Errorf("invalid timeout format")},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Call the parseTimeout function
+			duration, err := parseTimeout(test.timeoutStr)
+
+			// Compare the result with the expected result
+			if duration != test.expected {
+				t.Errorf("Expected result: %v, got: %v", test.expected, duration)
+			}
+
+			// Compare the error with the expected error
+			if err != nil && test.expectedError != nil {
+				if err.Error() != test.expectedError.Error() {
+					t.Errorf("Expected error: %v, got: %v", test.expectedError, err)
+				}
+			} else if err != nil || test.expectedError != nil {
+				t.Errorf("Expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}
+
+func TestDecisionGroupsToGroupKeys(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []MandatoryDecisionGroup
+		expected []clusterv1beta1.GroupKey
+	}{
+		{
+			name: "Both GroupName and GroupIndex are set",
+			input: []MandatoryDecisionGroup{
+				{GroupName: "group1", GroupIndex: 1},
+				{GroupName: "group2", GroupIndex: 2},
+			},
+			expected: []clusterv1beta1.GroupKey{
+				{GroupName: "group1", GroupIndex: 0},
+				{GroupName: "group2", GroupIndex: 0},
+			},
+		},
+		{
+			name: "Only GroupName is set",
+			input: []MandatoryDecisionGroup{
+				{GroupName: "group1"},
+				{GroupName: "group2"},
+			},
+			expected: []clusterv1beta1.GroupKey{
+				{GroupName: "group1", GroupIndex: 0},
+				{GroupName: "group2", GroupIndex: 0},
+			},
+		},
+		{
+			name: "Only GroupIndex is set",
+			input: []MandatoryDecisionGroup{
+				{GroupIndex: 1},
+				{GroupIndex: 2},
+			},
+			expected: []clusterv1beta1.GroupKey{
+				{GroupName: "", GroupIndex: 1},
+				{GroupName: "", GroupIndex: 2},
+			},
+		},
+		{
+			name: "Both GroupName and GroupIndex are empty",
+			input: []MandatoryDecisionGroup{
+				{},
+			},
+			expected: []clusterv1beta1.GroupKey{
+				{GroupName: "", GroupIndex: 0},
+			},
+		},
+		{
+			name:     "Empty MandatoryDecisionGroup",
+			input:    []MandatoryDecisionGroup{},
+			expected: []clusterv1beta1.GroupKey{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := decisionGroupsToGroupKeys(test.input)
+
+			// Compare the result with the expected result
+			if !reflect.DeepEqual(result, test.expected) {
+				t.Errorf("Expected result: %v, got: %v", test.expected, result)
+			}
+		})
+	}
+}
