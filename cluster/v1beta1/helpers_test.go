@@ -560,8 +560,8 @@ func TestPlacementDecisionClustersTracker_Existing(t *testing.T) {
 		}
 
 		// Call the Existing method with different groupKeys inputs.
-		existingClusters := tracker.Existing(test.groupKeys)
-		existingBesidesClusters := tracker.ExistingBesides(test.groupKeys)
+		existingClusters, _, _ := tracker.Existing(test.groupKeys)
+		existingBesidesClusters, _, _ := tracker.ExistingBesides(test.groupKeys)
 
 		// Assert the existingClusters
 		if !test.expectedExistingClusters.Equal(existingClusters) {

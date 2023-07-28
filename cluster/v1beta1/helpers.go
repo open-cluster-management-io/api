@@ -224,38 +224,28 @@ func (pdct *PlacementDecisionClustersTracker) generateGroupsNameIndex() {
 
 // Existing() returns the tracker's existing decision cluster names of groups listed in groupKeys.
 // Return empty set when groupKeys is empty.
-func (pdct *PlacementDecisionClustersTracker) Existing(groupKeys []GroupKey) sets.Set[string] {
-	pdct.lock.RLock()
-	defer pdct.lock.RUnlock()
+func (pdct *PlacementDecisionClustersTracker) Existing(groupKeys []GroupKey) (sets.Set[string], []GroupKey, map[GroupKey]sets.Set[string]) {
+	existingGroupKeys, existingClusterGroups := pdct.ExistingClusterGroups(groupKeys)
 
-	result := sets.New[string]()
-	includeGroupKeys := pdct.fulfillGroupKeys(groupKeys)
-	for _, groupKey := range includeGroupKeys {
-		if clusters, found := pdct.existingScheduledClusterGroups[groupKey]; found {
-			result.Insert(clusters.UnsortedList()...)
-		}
+	existingClusters := sets.New[string]()
+	for _, clusterSets := range existingClusterGroups {
+		existingClusters.Insert(clusterSets.UnsortedList()...)
 	}
 
-	return result
+	return existingClusters, existingGroupKeys, existingClusterGroups
 }
 
 // ExistingBesides returns the tracker's existing decision cluster names except cluster groups listed in groupKeys.
 // Return all the clusters when groupKeys is empty.
-func (pdct *PlacementDecisionClustersTracker) ExistingBesides(groupKeys []GroupKey) sets.Set[string] {
-	pdct.lock.RLock()
-	defer pdct.lock.RUnlock()
+func (pdct *PlacementDecisionClustersTracker) ExistingBesides(groupKeys []GroupKey) (sets.Set[string], []GroupKey, map[GroupKey]sets.Set[string]) {
+	existingGroupKeys, existingClusterGroups := pdct.ExistingClusterGroupsBesides(groupKeys)
 
-	result := sets.New[string]()
-
-	excludeGroupKeys := pdct.fulfillGroupKeys(groupKeys)
-	includeGroupKeys := pdct.getOrderedGroupKeysBesides(excludeGroupKeys)
-	for _, groupKey := range includeGroupKeys {
-		if clusters, found := pdct.existingScheduledClusterGroups[groupKey]; found {
-			result.Insert(clusters.UnsortedList()...)
-		}
+	existingClusters := sets.New[string]()
+	for _, clusterSets := range existingClusterGroups {
+		existingClusters.Insert(clusterSets.UnsortedList()...)
 	}
 
-	return result
+	return existingClusters, existingGroupKeys, existingClusterGroups
 }
 
 // ExistingClusterGroups returns the tracker's existing decision cluster names for groups listed in groupKeys.
@@ -297,6 +287,18 @@ func (pdct *PlacementDecisionClustersTracker) ExistingClusterGroupsBesides(group
 	}
 
 	return resultGroupKeys, resultClusterGroups
+}
+
+func (pdct *PlacementDecisionClustersTracker) ClusterToGroupKey(groupToCluster map[GroupKey]sets.Set[string]) map[string]GroupKey {
+	clusterToGroupKey := map[string]GroupKey{}
+
+	for groupKey, clustersSet := range groupToCluster {
+		for c := range clustersSet {
+			clusterToGroupKey[c] = groupKey
+		}
+	}
+
+	return clusterToGroupKey
 }
 
 // Fulfill the expect groupkeys with group name or group index, the returned groupkeys are ordered by input group name then group index.

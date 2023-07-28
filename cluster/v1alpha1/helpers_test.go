@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -14,9 +15,9 @@ import (
 	clusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
 )
 
-var fakeTime = time.Date(2022, time.January, 01, 0, 0, 0, 0, time.UTC)
-var fakeTime_1m = fakeTime.Add(-time.Minute)
-var fakeTime_2m = fakeTime.Add(-2 * time.Minute)
+var fakeTime = metav1.NewTime(time.Date(2022, time.January, 01, 0, 0, 0, 0, time.UTC))
+var fakeTime_1m = metav1.NewTime(fakeTime.Add(-time.Minute))
+var fakeTime_2m = metav1.NewTime(fakeTime.Add(-2 * time.Minute))
 
 type FakePlacementDecisionGetter struct {
 	FakeDecisions []*clusterv1beta1.PlacementDecision
@@ -35,6 +36,7 @@ func TestGetRolloutCluster_All(t *testing.T) {
 		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
 		expectRolloutStrategy          *RolloutStrategy
 		expectRolloutClusters          map[string]ClusterRolloutStatus
+		expectTimeOutClusters          map[string]ClusterRolloutStatus
 	}{
 		{
 			name:                      "test rollout all with timeout 90s",
@@ -46,21 +48,24 @@ func TestGetRolloutCluster_All(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-					"cluster2": {status: Progressing, lastTransitionTime: &fakeTime_1m},
-					"cluster3": {status: Succeed, lastTransitionTime: &fakeTime_1m},
-					"cluster4": {status: Failed, lastTransitionTime: &fakeTime_1m},
-					"cluster5": {status: Failed, lastTransitionTime: &fakeTime_2m},
+					"cluster1": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
+					"cluster2": {Status: Progressing, LastTransitionTime: &fakeTime_1m},
+					"cluster3": {Status: Succeed, LastTransitionTime: &fakeTime_1m},
+					"cluster4": {Status: Failed, LastTransitionTime: &fakeTime_1m},
+					"cluster5": {Status: Failed, LastTransitionTime: &fakeTime_2m},
 					"cluster6": {},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
 			expectRolloutStrategy: &RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"90s"}}},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-				"cluster2": {status: Progressing, lastTransitionTime: &fakeTime_1m},
-				"cluster4": {status: Failed, lastTransitionTime: &fakeTime_1m},
-				"cluster6": {},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply, LastTransitionTime: &fakeTime_1m},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Progressing, LastTransitionTime: &fakeTime_1m},
+				"cluster4": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Failed, LastTransitionTime: &fakeTime_1m},
+				"cluster6": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}},
+			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{
+				"cluster5": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: TimeOut, LastTransitionTime: &fakeTime_2m},
 			},
 		},
 		{
@@ -73,21 +78,22 @@ func TestGetRolloutCluster_All(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: ToApply},
-					"cluster2": {status: Progressing},
-					"cluster3": {status: Succeed},
-					"cluster4": {status: Failed},
+					"cluster1": {Status: ToApply},
+					"cluster2": {Status: Progressing},
+					"cluster3": {Status: Succeed},
+					"cluster4": {Status: Failed},
 					"cluster5": {},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
 			expectRolloutStrategy: &RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{""}}},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: ToApply},
-				"cluster2": {status: Progressing},
-				"cluster4": {status: Failed},
-				"cluster5": {},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Progressing},
+				"cluster4": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Failed},
+				"cluster5": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 		{
 			name:                      "test rollout all with timeout 0s",
@@ -99,38 +105,45 @@ func TestGetRolloutCluster_All(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: ToApply},
-					"cluster2": {status: Progressing},
-					"cluster3": {status: Succeed},
-					"cluster4": {status: Failed},
+					"cluster1": {Status: ToApply},
+					"cluster2": {Status: Progressing},
+					"cluster3": {Status: Succeed},
+					"cluster4": {Status: Failed},
 					"cluster5": {},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
 			expectRolloutStrategy: &RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"0s"}}},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: ToApply},
-				"cluster2": {status: Progressing},
-				"cluster5": {},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
+				"cluster5": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}},
+			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut},
+				"cluster4": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: TimeOut},
 			},
 		},
 	}
 
-	RolloutClock = testingclock.NewFakeClock(fakeTime)
+	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 	for _, test := range tests {
 		// init fake placement decision tracker
 		fakeGetter := FakePlacementDecisionGetter{}
 		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
 
-		rolloutHandler := NewRolloutHandler(test.rolloutStrategy, tracker, test.clusterRolloutStatusFunc)
-		actualRolloutStrategy, actualRolloutClusters, _ := rolloutHandler.GetRolloutCluster()
+		rolloutHandler, _ := NewRolloutHandler(tracker)
+		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, test.clusterRolloutStatusFunc)
 
 		if !reflect.DeepEqual(actualRolloutStrategy.All, test.expectRolloutStrategy.All) {
 			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect strategy : %v, actual : %v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
 			return
 		}
-		if !reflect.DeepEqual(actualRolloutClusters, test.expectRolloutClusters) {
-			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutClusters)
+		if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect rollout clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutResult.ClustersToRollout)
+			return
+		}
+		if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectTimeOutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect timeout clusters: %v, actual : %v", test.name, test.expectTimeOutClusters, actualRolloutResult.ClustersTimeOut)
 			return
 		}
 	}
@@ -145,6 +158,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
 		expectRolloutStrategy          *RolloutStrategy
 		expectRolloutClusters          map[string]ClusterRolloutStatus
+		expectTimeOutClusters          map[string]ClusterRolloutStatus
 	}{
 		{
 			name: "test progressive rollout with timeout 90s",
@@ -161,11 +175,11 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-					"cluster2": {status: Progressing, lastTransitionTime: &fakeTime_1m},
-					"cluster3": {status: Succeed, lastTransitionTime: &fakeTime_1m},
-					"cluster4": {status: Failed, lastTransitionTime: &fakeTime_1m},
-					"cluster5": {status: Failed, lastTransitionTime: &fakeTime_2m},
+					"cluster1": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
+					"cluster2": {Status: Progressing, LastTransitionTime: &fakeTime_1m},
+					"cluster3": {Status: Succeed, LastTransitionTime: &fakeTime_1m},
+					"cluster4": {Status: Failed, LastTransitionTime: &fakeTime_1m},
+					"cluster5": {Status: Failed, LastTransitionTime: &fakeTime_2m},
 					"cluster6": {},
 				}
 				return clustersRolloutStatus[clusterName]
@@ -177,10 +191,13 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-				"cluster2": {status: Progressing, lastTransitionTime: &fakeTime_1m},
-				"cluster4": {status: Failed, lastTransitionTime: &fakeTime_1m},
-				"cluster6": {},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply, LastTransitionTime: &fakeTime_1m},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Progressing, LastTransitionTime: &fakeTime_1m},
+				"cluster4": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Failed, LastTransitionTime: &fakeTime_1m},
+				"cluster6": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}},
+			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{
+				"cluster5": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: TimeOut, LastTransitionTime: &fakeTime_2m},
 			},
 		},
 		{
@@ -199,10 +216,10 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: ToApply},
-					"cluster2": {status: Progressing},
-					"cluster3": {status: Succeed},
-					"cluster4": {status: Failed},
+					"cluster1": {Status: ToApply},
+					"cluster2": {Status: Progressing},
+					"cluster3": {Status: Succeed},
+					"cluster4": {Status: Failed},
 					"cluster5": {},
 				}
 				return clustersRolloutStatus[clusterName]
@@ -215,10 +232,11 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: ToApply},
-				"cluster2": {status: Progressing},
-				"cluster4": {status: Failed},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Progressing},
+				"cluster4": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Failed},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 		{
 			name: "test progressive rollout with timeout 0s and MaxConcurrency 3",
@@ -236,10 +254,10 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: ToApply},
-					"cluster2": {status: Progressing},
-					"cluster3": {status: Succeed},
-					"cluster4": {status: Failed},
+					"cluster1": {Status: ToApply},
+					"cluster2": {Status: Progressing},
+					"cluster3": {Status: Succeed},
+					"cluster4": {Status: Failed},
 					"cluster5": {},
 				}
 				return clustersRolloutStatus[clusterName]
@@ -252,9 +270,12 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: ToApply},
-				"cluster2": {status: Progressing},
-				"cluster5": {},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
+				"cluster5": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}},
+			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut},
+				"cluster4": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: TimeOut},
 			},
 		},
 		{
@@ -277,11 +298,11 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: ToApply},
-					"cluster2": {status: ToApply},
-					"cluster3": {status: ToApply},
-					"cluster4": {status: ToApply},
-					"cluster5": {status: ToApply},
+					"cluster1": {Status: ToApply},
+					"cluster2": {Status: ToApply},
+					"cluster3": {Status: ToApply},
+					"cluster4": {Status: ToApply},
+					"cluster5": {Status: ToApply},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
@@ -298,9 +319,10 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: ToApply},
-				"cluster2": {status: ToApply},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 		{
 			name: "test progressive rollout with mandatory decision groups Succeed",
@@ -322,12 +344,12 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: Succeed},
-					"cluster2": {status: Succeed},
-					"cluster3": {status: ToApply},
-					"cluster4": {status: Succeed},
-					"cluster5": {status: ToApply},
-					"cluster6": {status: ToApply},
+					"cluster1": {Status: Succeed},
+					"cluster2": {Status: Succeed},
+					"cluster3": {Status: ToApply},
+					"cluster4": {Status: Succeed},
+					"cluster5": {Status: ToApply},
+					"cluster6": {Status: ToApply},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
@@ -344,9 +366,10 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster3": {status: ToApply},
-				"cluster5": {status: ToApply},
+				"cluster3": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: ToApply},
+				"cluster5": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: ToApply},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 		{
 			name: "test progressive rollout with mandatory decision groups failed",
@@ -369,11 +392,11 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: Failed},
-					"cluster2": {status: Failed},
-					"cluster3": {status: ToApply},
-					"cluster4": {status: ToApply},
-					"cluster5": {status: ToApply},
+					"cluster1": {Status: Failed},
+					"cluster2": {Status: Failed},
+					"cluster3": {Status: ToApply},
+					"cluster4": {Status: ToApply},
+					"cluster5": {Status: ToApply},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
@@ -390,29 +413,34 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: Failed},
-				"cluster2": {status: Failed},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 	}
 
 	// Set the fake time for testing
-	RolloutClock = testingclock.NewFakeClock(fakeTime)
+	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 
 	for _, test := range tests {
 		// Init fake placement decision tracker
 		fakeGetter := FakePlacementDecisionGetter{}
 		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
 
-		rolloutHandler := NewRolloutHandler(test.rolloutStrategy, tracker, test.clusterRolloutStatusFunc)
-		actualRolloutStrategy, actualRolloutClusters, _ := rolloutHandler.GetRolloutCluster()
+		rolloutHandler, _ := NewRolloutHandler(tracker)
+		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, test.clusterRolloutStatusFunc)
 
 		if !reflect.DeepEqual(actualRolloutStrategy.Progressive, test.expectRolloutStrategy.Progressive) {
 			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect strategy : %v, actual : %v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
 			return
 		}
-		if !reflect.DeepEqual(actualRolloutClusters, test.expectRolloutClusters) {
-			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutClusters)
+		if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect rollout clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutResult.ClustersToRollout)
+			return
+		}
+		if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectTimeOutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect timeout clusters: %v, actual : %v", test.name, test.expectTimeOutClusters, actualRolloutResult.ClustersTimeOut)
 			return
 		}
 	}
@@ -427,6 +455,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
 		expectRolloutStrategy          *RolloutStrategy
 		expectRolloutClusters          map[string]ClusterRolloutStatus
+		expectTimeOutClusters          map[string]ClusterRolloutStatus
 	}{
 		{
 			name: "test progressive per group rollout with timeout 90s",
@@ -443,11 +472,11 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
-					"cluster2": {status: Failed, lastTransitionTime: &fakeTime_2m},
-					"cluster3": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-					"cluster4": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-					"cluster5": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster1": {Status: Failed, LastTransitionTime: &fakeTime_1m},
+					"cluster2": {Status: Failed, LastTransitionTime: &fakeTime_2m},
+					"cluster3": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
+					"cluster4": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
+					"cluster5": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
 					"cluster6": {},
 				}
 				return clustersRolloutStatus[clusterName]
@@ -459,7 +488,10 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_1m},
+			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_2m},
 			},
 		},
 		{
@@ -474,11 +506,11 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
-					"cluster2": {status: Failed, lastTransitionTime: &fakeTime_2m},
-					"cluster3": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-					"cluster4": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-					"cluster5": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster1": {Status: Failed, LastTransitionTime: &fakeTime_1m},
+					"cluster2": {Status: Failed, LastTransitionTime: &fakeTime_2m},
+					"cluster3": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
+					"cluster4": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
+					"cluster5": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
 					"cluster6": {},
 				}
 				return clustersRolloutStatus[clusterName]
@@ -490,9 +522,10 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
-				"cluster2": {status: Failed, lastTransitionTime: &fakeTime_2m},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_1m},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_2m},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 		{
 			name: "test progressive per group rollout with timeout 0s",
@@ -509,11 +542,11 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: Failed, lastTransitionTime: &fakeTime_1m},
-					"cluster2": {status: Failed, lastTransitionTime: &fakeTime_2m},
-					"cluster3": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-					"cluster4": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-					"cluster5": {status: ToApply, lastTransitionTime: &fakeTime_1m},
+					"cluster1": {Status: Failed, LastTransitionTime: &fakeTime_1m},
+					"cluster2": {Status: Failed, LastTransitionTime: &fakeTime_2m},
+					"cluster3": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
+					"cluster4": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
+					"cluster5": {Status: ToApply, LastTransitionTime: &fakeTime_1m},
 					"cluster6": {},
 				}
 				return clustersRolloutStatus[clusterName]
@@ -525,10 +558,14 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster3": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-				"cluster4": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-				"cluster5": {status: ToApply, lastTransitionTime: &fakeTime_1m},
-				"cluster6": {},
+				"cluster3": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: ToApply, LastTransitionTime: &fakeTime_1m},
+				"cluster4": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: ToApply, LastTransitionTime: &fakeTime_1m},
+				"cluster5": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: ToApply, LastTransitionTime: &fakeTime_1m},
+				"cluster6": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}},
+			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_1m},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_2m},
 			},
 		},
 		{
@@ -550,11 +587,11 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: ToApply},
-					"cluster2": {status: ToApply},
-					"cluster3": {status: ToApply},
-					"cluster4": {status: ToApply},
-					"cluster5": {status: ToApply},
+					"cluster1": {Status: ToApply},
+					"cluster2": {Status: ToApply},
+					"cluster3": {Status: ToApply},
+					"cluster4": {Status: ToApply},
+					"cluster5": {Status: ToApply},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
@@ -569,9 +606,10 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: ToApply},
-				"cluster2": {status: ToApply},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 		{
 			name: "test progressive per group rollout with mandatory decision groups Succeed",
@@ -593,11 +631,11 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: Succeed},
-					"cluster2": {status: Succeed},
-					"cluster3": {status: ToApply},
-					"cluster4": {status: Succeed},
-					"cluster5": {status: ToApply},
+					"cluster1": {Status: Succeed},
+					"cluster2": {Status: Succeed},
+					"cluster3": {Status: ToApply},
+					"cluster4": {Status: Succeed},
+					"cluster5": {Status: ToApply},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
@@ -612,8 +650,9 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster3": {status: ToApply},
+				"cluster3": {GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: ToApply},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 		{
 			name: "test progressive per group rollout with mandatory decision groups failed",
@@ -635,11 +674,11 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {status: Failed},
-					"cluster2": {status: Failed},
-					"cluster3": {status: ToApply},
-					"cluster4": {status: ToApply},
-					"cluster5": {status: ToApply},
+					"cluster1": {Status: Failed},
+					"cluster2": {Status: Failed},
+					"cluster3": {Status: ToApply},
+					"cluster4": {Status: ToApply},
+					"cluster5": {Status: ToApply},
 				}
 				return clustersRolloutStatus[clusterName]
 			},
@@ -655,29 +694,34 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				},
 			},
 			expectRolloutClusters: map[string]ClusterRolloutStatus{
-				"cluster1": {status: Failed},
-				"cluster2": {status: Failed},
+				"cluster1": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed},
+				"cluster2": {GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed},
 			},
+			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 	}
 
 	// Set the fake time for testing
-	RolloutClock = testingclock.NewFakeClock(fakeTime)
+	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 
 	for _, test := range tests {
 		// Init fake placement decision tracker
 		fakeGetter := FakePlacementDecisionGetter{}
 		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
 
-		rolloutHandler := NewRolloutHandler(test.rolloutStrategy, tracker, test.clusterRolloutStatusFunc)
-		actualRolloutStrategy, actualRolloutClusters, _ := rolloutHandler.GetRolloutCluster()
+		rolloutHandler, _ := NewRolloutHandler(tracker)
+		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, test.clusterRolloutStatusFunc)
 
 		if !reflect.DeepEqual(actualRolloutStrategy.ProgressivePerGroup, test.expectRolloutStrategy.ProgressivePerGroup) {
 			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect strategy : %v, actual : %v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
 			return
 		}
-		if !reflect.DeepEqual(actualRolloutClusters, test.expectRolloutClusters) {
-			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutClusters)
+		if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect rollout clusters: %v, actual : %v", test.name, test.expectRolloutClusters, actualRolloutResult.ClustersToRollout)
+			return
+		}
+		if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectTimeOutClusters) {
+			t.Errorf("Case: %v, Failed to run NewRolloutHandler. Expect timeout clusters: %v, actual : %v", test.name, test.expectTimeOutClusters, actualRolloutResult.ClustersTimeOut)
 			return
 		}
 	}
@@ -687,7 +731,7 @@ func TestNeedToUpdate(t *testing.T) {
 	testCases := []struct {
 		name           string
 		status         RolloutStatus
-		lastTransition *time.Time
+		lastTransition *metav1.Time
 		timeout        time.Duration
 		expectedResult bool
 	}{
@@ -742,18 +786,18 @@ func TestNeedToUpdate(t *testing.T) {
 		},
 	}
 
-	RolloutClock = testingclock.NewFakeClock(fakeTime)
+	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 	// Run the tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a ClusterRolloutStatus instance
 			status := ClusterRolloutStatus{
-				status:             tc.status,
-				lastTransitionTime: tc.lastTransition,
+				Status:             tc.status,
+				LastTransitionTime: tc.lastTransition,
 			}
 
 			// Call the needToUpdate function
-			result := needToUpdate(status, tc.timeout)
+			_, result := needToRollout(status, tc.timeout)
 
 			// Compare the result with the expected result
 			if result != tc.expectedResult {

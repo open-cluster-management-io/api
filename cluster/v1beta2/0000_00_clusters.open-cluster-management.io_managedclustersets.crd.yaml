@@ -109,7 +109,6 @@ spec:
                           "value". The requirements are ANDed.
                         type: object
                     type: object
-                    x-kubernetes-map-type: atomic
                   selectorType:
                     default: LegacyClusterSetLabel
                     description: SelectorType could only be "LegacyClusterSetLabel"
@@ -150,7 +149,6 @@ spec:
                     message:
                       description: message is a human readable message indicating
                         details about the transition. This may be an empty string.
-                      maxLength: 32768
                       type: string
                     observedGeneration:
                       description: observedGeneration represents the .metadata.generation
@@ -159,7 +157,6 @@ spec:
                         is 9, the condition is out of date with respect to the current
                         state of the instance.
                       format: int64
-                      minimum: 0
                       type: integer
                     reason:
                       description: reason contains a programmatic identifier indicating
@@ -168,16 +165,9 @@ spec:
                         meanings for this field, and whether the values are considered
                         a guaranteed API. The value should be a CamelCase string.
                         This field may not be empty.
-                      maxLength: 1024
-                      minLength: 1
-                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
                       type: string
                     status:
                       description: status of the condition, one of True, False, Unknown.
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
                       type: string
                     type:
                       description: type of condition in CamelCase or in foo.example.com/CamelCase.
@@ -185,8 +175,6 @@ spec:
                         like Available, but because arbitrary conditions can be useful
                         (see .node.status.conditions), the ability to deconflict is
                         important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
                   required:
                   - lastTransitionTime
@@ -293,6 +281,7 @@ spec:
                           "value". The requirements are ANDed.
                         type: object
                     type: object
+                    x-kubernetes-map-type: atomic
                   selectorType:
                     default: ExclusiveClusterSetLabel
                     description: SelectorType could only be "ExclusiveClusterSetLabel"
@@ -333,6 +322,7 @@ spec:
                     message:
                       description: message is a human readable message indicating
                         details about the transition. This may be an empty string.
+                      maxLength: 32768
                       type: string
                     observedGeneration:
                       description: observedGeneration represents the .metadata.generation
@@ -341,6 +331,7 @@ spec:
                         is 9, the condition is out of date with respect to the current
                         state of the instance.
                       format: int64
+                      minimum: 0
                       type: integer
                     reason:
                       description: reason contains a programmatic identifier indicating
@@ -349,9 +340,16 @@ spec:
                         meanings for this field, and whether the values are considered
                         a guaranteed API. The value should be a CamelCase string.
                         This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
                       type: string
                     status:
                       description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
                       type: string
                     type:
                       description: type of condition in CamelCase or in foo.example.com/CamelCase.
@@ -359,6 +357,8 @@ spec:
                         like Available, but because arbitrary conditions can be useful
                         (see .node.status.conditions), the ability to deconflict is
                         important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
                   required:
                   - lastTransitionTime
