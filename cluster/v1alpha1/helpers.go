@@ -51,12 +51,15 @@ type ClusterRolloutStatus struct {
 	// this is used to calculate timeout for progressing and failed status
 	// optional field
 	LastTransitionTime *metav1.Time
+	// the timeout time when status is progressing or failed
+	// optional field
+	TimeOutTime *metav1.Time
 }
 
 type RolloutResult struct {
-	// clusters to rollout
+	// clusters to rollout, map key is the cluster name
 	ClustersToRollout map[string]ClusterRolloutStatus
-	// clusters that are timeout
+	// clusters that are timeout, map key is the cluster name
 	ClustersTimeOut map[string]ClusterRolloutStatus
 }
 
@@ -71,9 +74,7 @@ func NewRolloutHandler(pdTracker *clusterv1beta1.PlacementDecisionClustersTracke
 		return nil, fmt.Errorf("invalid placement decision tracker %v", pdTracker)
 	}
 
-	return &RolloutHandler{
-		pdTracker: pdTracker,
-	}, nil
+	return &RolloutHandler{pdTracker: pdTracker}, nil
 }
 
 // The input is a duck type RolloutStrategy and a ClusterRolloutStatusFunc to return the rollout status on each managed cluster.
@@ -204,11 +205,13 @@ func progressivePerCluster(clusters []string, clusterToGroupKey map[string]clust
 		}
 
 		newstatus, needtorollout := needToRollout(status, timeout)
-		status.Status = newstatus
+		status.Status = newstatus.Status
+		status.TimeOutTime = newstatus.TimeOutTime
+
 		if needtorollout {
 			rolloutclusters[cluster] = status
 		}
-		if newstatus == TimeOut {
+		if status.Status == TimeOut {
 			timeoutclusters[cluster] = status
 		}
 
@@ -238,11 +241,13 @@ func progressivePerGroup(clusterGroupKeys []clusterv1beta1.GroupKey, clusterGrou
 				status.GroupKey = key
 
 				newstatus, needtorollout := needToRollout(status, timeout)
+				status.Status = newstatus.Status
+				status.TimeOutTime = newstatus.TimeOutTime
+
 				if needtorollout {
 					rolloutclusters[cluster] = status
 				}
-				if newstatus == TimeOut {
-					status.Status = newstatus
+				if status.Status == TimeOut {
 					timeoutclusters[cluster] = status
 				}
 			}
@@ -268,43 +273,38 @@ func progressivePerGroup(clusterGroupKeys []clusterv1beta1.GroupKey, clusterGrou
 // Return true to append it to the result and stop rollout other clusters or groups.
 // 2) Timeout is 0 means continue upgrade others without any wait.
 // Return false to skip updating it and continue rollout other clusters or groups.
-func needToRollout(status ClusterRolloutStatus, timeout time.Duration) (RolloutStatus, bool) {
+func needToRollout(status ClusterRolloutStatus, timeout time.Duration) (*ClusterRolloutStatus, bool) {
+	newStatus := status.DeepCopy()
 	switch status.Status {
 	case ToApply:
-		return status.Status, true
-	case Progressing:
-		if beforeTimeOut(status.LastTransitionTime, timeout) {
-			return Progressing, true
+		return newStatus, true
+	case TimeOut, Succeed, Skip:
+		return newStatus, false
+	case Progressing, Failed:
+		timeOutTime := getTimeOutTime(status.LastTransitionTime, timeout)
+		newStatus.TimeOutTime = timeOutTime
+
+		// check if current time is before the timeout time
+		if RolloutClock.Now().Before(timeOutTime.Time) {
+			return newStatus, true
+		} else {
+			newStatus.Status = TimeOut
+			return newStatus, false
 		}
-		return TimeOut, false
-	case Failed:
-		if beforeTimeOut(status.LastTransitionTime, timeout) {
-			return Failed, true
-		}
-		return TimeOut, false
-	case TimeOut:
-		return status.Status, false
-	case Succeed:
-		return status.Status, false
-	case Skip:
-		return status.Status, false
 	default:
-		return status.Status, true
+		return newStatus, true
 	}
 }
 
-// check if current time is before start time + timeout duration
-func beforeTimeOut(startTime *metav1.Time, timeout time.Duration) bool {
+// get the timeout time
+func getTimeOutTime(startTime *metav1.Time, timeout time.Duration) *metav1.Time {
 	var timeoutTime time.Time
 	if startTime == nil {
 		timeoutTime = RolloutClock.Now().Add(timeout)
 	} else {
 		timeoutTime = startTime.Add(timeout)
 	}
-	if RolloutClock.Now().Before(timeoutTime) {
-		return true
-	}
-	return false
+	return &metav1.Time{Time: timeoutTime}
 }
 
 func calculateLength(maxConcurrency intstr.IntOrString, total int) (int, error) {

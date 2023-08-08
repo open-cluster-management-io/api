@@ -202,6 +202,10 @@ func (in *ClusterRolloutStatus) DeepCopyInto(out *ClusterRolloutStatus) {
 		in, out := &in.LastTransitionTime, &out.LastTransitionTime
 		*out = (*in).DeepCopy()
 	}
+	if in.TimeOutTime != nil {
+		in, out := &in.TimeOutTime, &out.TimeOutTime
+		*out = (*in).DeepCopy()
+	}
 	return
 }
 
