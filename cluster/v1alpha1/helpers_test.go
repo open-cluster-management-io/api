@@ -801,8 +801,8 @@ func TestNeedToUpdate(t *testing.T) {
 				LastTransitionTime: tc.lastTransition,
 			}
 
-			// Call the needToUpdate function
-			_, result := needToRollout(status, tc.timeout)
+			// Call the determineRolloutStatusAndContinue function
+			_, result := determineRolloutStatusAndContinue(status, tc.timeout)
 
 			// Compare the result with the expected result
 			if result != tc.expectedResult {

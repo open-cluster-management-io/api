@@ -145,7 +145,7 @@ func NewPlacementDecisionClustersTracker(placement *Placement, pdl PlacementDeci
 	return pdct
 }
 
-// Get() update the tracker's decisionClusters and return the added and deleted cluster names.
+// Get updates the tracker's decisionClusters and returns added and deleted cluster names.
 func (pdct *PlacementDecisionClustersTracker) Get() (sets.Set[string], sets.Set[string], error) {
 	pdct.lock.Lock()
 	defer pdct.lock.Unlock()
@@ -163,19 +163,15 @@ func (pdct *PlacementDecisionClustersTracker) Get() (sets.Set[string], sets.Set[
 		return nil, nil, fmt.Errorf("failed to list PlacementDecisions: %w", err)
 	}
 
-	// Get the decision cluster names
+	// Get the decision cluster names and groups
 	newScheduledClusters := sets.New[string]()
-	// Get the decision cluster groups
 	newScheduledClusterGroups := map[GroupKey]sets.Set[string]{}
 	for _, d := range decisions {
-		groupName := d.Labels[DecisionGroupNameLabel]
-		groupIndex := d.Labels[DecisionGroupIndexLabel]
-		groupIndexNum, err := strconv.Atoi(groupIndex)
+		groupKey, err := parseGroupKeyFromDecision(d)
 		if err != nil {
-			return nil, nil, fmt.Errorf("incorrect group index: %w", err)
+			return nil, nil, err
 		}
 
-		groupKey := GroupKey{GroupName: groupName, GroupIndex: int32(groupIndexNum)}
 		if _, exist := newScheduledClusterGroups[groupKey]; !exist {
 			newScheduledClusterGroups[groupKey] = sets.New[string]()
 		}
@@ -190,9 +186,8 @@ func (pdct *PlacementDecisionClustersTracker) Get() (sets.Set[string], sets.Set[
 	added := newScheduledClusters.Difference(pdct.existingScheduledClusters)
 	deleted := pdct.existingScheduledClusters.Difference(newScheduledClusters)
 
-	// Update the existing decision cluster names
+	// Update the existing decision cluster names and groups
 	pdct.existingScheduledClusters = newScheduledClusters
-	// Update the existing decision cluster groups
 	pdct.existingScheduledClusterGroups = newScheduledClusterGroups
 	pdct.generateGroupsNameIndex()
 
@@ -342,4 +337,14 @@ func containsGroupKey(groupKeys []GroupKey, groupKey GroupKey) bool {
 		}
 	}
 	return false
+}
+
+func parseGroupKeyFromDecision(d *PlacementDecision) (GroupKey, error) {
+	groupName := d.Labels[DecisionGroupNameLabel]
+	groupIndex := d.Labels[DecisionGroupIndexLabel]
+	groupIndexNum, err := strconv.Atoi(groupIndex)
+	if err != nil {
+		return GroupKey{}, fmt.Errorf("incorrect group index: %w", err)
+	}
+	return GroupKey{GroupName: groupName, GroupIndex: int32(groupIndexNum)}, nil
 }
