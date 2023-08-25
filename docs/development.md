@@ -63,26 +63,41 @@ To generate `zz_generated.deepcopy.go` & `zz_generated.swagger_doc_generated.go`
 Before you commit you changes, please run `make verify` locally to make sure you have generated all required files.
 
 ## API upgrade flow
-When introducing a new version API, you need to deprecate the old version API and then remove it. 
+OCM community doc [Changing the API](https://github.com/open-cluster-management-io/community/blob/main/sig-architecture/api_changes.md) describes the things to consider when updating the API, suggest you read it before upgrading the API.
+
+Once you decided to introduce a new version API, you will also need to consider deprecate the old version API and then remove it in the future. 
 Below is the suggested API migration flow, the example code is to migrate `ManagedClusterSet` API from v1beta1 to v1beta2.
 
-### Relase N (add new version and depracated old version)
-- Add new version v1beta2 API and mark v1beta1 as deprecated. For example: 
+### Relase N (add new version)
+- Add new version v1beta2 API to api repo. For example:
   - https://github.com/open-cluster-management-io/api/pull/174
-- Add conversion webhook to transform CRs between v1beta1 and v1beta2. (optional) For example: 
+
+- Convert between old and new versions.
+
+  At this stage, both v1beta1 and v1beta2 are in served versions and storage version is v1beta1. If v1beta2 schema not change or can be converted to v1beta1, the CRD storage version can remain unchanged. If the v1beta2 schema changes and requires custom logic, you need to add conversion webhook to transform CRs between v1beta1 and v1beta2. For example: 
   - https://github.com/open-cluster-management-io/registration/pull/272
   - https://github.com/open-cluster-management-io/registration-operator/pull/279
-- Change internal consumers(ui/foundation/submarinar-addon/placement) to use clusterset api v1beta2.
-- Other clusterset consumers (external consumers) can upgrade to clusterset api v1beta2
 
-### Relase N+1 (migrate old version to new version)
-- Migrate stored version of clusterset api to v1beta2 and remove v1beta1 from stored version. For example: 
+- The consumers (eg, ui/foundation/submarinar-addon/placement) CAN start to migrate to clusterset api v1beta2.
+
+- See also [How to add a new version](https://github.com/open-cluster-management-io/community/blob/main/sig-architecture/api_changes.md#how-to-add-a-new-version)
+
+### Relase N+1 (deprecated old version and start migration)
+- Mark v1beta1 as deprecated, served versions are v1beta1 and v1beta2, set storage: true on v1beta2.
+
+- Migrate stored version of clusterset api to v1beta2 and remove v1beta1 from CRD `status.storedVersions`. For example: 
   - https://github.com/open-cluster-management-io/api/pull/202
   - https://github.com/open-cluster-management-io/registration-operator/pull/315
   - https://github.com/open-cluster-management-io/registration/pull/297
-- Other clusterset consumers (external consumers) must upgrade to clusterset api v1beta2.
 
-### Relase N+2 (remove old version)
-- Delete v1beta1 in clusterset crd
+- The consumers (eg, ui/foundation/submarinar-addon/placement) SHOULD migrate to clusterset api v1beta2 before it's removed.
+
+- See also [Migrate stored objects to the new version](https://github.com/open-cluster-management-io/community/blob/main/sig-architecture/api_changes.md#migrate-stored-objects-to-the-new-version)
+
+### Relase N+x (remove old version)
+when the new version API becomes mature, and ready to remove old version (for example, the consumers have adopted the new version API), remove the old version related code:
+- Delete v1beta1 in clusterset crd. For example:
+  - https://github.com/open-cluster-management-io/api/pull/266
 - Delete conversion webhook about clusterset v1beta1
 - Remove migration files in registration-operator
+  - https://github.com/open-cluster-management-io/ocm/pull/257
