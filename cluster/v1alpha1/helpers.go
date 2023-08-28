@@ -27,8 +27,8 @@ const (
 	ToApply RolloutStatus = iota
 	// Progressing indicates that the resource's desired status is applied and last applied status is not updated.
 	Progressing
-	// Succeed indicates that the resource's desired status is applied and last applied status is successful.
-	Succeed
+	// Succeeded indicates that the resource's desired status is applied and last applied status is successful.
+	Succeeded
 	// Failed indicates that the resource's desired status is applied and last applied status has failed.
 	Failed
 	// TimeOut indicates that the rollout status is progressing or failed and the status remains
@@ -288,7 +288,7 @@ func determineRolloutStatusAndContinue(status ClusterRolloutStatus, timeout time
 	switch status.Status {
 	case ToApply:
 		return newStatus, true
-	case TimeOut, Succeed, Skip:
+	case TimeOut, Succeeded, Skip:
 		return newStatus, false
 	case Progressing, Failed:
 		timeOutTime := getTimeOutTime(status.LastTransitionTime, timeout)

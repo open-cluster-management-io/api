@@ -123,8 +123,8 @@ type PlacementDecisionClustersTracker struct {
 	placementDecisionGetter        PlacementDecisionGetter
 	existingScheduledClusters      sets.Set[string]
 	existingScheduledClusterGroups map[GroupKey]sets.Set[string]
-	clustesGroupsIndexToName       map[int32]string
-	clustesGroupsNameToIndex       map[string][]int32
+	clusterGroupsIndexToName       map[int32]string
+	clusterGroupsNameToIndex       map[string][]int32
 	lock                           sync.RWMutex
 }
 
@@ -195,22 +195,22 @@ func (pdct *PlacementDecisionClustersTracker) Get() (sets.Set[string], sets.Set[
 }
 
 func (pdct *PlacementDecisionClustersTracker) generateGroupsNameIndex() {
-	pdct.clustesGroupsIndexToName = map[int32]string{}
-	pdct.clustesGroupsNameToIndex = map[string][]int32{}
+	pdct.clusterGroupsIndexToName = map[int32]string{}
+	pdct.clusterGroupsNameToIndex = map[string][]int32{}
 
 	for groupkey := range pdct.existingScheduledClusterGroups {
 		// index to name
-		pdct.clustesGroupsIndexToName[groupkey.GroupIndex] = groupkey.GroupName
+		pdct.clusterGroupsIndexToName[groupkey.GroupIndex] = groupkey.GroupName
 		// name to index
-		if index, exist := pdct.clustesGroupsNameToIndex[groupkey.GroupName]; exist {
-			pdct.clustesGroupsNameToIndex[groupkey.GroupName] = append(index, groupkey.GroupIndex)
+		if index, exist := pdct.clusterGroupsNameToIndex[groupkey.GroupName]; exist {
+			pdct.clusterGroupsNameToIndex[groupkey.GroupName] = append(index, groupkey.GroupIndex)
 		} else {
-			pdct.clustesGroupsNameToIndex[groupkey.GroupName] = []int32{groupkey.GroupIndex}
+			pdct.clusterGroupsNameToIndex[groupkey.GroupName] = []int32{groupkey.GroupIndex}
 		}
 	}
 
 	// sort index order
-	for _, index := range pdct.clustesGroupsNameToIndex {
+	for _, index := range pdct.clusterGroupsNameToIndex {
 		sort.Slice(index, func(i, j int) bool {
 			return index[i] < index[j]
 		})
@@ -303,13 +303,13 @@ func (pdct *PlacementDecisionClustersTracker) fulfillGroupKeys(groupKeys []Group
 	fulfilledGroupKeys := []GroupKey{}
 	for _, gk := range groupKeys {
 		if gk.GroupName != "" {
-			if indexes, exist := pdct.clustesGroupsNameToIndex[gk.GroupName]; exist {
+			if indexes, exist := pdct.clusterGroupsNameToIndex[gk.GroupName]; exist {
 				for _, groupIndex := range indexes {
 					fulfilledGroupKeys = append(fulfilledGroupKeys, GroupKey{GroupName: gk.GroupName, GroupIndex: groupIndex})
 				}
 			}
 		} else {
-			if groupName, exist := pdct.clustesGroupsIndexToName[gk.GroupIndex]; exist {
+			if groupName, exist := pdct.clusterGroupsIndexToName[gk.GroupIndex]; exist {
 				fulfilledGroupKeys = append(fulfilledGroupKeys, GroupKey{GroupName: groupName, GroupIndex: gk.GroupIndex})
 			}
 		}
@@ -319,8 +319,8 @@ func (pdct *PlacementDecisionClustersTracker) fulfillGroupKeys(groupKeys []Group
 
 func (pdct *PlacementDecisionClustersTracker) getOrderedGroupKeysBesides(orderedGroupKeyToExclude []GroupKey) []GroupKey {
 	orderedGroupKey := []GroupKey{}
-	for i := 0; i < len(pdct.clustesGroupsIndexToName); i++ {
-		groupKey := GroupKey{GroupName: pdct.clustesGroupsIndexToName[int32(i)], GroupIndex: int32(i)}
+	for i := 0; i < len(pdct.clusterGroupsIndexToName); i++ {
+		groupKey := GroupKey{GroupName: pdct.clusterGroupsIndexToName[int32(i)], GroupIndex: int32(i)}
 		if !containsGroupKey(orderedGroupKeyToExclude, groupKey) {
 			orderedGroupKey = append(orderedGroupKey, groupKey)
 		}

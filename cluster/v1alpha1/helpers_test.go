@@ -55,7 +55,7 @@ func TestGetRolloutCluster_All(t *testing.T) {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
 					"cluster1": {Status: ToApply, LastTransitionTime: &fakeTime_60s},
 					"cluster2": {Status: Progressing, LastTransitionTime: &fakeTime_60s},
-					"cluster3": {Status: Succeed, LastTransitionTime: &fakeTime_60s},
+					"cluster3": {Status: Succeeded, LastTransitionTime: &fakeTime_60s},
 					"cluster4": {Status: Failed, LastTransitionTime: &fakeTime_60s},
 					"cluster5": {Status: Failed, LastTransitionTime: &fakeTime_120s},
 					"cluster6": {},
@@ -85,7 +85,7 @@ func TestGetRolloutCluster_All(t *testing.T) {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
 					"cluster1": {Status: ToApply},
 					"cluster2": {Status: Progressing},
-					"cluster3": {Status: Succeed},
+					"cluster3": {Status: Succeeded},
 					"cluster4": {Status: Failed},
 					"cluster5": {},
 				}
@@ -112,7 +112,7 @@ func TestGetRolloutCluster_All(t *testing.T) {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
 					"cluster1": {Status: ToApply},
 					"cluster2": {Status: Progressing},
-					"cluster3": {Status: Succeed},
+					"cluster3": {Status: Succeeded},
 					"cluster4": {Status: Failed},
 					"cluster5": {},
 				}
@@ -182,7 +182,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
 					"cluster1": {Status: ToApply, LastTransitionTime: &fakeTime_60s},
 					"cluster2": {Status: Progressing, LastTransitionTime: &fakeTime_60s},
-					"cluster3": {Status: Succeed, LastTransitionTime: &fakeTime_60s},
+					"cluster3": {Status: Succeeded, LastTransitionTime: &fakeTime_60s},
 					"cluster4": {Status: Failed, LastTransitionTime: &fakeTime_60s},
 					"cluster5": {Status: Failed, LastTransitionTime: &fakeTime_120s},
 					"cluster6": {},
@@ -223,7 +223,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
 					"cluster1": {Status: ToApply},
 					"cluster2": {Status: Progressing},
-					"cluster3": {Status: Succeed},
+					"cluster3": {Status: Succeeded},
 					"cluster4": {Status: Failed},
 					"cluster5": {},
 				}
@@ -261,7 +261,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
 					"cluster1": {Status: ToApply},
 					"cluster2": {Status: Progressing},
-					"cluster3": {Status: Succeed},
+					"cluster3": {Status: Succeeded},
 					"cluster4": {Status: Failed},
 					"cluster5": {},
 				}
@@ -349,10 +349,10 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {Status: Succeed},
-					"cluster2": {Status: Succeed},
+					"cluster1": {Status: Succeeded},
+					"cluster2": {Status: Succeeded},
 					"cluster3": {Status: ToApply},
-					"cluster4": {Status: Succeed},
+					"cluster4": {Status: Succeeded},
 					"cluster5": {Status: ToApply},
 					"cluster6": {Status: ToApply},
 				}
@@ -636,10 +636,10 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			clusterRolloutStatusFunc: func(clusterName string) ClusterRolloutStatus {
 				clustersRolloutStatus := map[string]ClusterRolloutStatus{
-					"cluster1": {Status: Succeed},
-					"cluster2": {Status: Succeed},
+					"cluster1": {Status: Succeeded},
+					"cluster2": {Status: Succeeded},
 					"cluster3": {Status: ToApply},
-					"cluster4": {Status: Succeed},
+					"cluster4": {Status: Succeeded},
 					"cluster5": {Status: ToApply},
 				}
 				return clustersRolloutStatus[clusterName]
@@ -755,8 +755,8 @@ func TestNeedToUpdate(t *testing.T) {
 			expectedResult: true,
 		},
 		{
-			name:           "Succeed status",
-			status:         Succeed,
+			name:           "Succeeded status",
+			status:         Succeeded,
 			lastTransition: nil,
 			timeout:        time.Minute,
 			expectedResult: false,
