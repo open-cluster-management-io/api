@@ -10,8 +10,8 @@ import (
 	cloudeventscontext "github.com/cloudevents/sdk-go/v2/context"
 	"github.com/eclipse/paho.golang/paho"
 
-	"open-cluster-management.io/api/client/cloudevents/options"
-	"open-cluster-management.io/api/client/cloudevents/types"
+	"open-cluster-management.io/api/cloudevents/generic/options"
+	"open-cluster-management.io/api/cloudevents/generic/types"
 )
 
 type mqttAgentOptions struct {
@@ -33,7 +33,7 @@ func NewAgentOptions(mqttOptions *MQTTOptions, clusterName, agentID string) *opt
 }
 
 func (o *mqttAgentOptions) WithContext(ctx context.Context, evtCtx cloudevents.EventContext) (context.Context, error) {
-	eventType, err := types.Parse(evtCtx.GetType())
+	eventType, err := types.ParseCloudEventsType(evtCtx.GetType())
 	if err != nil {
 		return nil, fmt.Errorf("unsupported event type %s, %v", eventType, err)
 	}

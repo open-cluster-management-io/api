@@ -27,7 +27,46 @@ func TestToString(t *testing.T) {
 	}
 }
 
-func TestParseCloudEventType(t *testing.T) {
+func TestParseCloudEventsDataType(t *testing.T) {
+	cases := []struct {
+		name          string
+		eventDataType string
+		expectedType  *CloudEventsDataType
+		err           error
+	}{
+		{
+			name:          "manifests event",
+			eventDataType: "io.open-cluster-management.works.v1alpha1.manifests",
+			expectedType: &CloudEventsDataType{
+				Group:    "io.open-cluster-management.works",
+				Version:  "v1alpha1",
+				Resource: "manifests",
+			},
+		},
+		{
+			name:          "wrong format",
+			eventDataType: "",
+			err:           fmt.Errorf("unsupported cloudevents data type format"),
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			eventDataType, err := ParseCloudEventsDataType(c.eventDataType)
+			if err != nil {
+				if err.Error() != c.err.Error() {
+					t.Errorf("unexpected error %v", err)
+				}
+			}
+
+			if !equality.Semantic.DeepEqual(eventDataType, c.expectedType) {
+				t.Errorf("unexpected event type %v", eventDataType)
+			}
+		})
+	}
+}
+
+func TestParseCloudEventsType(t *testing.T) {
 	cases := []struct {
 		name         string
 		eventType    string
@@ -50,7 +89,7 @@ func TestParseCloudEventType(t *testing.T) {
 		{
 			name:      "wrong format",
 			eventType: "test",
-			err:       fmt.Errorf("unsupported cloud event type format"),
+			err:       fmt.Errorf("unsupported cloudevents type format"),
 		},
 		{
 			name:      "unsupported subresource",
@@ -61,7 +100,7 @@ func TestParseCloudEventType(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			eventType, err := Parse(c.eventType)
+			eventType, err := ParseCloudEventsType(c.eventType)
 			if err != nil {
 				if err.Error() != c.err.Error() {
 					t.Errorf("unexpected error %v", err)
