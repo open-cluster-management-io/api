@@ -36,7 +36,6 @@ func TestGetRolloutCluster_All(t *testing.T) {
 	tests := []struct {
 		name                           string
 		rolloutStrategy                RolloutStrategy
-		existingScheduledClusters      sets.Set[string]
 		existingScheduledClusterGroups map[clusterv1beta1.GroupKey]sets.Set[string]
 		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
 		expectRolloutStrategy          *RolloutStrategy
@@ -44,9 +43,8 @@ func TestGetRolloutCluster_All(t *testing.T) {
 		expectTimeOutClusters          map[string]ClusterRolloutStatus
 	}{
 		{
-			name:                      "test rollout all with timeout 90s",
-			rolloutStrategy:           RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"90s"}}},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
+			name:            "test rollout all with timeout 90s",
+			rolloutStrategy: RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"90s"}}},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
@@ -74,9 +72,8 @@ func TestGetRolloutCluster_All(t *testing.T) {
 			},
 		},
 		{
-			name:                      "test rollout all (default timeout None)",
-			rolloutStrategy:           RolloutStrategy{Type: All},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			name:            "test rollout all (default timeout None)",
+			rolloutStrategy: RolloutStrategy{Type: All},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
@@ -101,9 +98,8 @@ func TestGetRolloutCluster_All(t *testing.T) {
 			expectTimeOutClusters: map[string]ClusterRolloutStatus{},
 		},
 		{
-			name:                      "test rollout all with timeout 0s",
-			rolloutStrategy:           RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"0s"}}},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
+			name:            "test rollout all with timeout 0s",
+			rolloutStrategy: RolloutStrategy{Type: All, All: &RolloutAll{Timeout: Timeout{"0s"}}},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
@@ -134,7 +130,7 @@ func TestGetRolloutCluster_All(t *testing.T) {
 	for _, test := range tests {
 		// init fake placement decision tracker
 		fakeGetter := FakePlacementDecisionGetter{}
-		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
+		tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
 
 		rolloutHandler, _ := NewRolloutHandler(tracker)
 		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, test.clusterRolloutStatusFunc)
@@ -158,7 +154,6 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 	tests := []struct {
 		name                           string
 		rolloutStrategy                RolloutStrategy
-		existingScheduledClusters      sets.Set[string]
 		existingScheduledClusterGroups map[clusterv1beta1.GroupKey]sets.Set[string]
 		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
 		expectRolloutStrategy          *RolloutStrategy
@@ -173,7 +168,6 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					Timeout: Timeout{"90s"},
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
@@ -214,7 +208,6 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					MaxConcurrency: intstr.FromString("50%"), // 50% of total clusters
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
@@ -252,7 +245,6 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					MaxConcurrency: intstr.FromInt(3), // Maximum 3 clusters concurrently
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
@@ -296,7 +288,6 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					MaxConcurrency: intstr.FromString("50%"),
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
@@ -342,7 +333,6 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					MaxConcurrency: intstr.FromInt(2),
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
@@ -390,7 +380,6 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					Timeout:        Timeout{"0s"},
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
@@ -431,7 +420,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 	for _, test := range tests {
 		// Init fake placement decision tracker
 		fakeGetter := FakePlacementDecisionGetter{}
-		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
+		tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
 
 		rolloutHandler, _ := NewRolloutHandler(tracker)
 		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, test.clusterRolloutStatusFunc)
@@ -455,7 +444,6 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 	tests := []struct {
 		name                           string
 		rolloutStrategy                RolloutStrategy
-		existingScheduledClusters      sets.Set[string]
 		existingScheduledClusterGroups map[clusterv1beta1.GroupKey]sets.Set[string]
 		clusterRolloutStatusFunc       ClusterRolloutStatusFunc
 		expectRolloutStrategy          *RolloutStrategy
@@ -470,7 +458,6 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					Timeout: Timeout{"90s"},
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
@@ -504,7 +491,6 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
@@ -540,7 +526,6 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					Timeout: Timeout{"0s"},
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5", "cluster6"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5", "cluster6"),
@@ -585,7 +570,6 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					},
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
@@ -628,7 +612,6 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					},
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4"),
@@ -672,7 +655,6 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					Timeout: Timeout{"0s"},
 				},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2", "cluster3", "cluster4", "cluster5"),
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
 				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster3", "cluster4", "cluster5"),
@@ -712,7 +694,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 	for _, test := range tests {
 		// Init fake placement decision tracker
 		fakeGetter := FakePlacementDecisionGetter{}
-		tracker := clusterv1beta1.NewPlacementDecisionClustersTracker(nil, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
+		tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
 
 		rolloutHandler, _ := NewRolloutHandler(tracker)
 		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, test.clusterRolloutStatusFunc)

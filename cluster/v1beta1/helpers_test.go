@@ -425,7 +425,6 @@ func TestPlacementDecisionClustersTracker_Get(t *testing.T) {
 	tests := []struct {
 		name                           string
 		placement                      Placement
-		existingScheduledClusters      sets.Set[string]
 		existingScheduledClusterGroups map[GroupKey]sets.Set[string]
 		updateDecisions                []*PlacementDecision
 		expectAddedScheduledClusters   sets.Set[string]
@@ -437,7 +436,6 @@ func TestPlacementDecisionClustersTracker_Get(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "placement1", Namespace: "default"},
 				Spec:       PlacementSpec{},
 			},
-			existingScheduledClusters: sets.New[string]("cluster1", "cluster2"),
 			existingScheduledClusterGroups: map[GroupKey]sets.Set[string]{
 				{GroupName: "", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2"),
 			},
@@ -454,7 +452,6 @@ func TestPlacementDecisionClustersTracker_Get(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "placement2", Namespace: "default"},
 				Spec:       PlacementSpec{},
 			},
-			existingScheduledClusters:      sets.New[string](),
 			existingScheduledClusterGroups: map[GroupKey]sets.Set[string]{},
 			updateDecisions: []*PlacementDecision{
 				newFakePlacementDecision("placement2", "", 0, "cluster1", "cluster2"),
@@ -470,7 +467,7 @@ func TestPlacementDecisionClustersTracker_Get(t *testing.T) {
 			FakeDecisions: test.updateDecisions,
 		}
 		// init tracker
-		tracker := NewPlacementDecisionClustersTracker(&test.placement, &fakeGetter, test.existingScheduledClusters, test.existingScheduledClusterGroups)
+		tracker := NewPlacementDecisionClustersTrackerWithGroups(&test.placement, &fakeGetter, test.existingScheduledClusterGroups)
 
 		// check changed decision clusters
 		addedClusters, deletedClusters, err := tracker.Get()
@@ -553,15 +550,15 @@ func TestPlacementDecisionClustersTracker_Existing(t *testing.T) {
 			FakeDecisions: test.placementDecisions,
 		}
 		// init tracker
-		tracker := NewPlacementDecisionClustersTracker(&test.placement, &fakeGetter, nil, nil)
+		tracker := NewPlacementDecisionClustersTrackerWithGroups(&test.placement, &fakeGetter, nil)
 		_, _, err := tracker.Get()
 		if err != nil {
 			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
 		}
 
 		// Call the Existing method with different groupKeys inputs.
-		existingClusters, _, _ := tracker.Existing(test.groupKeys)
-		existingBesidesClusters, _, _ := tracker.ExistingBesides(test.groupKeys)
+		existingClusters := tracker.ExistingClusterGroups(test.groupKeys).GetClusterSets()
+		existingBesidesClusters := tracker.ExistingClusterGroupsBesides(test.groupKeys).GetClusterSets()
 
 		// Assert the existingClusters
 		if !test.expectedExistingClusters.Equal(existingClusters) {
@@ -675,15 +672,17 @@ func TestPlacementDecisionClustersTracker_ExistingClusterGroups(t *testing.T) {
 			FakeDecisions: test.placementDecisions,
 		}
 		// init tracker
-		tracker := NewPlacementDecisionClustersTracker(&test.placement, &fakeGetter, nil, nil)
+		tracker := NewPlacementDecisionClustersTracker(&test.placement, &fakeGetter, nil)
 		_, _, err := tracker.Get()
 		if err != nil {
 			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
 		}
 
 		// Call the Existing method with different groupKeys inputs.
-		existingGroupKeys, existingClusterGroups := tracker.ExistingClusterGroups(test.groupKeys)
-		existingBesidesGroupKeys, existingBesidesClusterGroups := tracker.ExistingClusterGroupsBesides(test.groupKeys)
+		existingClusterGroups := tracker.ExistingClusterGroups(test.groupKeys)
+		existingBesidesClusterGroups := tracker.ExistingClusterGroupsBesides(test.groupKeys)
+		existingGroupKeys := existingClusterGroups.GetOrderedGroupKeys()
+		existingBesidesGroupKeys := existingBesidesClusterGroups.GetOrderedGroupKeys()
 
 		// Assert the existingClustersGroups
 		if !reflect.DeepEqual(existingGroupKeys, test.expectedGroupKeys) {
