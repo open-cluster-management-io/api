@@ -15,5 +15,9 @@ fi
 
 $CONTROLLER_GEN schemapatch:manifests="./crdsv1beta1" paths="./operator/v1" 'output:dir="./crdsv1beta1"'
 $CONTROLLER_GEN schemapatch:manifests="./crdsv1beta1" paths="./work/v1" 'output:dir="./crdsv1beta1"'
-$CONTROLLER_GEN schemapatch:manifests="./crdsv1beta1" paths="./cluster/v1alpha1" 'output:dir="./crdsv1beta1"'
+# There is a generic struct related issue:
+#   "open-cluster-management.io/api/cluster/v1alpha1/helpers.go:238:120: missing ',' in parameter list"
+# Because the ClusterClaim CRD is stable now, we can comment out the following line.
+# Uncomment to generate ClusterClaim CRD when cluster/v1alpha1/types.go is changed
+# $CONTROLLER_GEN schemapatch:manifests="./crdsv1beta1" paths="./cluster/v1alpha1" 'output:dir="./crdsv1beta1"'
 
