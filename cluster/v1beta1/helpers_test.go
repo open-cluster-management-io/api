@@ -557,8 +557,8 @@ func TestPlacementDecisionClustersTracker_Existing(t *testing.T) {
 		}
 
 		// Call the Existing method with different groupKeys inputs.
-		existingClusters := tracker.ExistingClusterGroups(test.groupKeys).GetClusterSets()
-		existingBesidesClusters := tracker.ExistingClusterGroupsBesides(test.groupKeys).GetClusterSets()
+		existingClusters := tracker.ExistingClusterGroups(test.groupKeys...).GetClusters()
+		existingBesidesClusters := tracker.ExistingClusterGroupsBesides(test.groupKeys...).GetClusters()
 
 		// Assert the existingClusters
 		if !test.expectedExistingClusters.Equal(existingClusters) {
@@ -679,8 +679,8 @@ func TestPlacementDecisionClustersTracker_ExistingClusterGroups(t *testing.T) {
 		}
 
 		// Call the Existing method with different groupKeys inputs.
-		existingClusterGroups := tracker.ExistingClusterGroups(test.groupKeys)
-		existingBesidesClusterGroups := tracker.ExistingClusterGroupsBesides(test.groupKeys)
+		existingClusterGroups := tracker.ExistingClusterGroups(test.groupKeys...)
+		existingBesidesClusterGroups := tracker.ExistingClusterGroupsBesides(test.groupKeys...)
 		existingGroupKeys := existingClusterGroups.GetOrderedGroupKeys()
 		existingBesidesGroupKeys := existingBesidesClusterGroups.GetOrderedGroupKeys()
 

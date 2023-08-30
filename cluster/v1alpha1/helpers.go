@@ -111,8 +111,8 @@ func (r *RolloutHandler) getRolloutAllClusters(rolloutStrategy RolloutStrategy, 
 	}
 
 	// Get all clusters and perform progressive rollout
-	totalClusterGroups := r.pdTracker.ExistingClusterGroupsBesides([]clusterv1beta1.GroupKey{})
-	totalClusters := totalClusterGroups.GetClusterSets().UnsortedList()
+	totalClusterGroups := r.pdTracker.ExistingClusterGroupsBesides()
+	totalClusters := totalClusterGroups.GetClusters().UnsortedList()
 	rolloutResult := progressivePerCluster(totalClusterGroups, len(totalClusters), failureTimeout, statusFunc)
 
 	return &strategy, rolloutResult, nil
@@ -128,7 +128,7 @@ func (r *RolloutHandler) getProgressiveClusters(rolloutStrategy RolloutStrategy,
 
 	// Upgrade mandatory decision groups first
 	groupKeys := decisionGroupsToGroupKeys(strategy.Progressive.MandatoryDecisionGroups.MandatoryDecisionGroups)
-	clusterGroups := r.pdTracker.ExistingClusterGroups(groupKeys)
+	clusterGroups := r.pdTracker.ExistingClusterGroups(groupKeys...)
 
 	// Perform progressive rollout for mandatory decision groups
 	rolloutResult := progressivePerGroup(clusterGroups, maxTimeDuration, statusFunc)
@@ -143,14 +143,14 @@ func (r *RolloutHandler) getProgressiveClusters(rolloutStrategy RolloutStrategy,
 	}
 
 	// Calculate the length for progressive rollout
-	totalClusters := r.pdTracker.ExistingClusterGroupsBesides([]clusterv1beta1.GroupKey{}).GetClusterSets()
+	totalClusters := r.pdTracker.ExistingClusterGroupsBesides().GetClusters()
 	length, err := calculateLength(strategy.Progressive.MaxConcurrency, len(totalClusters))
 	if err != nil {
 		return &strategy, RolloutResult{}, err
 	}
 
 	// Upgrade the remaining clusters
-	restClusterGroups := r.pdTracker.ExistingClusterGroupsBesides(clusterGroups.GetOrderedGroupKeys())
+	restClusterGroups := r.pdTracker.ExistingClusterGroupsBesides(clusterGroups.GetOrderedGroupKeys()...)
 	rolloutResult = progressivePerCluster(restClusterGroups, length, failureTimeout, statusFunc)
 
 	return &strategy, rolloutResult, nil
@@ -167,7 +167,7 @@ func (r *RolloutHandler) getProgressivePerGroupClusters(rolloutStrategy RolloutS
 	// Upgrade mandatory decision groups first
 	mandatoryDecisionGroups := strategy.ProgressivePerGroup.MandatoryDecisionGroups.MandatoryDecisionGroups
 	groupKeys := decisionGroupsToGroupKeys(mandatoryDecisionGroups)
-	clusterGroups := r.pdTracker.ExistingClusterGroups(groupKeys)
+	clusterGroups := r.pdTracker.ExistingClusterGroups(groupKeys...)
 
 	// Perform progressive rollout per group for mandatory decision groups
 	rolloutResult := progressivePerGroup(clusterGroups, maxTimeDuration, statusFunc)
@@ -182,7 +182,7 @@ func (r *RolloutHandler) getProgressivePerGroupClusters(rolloutStrategy RolloutS
 	}
 
 	// Upgrade the rest of the decision groups
-	restClusterGroups := r.pdTracker.ExistingClusterGroupsBesides(clusterGroups.GetOrderedGroupKeys())
+	restClusterGroups := r.pdTracker.ExistingClusterGroupsBesides(clusterGroups.GetOrderedGroupKeys()...)
 
 	// Perform progressive rollout per group for the remaining decision groups
 	rolloutResult = progressivePerGroup(restClusterGroups, failureTimeout, statusFunc)
@@ -200,7 +200,7 @@ func progressivePerCluster(clusterGroupsMap clusterv1beta1.ClusterGroupsMap, len
 		}
 	}
 
-	clusters := clusterGroupsMap.GetClusterSets().UnsortedList()
+	clusters := clusterGroupsMap.GetClusters().UnsortedList()
 	clusterToGroupKey := clusterGroupsMap.ClusterToGroupKey()
 
 	// Sort the clusters in alphabetical order to ensure consistency.

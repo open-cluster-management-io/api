@@ -200,7 +200,7 @@ func (pdct *PlacementDecisionClustersTracker) Get() (sets.Set[string], sets.Set[
 	}
 
 	// Compare the difference
-	existingScheduledClusters := pdct.existingScheduledClusterGroups.GetClusterSets()
+	existingScheduledClusters := pdct.existingScheduledClusterGroups.GetClusters()
 	added := newScheduledClusters.Difference(existingScheduledClusters)
 	deleted := existingScheduledClusters.Difference(newScheduledClusters)
 
@@ -236,7 +236,7 @@ func (pdct *PlacementDecisionClustersTracker) generateGroupsNameIndex() {
 
 // ExistingClusterGroups returns the tracker's existing decision cluster groups for groups listed in groupKeys.
 // Return empty set when groupKeys is empty.
-func (pdct *PlacementDecisionClustersTracker) ExistingClusterGroups(groupKeys []GroupKey) ClusterGroupsMap {
+func (pdct *PlacementDecisionClustersTracker) ExistingClusterGroups(groupKeys ...GroupKey) ClusterGroupsMap {
 	pdct.lock.RLock()
 	defer pdct.lock.RUnlock()
 
@@ -254,7 +254,7 @@ func (pdct *PlacementDecisionClustersTracker) ExistingClusterGroups(groupKeys []
 
 // ExistingClusterGroupsBesides returns the tracker's existing decision cluster groups except cluster groups listed in groupKeys.
 // Return all the clusters when groupKeys is empty.
-func (pdct *PlacementDecisionClustersTracker) ExistingClusterGroupsBesides(groupKeys []GroupKey) ClusterGroupsMap {
+func (pdct *PlacementDecisionClustersTracker) ExistingClusterGroupsBesides(groupKeys ...GroupKey) ClusterGroupsMap {
 	pdct.lock.RLock()
 	defer pdct.lock.RUnlock()
 
@@ -322,8 +322,8 @@ func (g ClusterGroupsMap) GetOrderedGroupKeys() []GroupKey {
 	return groupKeys
 }
 
-// GetClusterSets returns a set containing all clusters from all group sets.
-func (g ClusterGroupsMap) GetClusterSets() sets.Set[string] {
+// GetClusters returns a set containing all clusters from all group sets.
+func (g ClusterGroupsMap) GetClusters() sets.Set[string] {
 	clusterSet := sets.New[string]()
 	for _, clusterGroup := range g {
 		clusterSet = clusterSet.Union(clusterGroup)
