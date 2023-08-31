@@ -8,13 +8,15 @@ import (
 
 // RolloutStrategy API used by workload applier APIs to define how the workload will be applied to the selected clusters by the Placement and DecisionStrategy.
 
+type RolloutType string
+
 const (
 	//All means apply the workload to all clusters in the decision groups at once.
-	All string = "All"
+	All RolloutType = "All"
 	//Progressive means apply the workload to the selected clusters progressively per cluster.
-	Progressive string = "Progressive"
+	Progressive RolloutType = "Progressive"
 	//ProgressivePerGroup means apply the workload to the selected clusters progressively per group.
-	ProgressivePerGroup string = "ProgressivePerGroup"
+	ProgressivePerGroup RolloutType = "ProgressivePerGroup"
 )
 
 // Rollout strategy to apply workload to the selected clusters by Placement and DecisionStrategy.
@@ -26,7 +28,7 @@ type RolloutStrategy struct {
 	// +kubebuilder:validation:Enum=All;Progressive;ProgressivePerGroup
 	// +kubebuilder:default:=All
 	// +optional
-	Type string `json:"type,omitempty"`
+	Type RolloutType `json:"type,omitempty"`
 
 	// All define required fields for RolloutStrategy type All
 	// +optional
