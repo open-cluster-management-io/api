@@ -1,4 +1,4 @@
-package cloudevents
+package generic
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"open-cluster-management.io/api/client/cloudevents/options"
-	"open-cluster-management.io/api/client/cloudevents/payload"
-	"open-cluster-management.io/api/client/cloudevents/types"
+	"open-cluster-management.io/api/cloudevents/generic/options"
+	"open-cluster-management.io/api/cloudevents/generic/payload"
+	"open-cluster-management.io/api/cloudevents/generic/types"
 )
 
 // CloudEventAgentClient is a client for an agent to resync/send/receive its resources with cloud events.
@@ -71,7 +71,7 @@ func NewCloudEventAgentClient[T ResourceObject](
 }
 
 // Resync the resources spec by sending a spec resync request from an agent to all sources.
-func (c *CloudEventAgentClient[T]) Resync(ctx context.Context, eventDataType types.CloudEventsDataType) error {
+func (c *CloudEventAgentClient[T]) Resync(ctx context.Context) error {
 	// list the resource objects that are maintained by the current agent from all sources
 	objs, err := c.lister.List(types.ListOptions{ClusterName: c.clusterName, Source: types.SourceAll})
 	if err != nil {
@@ -91,27 +91,30 @@ func (c *CloudEventAgentClient[T]) Resync(ctx context.Context, eventDataType typ
 		}
 	}
 
-	eventType := types.CloudEventsType{
-		CloudEventsDataType: eventDataType,
-		SubResource:         types.SubResourceSpec,
-		Action:              types.ResyncRequestAction,
-	}
+	// only resync the resources whose event data type is registered
+	for eventDataType := range c.codecs {
+		eventType := types.CloudEventsType{
+			CloudEventsDataType: eventDataType,
+			SubResource:         types.SubResourceSpec,
+			Action:              types.ResyncRequestAction,
+		}
 
-	evt := types.NewEventBuilder(c.agentID, eventType).WithClusterName(c.clusterName).NewEvent()
-	if err := evt.SetData(cloudevents.ApplicationJSON, resources); err != nil {
-		return fmt.Errorf("failed to set data to cloud event: %v", err)
-	}
+		evt := types.NewEventBuilder(c.agentID, eventType).WithClusterName(c.clusterName).NewEvent()
+		if err := evt.SetData(cloudevents.ApplicationJSON, resources); err != nil {
+			return fmt.Errorf("failed to set data to cloud event: %v", err)
+		}
 
-	sendingContext, err := c.cloudEventsOptions.WithContext(ctx, evt.Context)
-	if err != nil {
-		return err
-	}
+		sendingContext, err := c.cloudEventsOptions.WithContext(ctx, evt.Context)
+		if err != nil {
+			return err
+		}
 
-	if result := c.sender.Send(sendingContext, evt); cloudevents.IsUndelivered(result) {
-		return fmt.Errorf("failed to send event %s, %v", evt, result)
-	}
+		if result := c.sender.Send(sendingContext, evt); cloudevents.IsUndelivered(result) {
+			return fmt.Errorf("failed to send event %s, %v", evt, result)
+		}
 
-	klog.V(4).Infof("Sent resync request:\n%s", evt)
+		klog.V(4).Infof("Sent resync request:\n%s", evt)
+	}
 	return nil
 }
 
@@ -151,7 +154,7 @@ func (c *CloudEventAgentClient[T]) Subscribe(ctx context.Context, handlers ...Re
 	return c.receiver.StartReceiver(ctx, func(evt cloudevents.Event) {
 		klog.V(4).Infof("Received event:\n%s", evt)
 
-		eventType, err := types.Parse(evt.Type())
+		eventType, err := types.ParseCloudEventsType(evt.Type())
 		if err != nil {
 			klog.Errorf("failed to parse cloud event type %s, %v", evt.Type(), err)
 			return

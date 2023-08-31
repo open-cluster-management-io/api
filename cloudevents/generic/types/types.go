@@ -113,14 +113,29 @@ func (t CloudEventsType) String() string {
 	return fmt.Sprintf("%s.%s.%s.%s.%s", t.Group, t.Version, t.Resource, t.SubResource, t.Action)
 }
 
-// Parse the cloud event type to a struct object.
+// ParseCloudEventsDataType parse  the cloud event data type to a struct object.
+// The type format is `<reverse-group-of-resource>.<resource-version>.<resource-name>`.
+func ParseCloudEventsDataType(cloudEventsDataType string) (*CloudEventsDataType, error) {
+	types := strings.Split(cloudEventsDataType, ".")
+	length := len(types)
+	if length < 3 {
+		return nil, fmt.Errorf("unsupported cloudevents data type format")
+	}
+	return &CloudEventsDataType{
+		Group:    strings.Join(types[0:length-2], "."),
+		Version:  types[length-2],
+		Resource: types[length-1],
+	}, nil
+}
+
+// ParseCloudEventsType parse the cloud event type to a struct object.
 // The type format is `<reverse-group-of-resource>.<resource-version>.<resource-name>.<subresource>.<action>`.
 // The `<subresource>` must be one of "spec" and "status".
-func Parse(cloudEventType string) (*CloudEventsType, error) {
-	types := strings.Split(cloudEventType, ".")
+func ParseCloudEventsType(cloudEventsType string) (*CloudEventsType, error) {
+	types := strings.Split(cloudEventsType, ".")
 	length := len(types)
 	if length < 5 {
-		return nil, fmt.Errorf("unsupported cloud event type format")
+		return nil, fmt.Errorf("unsupported cloudevents type format")
 	}
 
 	subResource := EventSubResource(types[length-2])

@@ -6,7 +6,8 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cloudeventscontext "github.com/cloudevents/sdk-go/v2/context"
-	"open-cluster-management.io/api/client/cloudevents/types"
+
+	"open-cluster-management.io/api/cloudevents/generic/types"
 )
 
 func TestSourceContext(t *testing.T) {

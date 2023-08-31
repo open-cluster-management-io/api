@@ -1,4 +1,4 @@
-package cloudevents
+package generic
 
 import (
 	"context"
@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	apitypes "k8s.io/apimachinery/pkg/types"
+	kubetypes "k8s.io/apimachinery/pkg/types"
 
-	"open-cluster-management.io/api/client/cloudevents/options/fake"
-	"open-cluster-management.io/api/client/cloudevents/payload"
-	"open-cluster-management.io/api/client/cloudevents/types"
+	"open-cluster-management.io/api/cloudevents/generic/options/fake"
+	"open-cluster-management.io/api/cloudevents/generic/payload"
+	"open-cluster-management.io/api/cloudevents/generic/types"
 )
 
 const testAgentName = "mock-agent"
@@ -44,8 +44,8 @@ func TestAgentResync(t *testing.T) {
 			name:        "has cached resources",
 			clusterName: "cluster2",
 			resources: []*mockResource{
-				{UID: apitypes.UID("test1"), ResourceVersion: "2"},
-				{UID: apitypes.UID("test2"), ResourceVersion: "3"},
+				{UID: kubetypes.UID("test1"), ResourceVersion: "2"},
+				{UID: kubetypes.UID("test2"), ResourceVersion: "3"},
 			},
 			eventType:     types.CloudEventsType{SubResource: types.SubResourceSpec},
 			expectedItems: 2,
@@ -62,7 +62,7 @@ func TestAgentResync(t *testing.T) {
 				t.Errorf("unexpected error %v", err)
 			}
 
-			if err := agent.Resync(context.TODO(), mockEventDataType); err != nil {
+			if err := agent.Resync(context.TODO()); err != nil {
 				t.Errorf("unexpected error %v", err)
 			}
 
@@ -99,7 +99,7 @@ func TestAgentPublish(t *testing.T) {
 			name:        "publish status",
 			clusterName: "cluster1",
 			resources: &mockResource{
-				UID:             apitypes.UID("1234"),
+				UID:             kubetypes.UID("1234"),
 				ResourceVersion: "2",
 				Status:          "test-status",
 				Namespace:       "cluster1",
@@ -132,7 +132,7 @@ func TestAgentPublish(t *testing.T) {
 				t.Errorf("unexpected error %v", err)
 			}
 
-			if c.resources.UID != apitypes.UID(fmt.Sprintf("%s", resourceID)) {
+			if c.resources.UID != kubetypes.UID(fmt.Sprintf("%s", resourceID)) {
 				t.Errorf("expected %s, but got %v", c.resources.UID, evt.Context)
 			}
 
@@ -217,8 +217,8 @@ func TestStatusResyncResponse(t *testing.T) {
 				return evt
 			}(),
 			resources: []*mockResource{
-				{UID: apitypes.UID("test1"), ResourceVersion: "2", Status: "test1"},
-				{UID: apitypes.UID("test2"), ResourceVersion: "3", Status: "test2"},
+				{UID: kubetypes.UID("test1"), ResourceVersion: "2", Status: "test1"},
+				{UID: kubetypes.UID("test2"), ResourceVersion: "3", Status: "test2"},
 			},
 			validate: func(pubEvents []cloudevents.Event) {
 				if len(pubEvents) != 2 {
@@ -251,9 +251,9 @@ func TestStatusResyncResponse(t *testing.T) {
 				return evt
 			}(),
 			resources: []*mockResource{
-				{UID: apitypes.UID("test0"), ResourceVersion: "2", Status: "test0"},
-				{UID: apitypes.UID("test1"), ResourceVersion: "2", Status: "test1"},
-				{UID: apitypes.UID("test2"), ResourceVersion: "3", Status: "test2-updated"},
+				{UID: kubetypes.UID("test0"), ResourceVersion: "2", Status: "test0"},
+				{UID: kubetypes.UID("test1"), ResourceVersion: "2", Status: "test1"},
+				{UID: kubetypes.UID("test2"), ResourceVersion: "3", Status: "test2-updated"},
 			},
 			validate: func(pubEvents []cloudevents.Event) {
 				if len(pubEvents) != 1 {
@@ -339,7 +339,7 @@ func TestReceiveResourceSpec(t *testing.T) {
 					Action:              "test_create_request",
 				}
 
-				evt, _ := newMockResourceCodec().Encode(testAgentName, eventType, &mockResource{UID: apitypes.UID("test1"), ResourceVersion: "1"})
+				evt, _ := newMockResourceCodec().Encode(testAgentName, eventType, &mockResource{UID: kubetypes.UID("test1"), ResourceVersion: "1"})
 				return *evt
 			}(),
 			validate: func(event types.ResourceAction, resource *mockResource) {
@@ -358,12 +358,12 @@ func TestReceiveResourceSpec(t *testing.T) {
 					Action:              "test_update_request",
 				}
 
-				evt, _ := newMockResourceCodec().Encode(testAgentName, eventType, &mockResource{UID: apitypes.UID("test1"), ResourceVersion: "2"})
+				evt, _ := newMockResourceCodec().Encode(testAgentName, eventType, &mockResource{UID: kubetypes.UID("test1"), ResourceVersion: "2"})
 				return *evt
 			}(),
 			resources: []*mockResource{
-				{UID: apitypes.UID("test1"), ResourceVersion: "1"},
-				{UID: apitypes.UID("test2"), ResourceVersion: "1"},
+				{UID: kubetypes.UID("test1"), ResourceVersion: "1"},
+				{UID: kubetypes.UID("test2"), ResourceVersion: "1"},
 			},
 			validate: func(event types.ResourceAction, resource *mockResource) {
 				if event != types.Modified {
@@ -387,12 +387,12 @@ func TestReceiveResourceSpec(t *testing.T) {
 					Action:              "test_delete_request",
 				}
 				now := metav1.Now()
-				evt, _ := newMockResourceCodec().Encode(testAgentName, eventType, &mockResource{UID: apitypes.UID("test2"), ResourceVersion: "2", DeletionTimestamp: &now})
+				evt, _ := newMockResourceCodec().Encode(testAgentName, eventType, &mockResource{UID: kubetypes.UID("test2"), ResourceVersion: "2", DeletionTimestamp: &now})
 				return *evt
 			}(),
 			resources: []*mockResource{
-				{UID: apitypes.UID("test1"), ResourceVersion: "1"},
-				{UID: apitypes.UID("test2"), ResourceVersion: "1"},
+				{UID: kubetypes.UID("test1"), ResourceVersion: "1"},
+				{UID: kubetypes.UID("test2"), ResourceVersion: "1"},
 			},
 			validate: func(event types.ResourceAction, resource *mockResource) {
 				if event != types.Deleted {
@@ -413,12 +413,12 @@ func TestReceiveResourceSpec(t *testing.T) {
 					Action:              "test_create_request",
 				}
 
-				evt, _ := newMockResourceCodec().Encode(testAgentName, eventType, &mockResource{UID: apitypes.UID("test1"), ResourceVersion: "2"})
+				evt, _ := newMockResourceCodec().Encode(testAgentName, eventType, &mockResource{UID: kubetypes.UID("test1"), ResourceVersion: "2"})
 				return *evt
 			}(),
 			resources: []*mockResource{
-				{UID: apitypes.UID("test1"), ResourceVersion: "2"},
-				{UID: apitypes.UID("test2"), ResourceVersion: "1"},
+				{UID: kubetypes.UID("test1"), ResourceVersion: "2"},
+				{UID: kubetypes.UID("test2"), ResourceVersion: "1"},
 			},
 			validate: func(event types.ResourceAction, resource *mockResource) {
 				if len(event) != 0 {
@@ -454,15 +454,15 @@ func TestReceiveResourceSpec(t *testing.T) {
 }
 
 type mockResource struct {
-	UID               apitypes.UID `json:"uid"`
-	ResourceVersion   string       `json:"resourceVersion"`
-	DeletionTimestamp *metav1.Time `json:"deletionTimestamp,omitempty"`
+	UID               kubetypes.UID `json:"uid"`
+	ResourceVersion   string        `json:"resourceVersion"`
+	DeletionTimestamp *metav1.Time  `json:"deletionTimestamp,omitempty"`
 	Namespace         string
 	Spec              string `json:"spec"`
 	Status            string `json:"status"`
 }
 
-func (r *mockResource) GetUID() apitypes.UID {
+func (r *mockResource) GetUID() kubetypes.UID {
 	return r.UID
 }
 
@@ -532,7 +532,7 @@ func (c *mockResourceCodec) Decode(evt *cloudevents.Event) (*mockResource, error
 	}
 
 	res := &mockResource{
-		UID:             apitypes.UID(fmt.Sprintf("%s", resourceID)),
+		UID:             kubetypes.UID(fmt.Sprintf("%s", resourceID)),
 		ResourceVersion: fmt.Sprintf("%s", resourceVersion),
 		Status:          string(evt.Data()),
 	}

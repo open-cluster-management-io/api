@@ -1,4 +1,4 @@
-package cloudevents
+package generic
 
 import (
 	"context"
@@ -6,9 +6,9 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	apitypes "k8s.io/apimachinery/pkg/types"
+	kubetypes "k8s.io/apimachinery/pkg/types"
 
-	"open-cluster-management.io/api/client/cloudevents/types"
+	"open-cluster-management.io/api/cloudevents/generic/types"
 )
 
 // ResourceHandler handles the received resource object.
@@ -20,7 +20,7 @@ type StatusHashGetter[T ResourceObject] func(obj T) (string, error)
 type ResourceObject interface {
 	// GetUID returns the resource ID of this object. The resource ID represents the unique identifier for this object.
 	// The source should ensure its uniqueness and consistency.
-	GetUID() apitypes.UID
+	GetUID() kubetypes.UID
 
 	// GetResourceVersion returns the resource version of this object. The resource version is a required int64 sequence
 	// number property that must be incremented by the source whenever this resource changes.
@@ -54,7 +54,7 @@ type Codec[T ResourceObject] interface {
 
 type CloudEventsClient[T ResourceObject] interface {
 	// Resync the resources of one source/agent by sending resync request.
-	Resync(ctx context.Context, evtDataType types.CloudEventsDataType) error
+	Resync(ctx context.Context) error
 
 	// Publish the resources spec/status event to the broker.
 	Publish(ctx context.Context, eventType types.CloudEventsType, obj T) error
