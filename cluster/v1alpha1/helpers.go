@@ -33,6 +33,8 @@ const (
 	// TimeOut indicates that the rollout status is progressing or failed and the status remains
 	// for longer than the timeout, resulting in a timeout status.
 	TimeOut
+	// Ignore indicates that the resource's desired status is applied but the last applied status is irrelevant.
+	Ignore
 	// Skip indicates that the rollout should be skipped on this cluster.
 	Skip
 )
@@ -291,7 +293,7 @@ func determineRolloutStatusAndContinue(status ClusterRolloutStatus, timeout time
 	switch status.Status {
 	case ToApply:
 		return newStatus, true
-	case TimeOut, Succeeded, Skip:
+	case TimeOut, Succeeded, Skip, Ignore:
 		return newStatus, false
 	case Progressing, Failed:
 		timeOutTime := getTimeOutTime(status.LastTransitionTime, timeout)
