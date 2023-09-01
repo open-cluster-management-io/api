@@ -41,6 +41,17 @@ var manifestWorkGR = schema.GroupResource{Group: workv1.GroupName, Resource: "ma
 
 var _ workv1client.ManifestWorkInterface = &ManifestWorkAgentClient{}
 
+func NewManifestWorkAgentClient(cloudEventsClient *generic.CloudEventAgentClient[*workv1.ManifestWork], watcher *watcher.ManifestWorkWatcher) *ManifestWorkAgentClient {
+	return &ManifestWorkAgentClient{
+		cloudEventsClient: cloudEventsClient,
+		watcher:           watcher,
+	}
+}
+
+func (c *ManifestWorkAgentClient) SetLister(lister workv1lister.ManifestWorkNamespaceLister) {
+	c.lister = lister
+}
+
 func (c *ManifestWorkAgentClient) Create(ctx context.Context, manifestWork *workv1.ManifestWork, opts metav1.CreateOptions) (*workv1.ManifestWork, error) {
 	return nil, errors.NewMethodNotSupported(manifestWorkGR, "create")
 }
