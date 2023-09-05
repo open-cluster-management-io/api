@@ -99,5 +99,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: integration
-        run: make test-integration
+      - name: api-integration
+        run: make test-api-integration
+      - name: cloudevents-integration
+        run: make test-cloudevents-integration

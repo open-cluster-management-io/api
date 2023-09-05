@@ -28,7 +28,12 @@ clean-integration-test:
 
 clean: clean-integration-test
 
-test-integration: ensure-kubebuilder-tools
-	go test -c ./test/integration
-	./integration.test -ginkgo.slowSpecThreshold=15 -ginkgo.v -ginkgo.failFast
+test-api-integration: ensure-kubebuilder-tools
+	go test -c ./test/integration/api 
+	./api.test -ginkgo.slowSpecThreshold=15 -ginkgo.v -ginkgo.failFast
 .PHONY: test-integration
+
+test-cloudevents-integration: ensure-kubebuilder-tools
+	go test -c ./test/integration/cloudevents
+	./cloudevents.test -ginkgo.slowSpecThreshold=15 -ginkgo.v -ginkgo.failFast
+.PHONY: test-cloudevents-integration
