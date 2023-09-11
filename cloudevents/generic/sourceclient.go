@@ -19,6 +19,8 @@ import (
 //
 // A source is a component that runs on a server, it can be a controller on the hub cluster or a RESTful service
 // handling resource requests.
+//
+// TODO support limiting the message sending rate with a configuration.
 type CloudEventSourceClient[T ResourceObject] struct {
 	cloudEventsOptions options.CloudEventsOptions
 	sender             cloudevents.Client

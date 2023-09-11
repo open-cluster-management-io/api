@@ -18,6 +18,8 @@ import (
 //
 // An agent is a component that handles the deployment of requested resources on the managed cluster and status report
 // to the source.
+//
+// TODO support limiting the message sending rate with a configuration.
 type CloudEventAgentClient[T ResourceObject] struct {
 	cloudEventsOptions options.CloudEventsOptions
 	sender             cloudevents.Client

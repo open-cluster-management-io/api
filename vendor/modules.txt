@@ -114,6 +114,9 @@ github.com/google/gofuzz
 # github.com/google/uuid v1.2.0
 ## explicit
 github.com/google/uuid
+# github.com/gorilla/websocket v1.5.0
+## explicit; go 1.12
+github.com/gorilla/websocket
 # github.com/imdario/mergo v0.3.12
 ## explicit; go 1.13
 github.com/imdario/mergo
@@ -128,9 +131,23 @@ github.com/json-iterator/go
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
+# github.com/mattn/go-colorable v0.1.12
+## explicit; go 1.13
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.14
+## explicit; go 1.12
+github.com/mattn/go-isatty
 # github.com/matttproud/golang_protobuf_extensions v1.0.2
 ## explicit; go 1.9
 github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/mochi-mqtt/server/v2 v2.3.0
+## explicit; go 1.19
+github.com/mochi-mqtt/server/v2
+github.com/mochi-mqtt/server/v2/hooks/auth
+github.com/mochi-mqtt/server/v2/hooks/storage
+github.com/mochi-mqtt/server/v2/listeners
+github.com/mochi-mqtt/server/v2/packets
+github.com/mochi-mqtt/server/v2/system
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 ## explicit
 github.com/modern-go/concurrent
@@ -216,6 +233,14 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
+# github.com/rs/xid v1.4.0
+## explicit; go 1.12
+github.com/rs/xid
+# github.com/rs/zerolog v1.28.0
+## explicit; go 1.15
+github.com/rs/zerolog
+github.com/rs/zerolog/internal/cbor
+github.com/rs/zerolog/internal/json
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12
 github.com/spf13/pflag
