@@ -8,6 +8,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/klog/v2"
 
 	"open-cluster-management.io/api/cloudevents/generic/options"
@@ -19,8 +20,6 @@ import (
 //
 // A source is a component that runs on a server, it can be a controller on the hub cluster or a RESTful service
 // handling resource requests.
-//
-// TODO support limiting the message sending rate with a configuration.
 type CloudEventSourceClient[T ResourceObject] struct {
 	cloudEventsOptions options.CloudEventsOptions
 	sender             cloudevents.Client
@@ -28,6 +27,7 @@ type CloudEventSourceClient[T ResourceObject] struct {
 	lister             Lister[T]
 	codecs             map[types.CloudEventsDataType]Codec[T]
 	statusHashGetter   StatusHashGetter[T]
+	rateLimiter        flowcontrol.RateLimiter
 	sourceID           string
 }
 
@@ -67,6 +67,7 @@ func NewCloudEventSourceClient[T ResourceObject](
 		lister:             lister,
 		codecs:             evtCodes,
 		statusHashGetter:   statusHashGetter,
+		rateLimiter:        NewRateLimiter(sourceOptions.EventRateLimit),
 		sourceID:           sourceOptions.SourceID,
 	}, nil
 }
@@ -105,8 +106,13 @@ func (c *CloudEventSourceClient[T]) Resync(ctx context.Context) error {
 			return fmt.Errorf("failed to set data to cloud event: %v", err)
 		}
 
-		if result := c.sender.Send(ctx, evt); cloudevents.IsUndelivered(result) {
-			return fmt.Errorf("failed to send: %v", result)
+		sendingContext, err := c.cloudEventsOptions.WithContext(ctx, evt.Context)
+		if err != nil {
+			return err
+		}
+
+		if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.sender, evt); err != nil {
+			return err
 		}
 
 		klog.V(4).Infof("Sent resync request:\n%s", evt)
@@ -135,8 +141,8 @@ func (c *CloudEventSourceClient[T]) Publish(ctx context.Context, eventType types
 		return err
 	}
 
-	if result := c.sender.Send(sendingContext, *evt); cloudevents.IsUndelivered(result) {
-		return fmt.Errorf("failed to send event %s, %v", evt, result)
+	if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.sender, *evt); err != nil {
+		return err
 	}
 
 	klog.V(4).Infof("Sent event:\n%s", evt)
@@ -280,8 +286,8 @@ func (c *CloudEventSourceClient[T]) respondResyncSpecRequest(
 			return err
 		}
 
-		if result := c.sender.Send(sendingContext, evt); cloudevents.IsUndelivered(result) {
-			return fmt.Errorf("failed to send event %s, %v", evt, result)
+		if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.sender, evt); err != nil {
+			return err
 		}
 	}
 

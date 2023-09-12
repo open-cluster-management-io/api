@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
+	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/klog/v2"
 
 	"open-cluster-management.io/api/cloudevents/generic/options"
@@ -18,8 +20,6 @@ import (
 //
 // An agent is a component that handles the deployment of requested resources on the managed cluster and status report
 // to the source.
-//
-// TODO support limiting the message sending rate with a configuration.
 type CloudEventAgentClient[T ResourceObject] struct {
 	cloudEventsOptions options.CloudEventsOptions
 	sender             cloudevents.Client
@@ -27,6 +27,7 @@ type CloudEventAgentClient[T ResourceObject] struct {
 	lister             Lister[T]
 	codecs             map[types.CloudEventsDataType]Codec[T]
 	statusHashGetter   StatusHashGetter[T]
+	rateLimiter        flowcontrol.RateLimiter
 	agentID            string
 	clusterName        string
 }
@@ -67,6 +68,7 @@ func NewCloudEventAgentClient[T ResourceObject](
 		lister:             lister,
 		codecs:             evtCodes,
 		statusHashGetter:   statusHashGetter,
+		rateLimiter:        NewRateLimiter(agentOptions.EventRateLimit),
 		agentID:            agentOptions.AgentID,
 		clusterName:        agentOptions.ClusterName,
 	}, nil
@@ -111,8 +113,8 @@ func (c *CloudEventAgentClient[T]) Resync(ctx context.Context) error {
 			return err
 		}
 
-		if result := c.sender.Send(sendingContext, evt); cloudevents.IsUndelivered(result) {
-			return fmt.Errorf("failed to send event %s, %v", evt, result)
+		if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.sender, evt); err != nil {
+			return err
 		}
 
 		klog.V(4).Infof("Sent resync request:\n%s", evt)
@@ -141,8 +143,8 @@ func (c *CloudEventAgentClient[T]) Publish(ctx context.Context, eventType types.
 		return err
 	}
 
-	if result := c.sender.Send(sendingContext, *evt); cloudevents.IsUndelivered(result) {
-		return fmt.Errorf("failed to send event %s, %v", evt, result)
+	if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.sender, *evt); err != nil {
+		return err
 	}
 
 	klog.V(4).Infof("Sent event:\n%s", evt)
@@ -292,6 +294,28 @@ func (c *CloudEventAgentClient[T]) specAction(source string, obj T) (evt types.R
 	}
 
 	return types.Modified, nil
+}
+
+func sendEventWithLimit(sendingCtx context.Context, limiter flowcontrol.RateLimiter,
+	sender cloudevents.Client, evt cloudevents.Event) error {
+	now := time.Now()
+
+	err := limiter.Wait(sendingCtx)
+	if err != nil {
+		return fmt.Errorf("client rate limiter Wait returned an error: %w", err)
+	}
+
+	latency := time.Since(now)
+	if latency > longThrottleLatency {
+		klog.Warningf(fmt.Sprintf("Waited for %v due to client-side throttling, not priority and fairness, request: %s",
+			latency, evt))
+	}
+
+	if result := sender.Send(sendingCtx, evt); cloudevents.IsUndelivered(result) {
+		return fmt.Errorf("failed to send event %s, %v", evt, result)
+	}
+
+	return nil
 }
 
 func getObj[T ResourceObject](resourceID string, objs []T) (obj T, exists bool) {
