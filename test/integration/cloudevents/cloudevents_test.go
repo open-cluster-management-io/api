@@ -23,13 +23,6 @@ import (
 )
 
 var _ = ginkgo.Describe("Cloudevents clients test", func() {
-	ginkgo.BeforeEach(func() {
-		ginkgo.By("init resource source store", func() {
-			source.GetStore().Add(source.NewResource("cluster1", "resource1"))
-			source.GetStore().Add(source.NewResource("cluster2", "resource1"))
-		})
-	})
-
 	ginkgo.Context("Resync resources", func() {
 		ginkgo.It("resync resources between source and agent", func() {
 			ginkgo.By("start an agent on cluster1")
@@ -72,7 +65,7 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 				return nil
 			}, 10*time.Second, 1*time.Second).Should(gomega.Succeed())
 
-			// resync the status from source
+			ginkgo.By("resync the status from source")
 			err = sourceCloudEventsClient.Resync(context.TODO())
 			gomega.Expect(err).ToNot(gomega.HaveOccurred())
 

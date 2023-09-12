@@ -28,10 +28,13 @@ clean-integration-test:
 
 clean: clean-integration-test
 
+test-integration: test-api-integration test-cloudevents-integration
+.PHONY: test-integration
+
 test-api-integration: ensure-kubebuilder-tools
 	go test -c ./test/integration/api 
 	./api.test -ginkgo.slowSpecThreshold=15 -ginkgo.v -ginkgo.failFast
-.PHONY: test-integration
+.PHONY: test-api-integration
 
 test-cloudevents-integration: ensure-kubebuilder-tools
 	go test -c ./test/integration/cloudevents

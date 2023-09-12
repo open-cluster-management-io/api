@@ -43,6 +43,11 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	}()
 
+	ginkgo.By("init the resource source store")
+	source.GetStore().Add(source.NewResource("cluster1", "resource1"))
+	source.GetStore().Add(source.NewResource("cluster2", "resource1"))
+
+	ginkgo.By("start the resource source")
 	mqttOptions = mqtt.NewMQTTOptions()
 	mqttOptions.BrokerHost = mqttBrokerHost
 	sourceCloudEventsClient, err = source.StartResourceSourceClient(context.TODO(), mqttOptions)
