@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,11 +58,85 @@ func (c *ManifestWorkAgentClient) Create(ctx context.Context, manifestWork *work
 }
 
 func (c *ManifestWorkAgentClient) Update(ctx context.Context, manifestWork *workv1.ManifestWork, opts metav1.UpdateOptions) (*workv1.ManifestWork, error) {
-	return nil, errors.NewMethodNotSupported(manifestWorkGR, "update")
+	updatedWork := manifestWork.DeepCopy()
+
+	// the finalizers of a deleting manifestwork are removed, marking the manifestwork status to deleted and sending
+	// it back to source
+	if !updatedWork.DeletionTimestamp.IsZero() && len(updatedWork.Finalizers) == 0 {
+		meta.SetStatusCondition(&updatedWork.Status.Conditions, metav1.Condition{
+			Type:    ManifestsDeleted,
+			Status:  metav1.ConditionTrue,
+			Reason:  "ManifestsDeleted",
+			Message: fmt.Sprintf("The manifests are deleted from the cluster %s", manifestWork.Namespace),
+		})
+
+		eventDataType, err := types.ParseCloudEventsDataType(updatedWork.Annotations[codec.CloudEventsDataTypeAnnotationKey])
+		if err != nil {
+			return nil, err
+		}
+
+		eventType := types.CloudEventsType{
+			CloudEventsDataType: *eventDataType,
+			SubResource:         types.SubResourceStatus,
+			Action:              DeleteRequestAction,
+		}
+
+		if err := c.cloudEventsClient.Publish(ctx, eventType, updatedWork); err != nil {
+			return nil, err
+		}
+
+		// delete the manifestwork from the ManifestWorkInformer local cache.
+		c.watcher.Receive(watch.Event{
+			Type:   watch.Deleted,
+			Object: updatedWork,
+		})
+
+		return updatedWork, nil
+	}
+
+	// refresh the work in the ManifestWorkInformer local cache with updated work.
+	c.watcher.Receive(watch.Event{
+		Type:   watch.Modified,
+		Object: updatedWork,
+	})
+
+	return updatedWork, nil
 }
 
 func (c *ManifestWorkAgentClient) UpdateStatus(ctx context.Context, manifestWork *workv1.ManifestWork, opts metav1.UpdateOptions) (*workv1.ManifestWork, error) {
-	return nil, errors.NewMethodNotSupported(manifestWorkGR, "updatestatus")
+	lastWork, err := c.lister.Get(manifestWork.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedWork := manifestWork.DeepCopy()
+
+	if equality.Semantic.DeepEqual(lastWork.Status, updatedWork.Status) {
+		return manifestWork, nil
+	}
+
+	eventDataType, err := types.ParseCloudEventsDataType(updatedWork.Annotations[codec.CloudEventsDataTypeAnnotationKey])
+	if err != nil {
+		return nil, err
+	}
+
+	eventType := types.CloudEventsType{
+		CloudEventsDataType: *eventDataType,
+		SubResource:         types.SubResourceStatus,
+		Action:              UpdateRequestAction,
+	}
+
+	if err := c.cloudEventsClient.Publish(ctx, eventType, updatedWork); err != nil {
+		return nil, err
+	}
+
+	// refresh the work in the ManifestWorkInformer local cache with updated work.
+	c.watcher.Receive(watch.Event{
+		Type:   watch.Modified,
+		Object: updatedWork,
+	})
+
+	return updatedWork, nil
 }
 
 func (c *ManifestWorkAgentClient) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {

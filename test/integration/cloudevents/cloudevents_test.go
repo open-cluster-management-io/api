@@ -117,9 +117,32 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 
 				// ensure the work can be get by work client
 				workName := source.ResourceID(clusterName, "resource1")
-				_, err = agentWorkClient.Get(context.TODO(), workName, metav1.GetOptions{})
+				work, err := agentWorkClient.Get(context.TODO(), workName, metav1.GetOptions{})
 				if err != nil {
 					return err
+				}
+
+				newWork := work.DeepCopy()
+				newWork.Status = workv1.ManifestWorkStatus{Conditions: []metav1.Condition{{Type: "Created", Status: metav1.ConditionTrue}}}
+
+				_, err = agentWorkClient.UpdateStatus(context.TODO(), newWork, metav1.UpdateOptions{})
+				if err != nil {
+					return err
+				}
+
+				return nil
+			}, 10*time.Second, 1*time.Second).Should(gomega.Succeed())
+
+			gomega.Eventually(func() error {
+				resourceID := source.ResourceID(clusterName, "resource1")
+				resource, err := source.GetStore().Get(resourceID)
+				if err != nil {
+					return err
+				}
+
+				// ensure the resource status is synced
+				if !meta.IsStatusConditionTrue(resource.Status.Conditions, "Created") {
+					return fmt.Errorf("unexpected status %v", resource.Status.Conditions)
 				}
 
 				return nil
@@ -276,17 +299,9 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 						return fmt.Errorf("expected work is deleting, but got %v", work)
 					}
 
-					// remove the finalizers
-					patchBytes, err := json.Marshal(map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"uid":             work.GetUID(),
-							"resourceVersion": work.GetResourceVersion(),
-							"finalizers":      []string{},
-						},
-					})
-					gomega.Expect(err).ToNot(gomega.HaveOccurred())
-
-					_, err = agentWorkClient.Patch(context.TODO(), work.Name, apitypes.MergePatchType, patchBytes, metav1.PatchOptions{})
+					newWork := work.DeepCopy()
+					newWork.Finalizers = []string{}
+					_, err = agentWorkClient.Update(context.TODO(), newWork, metav1.UpdateOptions{})
 					gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 					return nil
