@@ -43,7 +43,7 @@ func newFakePlacementDecision(placementName, groupName string, groupIndex int, c
 	}
 }
 
-func TestPlacementDecisionClustersTracker_Get(t *testing.T) {
+func TestPlacementDecisionClustersTracker_GetClusterChanges(t *testing.T) {
 	tests := []struct {
 		name                           string
 		placement                      Placement
@@ -81,6 +81,19 @@ func TestPlacementDecisionClustersTracker_Get(t *testing.T) {
 			expectAddedScheduledClusters:   sets.New[string]("cluster1", "cluster2"),
 			expectDeletedScheduledClusters: sets.New[string](),
 		},
+		{
+			name: "test nil exist cluster groups",
+			placement: Placement{
+				ObjectMeta: metav1.ObjectMeta{Name: "placement2", Namespace: "default"},
+				Spec:       PlacementSpec{},
+			},
+			existingScheduledClusterGroups: nil,
+			updateDecisions: []*PlacementDecision{
+				newFakePlacementDecision("placement2", "", 0, "cluster1", "cluster2"),
+			},
+			expectAddedScheduledClusters:   sets.New[string]("cluster1", "cluster2"),
+			expectDeletedScheduledClusters: sets.New[string](),
+		},
 	}
 
 	for _, test := range tests {
@@ -92,7 +105,7 @@ func TestPlacementDecisionClustersTracker_Get(t *testing.T) {
 		tracker := NewPlacementDecisionClustersTrackerWithGroups(&test.placement, &fakeGetter, test.existingScheduledClusterGroups)
 
 		// check changed decision clusters
-		addedClusters, deletedClusters, err := tracker.Get()
+		addedClusters, deletedClusters, err := tracker.GetClusterChanges()
 		if err != nil {
 			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
 		}
@@ -173,9 +186,9 @@ func TestPlacementDecisionClustersTracker_Existing(t *testing.T) {
 		}
 		// init tracker
 		tracker := NewPlacementDecisionClustersTrackerWithGroups(&test.placement, &fakeGetter, nil)
-		_, _, err := tracker.Get()
+		err := tracker.Refresh()
 		if err != nil {
-			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
+			t.Errorf("Case: %v, Failed to run Refresh(): %v", test.name, err)
 		}
 
 		// Call the Existing method with different groupKeys inputs.
@@ -295,9 +308,9 @@ func TestPlacementDecisionClustersTracker_ExistingClusterGroups(t *testing.T) {
 		}
 		// init tracker
 		tracker := NewPlacementDecisionClustersTracker(&test.placement, &fakeGetter, nil)
-		_, _, err := tracker.Get()
+		err := tracker.Refresh()
 		if err != nil {
-			t.Errorf("Case: %v, Failed to run Get(): %v", test.name, err)
+			t.Errorf("Case: %v, Failed to run Refresh(): %v", test.name, err)
 		}
 
 		// Call the Existing method with different groupKeys inputs.
