@@ -5,11 +5,13 @@ on:
     branches:
       - main
       - release-*
+      - br_support_update_for_manifestwork_cloudevents_client
   workflow_dispatch: {}
   pull_request:
     branches:
       - main
       - release-*
+      - br_support_update_for_manifestwork_cloudevents_client
 
 env:
   # Common versions

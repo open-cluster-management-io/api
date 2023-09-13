@@ -9,6 +9,7 @@ import (
 	"github.com/mochi-mqtt/server/v2/listeners"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
+	"github.com/rs/zerolog"
 
 	"open-cluster-management.io/api/cloudevents/generic"
 	"open-cluster-management.io/api/cloudevents/generic/options/mqtt"
@@ -31,6 +32,8 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 
 	// start a MQTT broker
 	mqttBroker = mochimqtt.New(&mochimqtt.Options{})
+	l := mqttBroker.Log.Level(zerolog.DebugLevel)
+	mqttBroker.Log = &l
 	// allow all connections.
 	err := mqttBroker.AddHook(new(auth.AllowHook), nil)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
@@ -45,6 +48,7 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 
 	mqttOptions = mqtt.NewMQTTOptions()
 	mqttOptions.BrokerHost = mqttBrokerHost
+	ginkgo.By("start an source")
 	sourceCloudEventsClient, err = source.StartResourceSourceClient(context.TODO(), mqttOptions)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
