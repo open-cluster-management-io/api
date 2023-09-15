@@ -273,9 +273,7 @@ func TestStatusResyncResponse(t *testing.T) {
 				t.Errorf("unexpected error %v", err)
 			}
 
-			if err := agent.Subscribe(context.TODO()); err != nil {
-				t.Errorf("unexpected error %v", err)
-			}
+			agent.receive(context.TODO(), c.requestEvent)
 
 			c.validate(client.GetSentEvents())
 		})
@@ -440,13 +438,11 @@ func TestReceiveResourceSpec(t *testing.T) {
 
 			var actualEvent types.ResourceAction
 			var actualRes *mockResource
-			if err := agent.Subscribe(context.TODO(), func(event types.ResourceAction, resource *mockResource) error {
+			agent.receive(context.TODO(), c.requestEvent, func(event types.ResourceAction, resource *mockResource) error {
 				actualEvent = event
 				actualRes = resource
 				return nil
-			}); err != nil {
-				t.Errorf("unexpected error %v", err)
-			}
+			})
 
 			c.validate(actualEvent, actualRes)
 		})

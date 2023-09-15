@@ -8,7 +8,6 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/klog/v2"
 
 	"open-cluster-management.io/api/cloudevents/generic/options"
@@ -21,13 +20,11 @@ import (
 // A source is a component that runs on a server, it can be a controller on the hub cluster or a RESTful service
 // handling resource requests.
 type CloudEventSourceClient[T ResourceObject] struct {
-	cloudEventsOptions options.CloudEventsOptions
-	cloudEventsClient  cloudevents.Client
-	lister             Lister[T]
-	codecs             map[types.CloudEventsDataType]Codec[T]
-	statusHashGetter   StatusHashGetter[T]
-	rateLimiter        flowcontrol.RateLimiter
-	sourceID           string
+	*baseClient
+	lister           Lister[T]
+	codecs           map[types.CloudEventsDataType]Codec[T]
+	statusHashGetter StatusHashGetter[T]
+	sourceID         string
 }
 
 // NewCloudEventSourceClient returns an instance for CloudEventSourceClient. The following arguments are required to
@@ -44,8 +41,12 @@ func NewCloudEventSourceClient[T ResourceObject](
 	statusHashGetter StatusHashGetter[T],
 	codecs ...Codec[T],
 ) (*CloudEventSourceClient[T], error) {
-	cloudEventsClient, err := sourceOptions.CloudEventsOptions.Client(ctx)
-	if err != nil {
+	baseClient := &baseClient{
+		cloudEventsOptions:     sourceOptions.CloudEventsOptions,
+		cloudEventsRateLimiter: NewRateLimiter(sourceOptions.EventRateLimit),
+	}
+
+	if err := baseClient.connect(ctx); err != nil {
 		return nil, err
 	}
 
@@ -55,13 +56,11 @@ func NewCloudEventSourceClient[T ResourceObject](
 	}
 
 	return &CloudEventSourceClient[T]{
-		cloudEventsOptions: sourceOptions.CloudEventsOptions,
-		cloudEventsClient:  cloudEventsClient,
-		lister:             lister,
-		codecs:             evtCodes,
-		statusHashGetter:   statusHashGetter,
-		rateLimiter:        NewRateLimiter(sourceOptions.EventRateLimit),
-		sourceID:           sourceOptions.SourceID,
+		baseClient:       baseClient,
+		lister:           lister,
+		codecs:           evtCodes,
+		statusHashGetter: statusHashGetter,
+		sourceID:         sourceOptions.SourceID,
 	}, nil
 }
 
@@ -99,12 +98,7 @@ func (c *CloudEventSourceClient[T]) Resync(ctx context.Context) error {
 			return fmt.Errorf("failed to set data to cloud event: %v", err)
 		}
 
-		sendingContext, err := c.cloudEventsOptions.WithContext(ctx, evt.Context)
-		if err != nil {
-			return err
-		}
-
-		if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.cloudEventsClient, evt); err != nil {
+		if err := c.publish(ctx, evt); err != nil {
 			return err
 		}
 	}
@@ -128,12 +122,7 @@ func (c *CloudEventSourceClient[T]) Publish(ctx context.Context, eventType types
 		return err
 	}
 
-	sendingContext, err := c.cloudEventsOptions.WithContext(ctx, evt.Context)
-	if err != nil {
-		return err
-	}
-
-	if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.cloudEventsClient, *evt); err != nil {
+	if err := c.publish(ctx, *evt); err != nil {
 		return err
 	}
 
@@ -143,73 +132,73 @@ func (c *CloudEventSourceClient[T]) Publish(ctx context.Context, eventType types
 // Subscribe the events that are from the agent spec resync request or agent resource status request.
 // For spec resync request, source publish the current resources spec back as response.
 // For resource status request, source receives resource status and handles the status with resource handlers.
-func (c *CloudEventSourceClient[T]) Subscribe(ctx context.Context, handlers ...ResourceHandler[T]) error {
-	if err := c.cloudEventsClient.StartReceiver(ctx, func(evt cloudevents.Event) {
-		klog.V(4).Infof("Received event:\n%s", evt)
+func (c *CloudEventSourceClient[T]) Subscribe(ctx context.Context, handlers ...ResourceHandler[T]) {
+	c.subscribe(ctx, func(ctx context.Context, evt cloudevents.Event) {
+		c.receive(ctx, evt, handlers...)
+	})
+}
 
-		eventType, err := types.ParseCloudEventsType(evt.Type())
-		if err != nil {
-			klog.Errorf("failed to parse cloud event type, %v", err)
-			return
-		}
+func (c *CloudEventSourceClient[T]) receive(ctx context.Context, evt cloudevents.Event, handlers ...ResourceHandler[T]) {
+	klog.V(4).Infof("Received event:\n%s", evt)
 
-		if eventType.Action == types.ResyncRequestAction {
-			if eventType.SubResource != types.SubResourceSpec {
-				klog.Warningf("unsupported event type %s, ignore", eventType)
-				return
-			}
+	eventType, err := types.ParseCloudEventsType(evt.Type())
+	if err != nil {
+		klog.Errorf("failed to parse cloud event type, %v", err)
+		return
+	}
 
-			if err := c.respondResyncSpecRequest(ctx, eventType.CloudEventsDataType, evt); err != nil {
-				klog.Errorf("failed to resync resources spec, %v", err)
-			}
-
-			return
-		}
-
-		codec, ok := c.codecs[eventType.CloudEventsDataType]
-		if !ok {
-			klog.Warningf("failed to find the codec for event %s, ignore", eventType.CloudEventsDataType)
-			return
-		}
-
-		if eventType.SubResource != types.SubResourceStatus {
+	if eventType.Action == types.ResyncRequestAction {
+		if eventType.SubResource != types.SubResourceSpec {
 			klog.Warningf("unsupported event type %s, ignore", eventType)
 			return
 		}
 
-		clusterName, err := evt.Context.GetExtension(types.ExtensionClusterName)
-		if err != nil {
-			klog.Errorf("failed to find cluster name, %v", err)
-			return
+		if err := c.respondResyncSpecRequest(ctx, eventType.CloudEventsDataType, evt); err != nil {
+			klog.Errorf("failed to resync resources spec, %v", err)
 		}
 
-		obj, err := codec.Decode(&evt)
-		if err != nil {
-			klog.Errorf("failed to decode status, %v", err)
-			return
-		}
-
-		action, err := c.statusAction(fmt.Sprintf("%s", clusterName), obj)
-		if err != nil {
-			klog.Errorf("failed to generate status event %s, %v", evt, err)
-			return
-		}
-
-		if len(action) == 0 {
-			// no action is required, ignore
-			return
-		}
-
-		for _, handler := range handlers {
-			if err := handler(action, obj); err != nil {
-				klog.Errorf("failed to handle status event %s, %v", evt, err)
-			}
-		}
-	}); err != nil {
-		return err
+		return
 	}
 
-	return nil
+	codec, ok := c.codecs[eventType.CloudEventsDataType]
+	if !ok {
+		klog.Warningf("failed to find the codec for event %s, ignore", eventType.CloudEventsDataType)
+		return
+	}
+
+	if eventType.SubResource != types.SubResourceStatus {
+		klog.Warningf("unsupported event type %s, ignore", eventType)
+		return
+	}
+
+	clusterName, err := evt.Context.GetExtension(types.ExtensionClusterName)
+	if err != nil {
+		klog.Errorf("failed to find cluster name, %v", err)
+		return
+	}
+
+	obj, err := codec.Decode(&evt)
+	if err != nil {
+		klog.Errorf("failed to decode status, %v", err)
+		return
+	}
+
+	action, err := c.statusAction(fmt.Sprintf("%s", clusterName), obj)
+	if err != nil {
+		klog.Errorf("failed to generate status event %s, %v", evt, err)
+		return
+	}
+
+	if len(action) == 0 {
+		// no action is required, ignore
+		return
+	}
+
+	for _, handler := range handlers {
+		if err := handler(action, obj); err != nil {
+			klog.Errorf("failed to handle status event %s, %v", evt, err)
+		}
+	}
 }
 
 // Upon receiving the spec resync event, the source responds by sending resource status events to the broker as follows:
@@ -271,13 +260,7 @@ func (c *CloudEventSourceClient[T]) respondResyncSpecRequest(
 			WithClusterName(fmt.Sprintf("%s", clusterName)).
 			WithDeletionTimestamp(metav1.Now().Time).
 			NewEvent()
-
-		sendingContext, err := c.cloudEventsOptions.WithContext(ctx, evt.Context)
-		if err != nil {
-			return err
-		}
-
-		if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.cloudEventsClient, evt); err != nil {
+		if err := c.publish(ctx, evt); err != nil {
 			return err
 		}
 	}

@@ -16,13 +16,15 @@ import (
 
 type mqttSourceOptions struct {
 	MQTTOptions
-	sourceID string
+	errorChan chan error
+	sourceID  string
 }
 
 func NewSourceOptions(mqttOptions *MQTTOptions, sourceID string) *options.CloudEventsSourceOptions {
 	return &options.CloudEventsSourceOptions{
 		CloudEventsOptions: &mqttSourceOptions{
 			MQTTOptions: *mqttOptions,
+			errorChan:   make(chan error),
 			sourceID:    sourceID,
 		},
 		SourceID: sourceID,
@@ -55,6 +57,9 @@ func (o *mqttSourceOptions) Client(ctx context.Context) (cloudevents.Client, err
 	receiver, err := o.GetCloudEventsClient(
 		ctx,
 		fmt.Sprintf("%s-client", o.sourceID),
+		func(err error) {
+			o.errorChan <- err
+		},
 		cloudeventsmqtt.WithPublish(&paho.Publish{QoS: byte(o.PubQoS)}),
 		cloudeventsmqtt.WithSubscribe(
 			&paho.Subscribe{
@@ -71,4 +76,8 @@ func (o *mqttSourceOptions) Client(ctx context.Context) (cloudevents.Client, err
 		return nil, err
 	}
 	return receiver, nil
+}
+
+func (o *mqttSourceOptions) ErrorChan() <-chan error {
+	return o.errorChan
 }

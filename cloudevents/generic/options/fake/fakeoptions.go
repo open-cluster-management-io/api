@@ -38,6 +38,10 @@ func (o *CloudEventsFakeOptions) Client(ctx context.Context) (cloudevents.Client
 	return o.client, nil
 }
 
+func (o *CloudEventsFakeOptions) ErrorChan() <-chan error {
+	return nil
+}
+
 type CloudEventsFakeClient struct {
 	sentEvents     []cloudevents.Event
 	receivedEvents []cloudevents.Event
