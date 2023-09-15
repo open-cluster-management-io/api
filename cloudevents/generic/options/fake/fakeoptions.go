@@ -34,11 +34,7 @@ func (o *CloudEventsFakeOptions) WithContext(ctx context.Context, evtCtx cloudev
 	return ctx, nil
 }
 
-func (o *CloudEventsFakeOptions) Sender(ctx context.Context) (cloudevents.Client, error) {
-	return o.client, nil
-}
-
-func (o *CloudEventsFakeOptions) Receiver(ctx context.Context) (cloudevents.Client, error) {
+func (o *CloudEventsFakeOptions) Client(ctx context.Context) (cloudevents.Client, error) {
 	return o.client, nil
 }
 

@@ -147,7 +147,6 @@ func (b *ClientHolderBuilder) newAgentClients(ctx context.Context, config *mqtt.
 	go func() {
 		err := cloudEventsClient.Subscribe(ctx, agenthandler.NewManifestWorkAgentHandler(namespacedLister, watcher))
 		if err != nil {
-			// TODO (skeeey) consider how to retry to connect the broker again
 			klog.Errorf("failed to subscribe to %s, %v", config.BrokerHost, err)
 		}
 	}()

@@ -22,8 +22,7 @@ import (
 // to the source.
 type CloudEventAgentClient[T ResourceObject] struct {
 	cloudEventsOptions options.CloudEventsOptions
-	sender             cloudevents.Client
-	receiver           cloudevents.Client
+	cloudEventsClient  cloudevents.Client
 	lister             Lister[T]
 	codecs             map[types.CloudEventsDataType]Codec[T]
 	statusHashGetter   StatusHashGetter[T]
@@ -46,12 +45,7 @@ func NewCloudEventAgentClient[T ResourceObject](
 	statusHashGetter StatusHashGetter[T],
 	codecs ...Codec[T],
 ) (*CloudEventAgentClient[T], error) {
-	sender, err := agentOptions.CloudEventsOptions.Sender(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	receiver, err := agentOptions.CloudEventsOptions.Receiver(ctx)
+	cloudEventsClient, err := agentOptions.CloudEventsOptions.Client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +57,7 @@ func NewCloudEventAgentClient[T ResourceObject](
 
 	return &CloudEventAgentClient[T]{
 		cloudEventsOptions: agentOptions.CloudEventsOptions,
-		sender:             sender,
-		receiver:           receiver,
+		cloudEventsClient:  cloudEventsClient,
 		lister:             lister,
 		codecs:             evtCodes,
 		statusHashGetter:   statusHashGetter,
@@ -113,12 +106,11 @@ func (c *CloudEventAgentClient[T]) Resync(ctx context.Context) error {
 			return err
 		}
 
-		if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.sender, evt); err != nil {
+		if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.cloudEventsClient, evt); err != nil {
 			return err
 		}
-
-		klog.V(4).Infof("Sent resync request:\n%s", evt)
 	}
+
 	return nil
 }
 
@@ -143,11 +135,10 @@ func (c *CloudEventAgentClient[T]) Publish(ctx context.Context, eventType types.
 		return err
 	}
 
-	if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.sender, *evt); err != nil {
+	if err := sendEventWithLimit(sendingContext, c.rateLimiter, c.cloudEventsClient, *evt); err != nil {
 		return err
 	}
 
-	klog.V(4).Infof("Sent event:\n%s", evt)
 	return nil
 }
 
@@ -155,7 +146,7 @@ func (c *CloudEventAgentClient[T]) Publish(ctx context.Context, eventType types.
 // For status resync request, agent publish the current resources status back as response.
 // For resource spec request, agent receives resource spec and handles the spec with resource handlers.
 func (c *CloudEventAgentClient[T]) Subscribe(ctx context.Context, handlers ...ResourceHandler[T]) error {
-	return c.receiver.StartReceiver(ctx, func(evt cloudevents.Event) {
+	return c.cloudEventsClient.StartReceiver(ctx, func(evt cloudevents.Event) {
 		klog.V(4).Infof("Received event:\n%s", evt)
 
 		eventType, err := types.ParseCloudEventsType(evt.Type())
@@ -310,6 +301,8 @@ func sendEventWithLimit(sendingCtx context.Context, limiter flowcontrol.RateLimi
 		klog.Warningf(fmt.Sprintf("Waited for %v due to client-side throttling, not priority and fairness, request: %s",
 			latency, evt))
 	}
+
+	klog.V(4).Infof("Sent event: %v\n%s", sendingCtx, evt)
 
 	if result := sender.Send(sendingCtx, evt); cloudevents.IsUndelivered(result) {
 		return fmt.Errorf("failed to send event %s, %v", evt, result)
