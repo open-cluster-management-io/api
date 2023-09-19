@@ -79,7 +79,7 @@ func (c *ManifestWorkAgentClient) Get(ctx context.Context, name string, opts met
 
 func (c *ManifestWorkAgentClient) List(ctx context.Context, opts metav1.ListOptions) (*workv1.ManifestWorkList, error) {
 	klog.V(4).Infof("sync manifestworks")
-	// send resync request to fetch manifestworks from source when the ManifestWorkInformer status
+	// send resync request to fetch manifestworks from source when the ManifestWorkInformer starts
 	if err := c.cloudEventsClient.Resync(ctx); err != nil {
 		return nil, err
 	}

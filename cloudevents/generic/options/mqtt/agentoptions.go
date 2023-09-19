@@ -55,22 +55,11 @@ func (o *mqttAgentOptions) WithContext(ctx context.Context, evtCtx cloudevents.E
 	return cloudeventscontext.WithTopic(ctx, statusTopic), nil
 }
 
-func (o *mqttAgentOptions) Sender(ctx context.Context) (cloudevents.Client, error) {
-	sender, err := o.GetCloudEventsClient(
-		ctx,
-		fmt.Sprintf("%s-pub-client", o.agentID),
-		cloudeventsmqtt.WithPublish(&paho.Publish{QoS: byte(o.PubQoS)}),
-	)
-	if err != nil {
-		return nil, err
-	}
-	return sender, nil
-}
-
-func (o *mqttAgentOptions) Receiver(ctx context.Context) (cloudevents.Client, error) {
+func (o *mqttAgentOptions) Client(ctx context.Context) (cloudevents.Client, error) {
 	receiver, err := o.GetCloudEventsClient(
 		ctx,
-		fmt.Sprintf("%s-sub-client", o.agentID),
+		fmt.Sprintf("%s-client", o.agentID),
+		cloudeventsmqtt.WithPublish(&paho.Publish{QoS: byte(o.PubQoS)}),
 		cloudeventsmqtt.WithSubscribe(
 			&paho.Subscribe{
 				Subscriptions: map[string]paho.SubscribeOptions{

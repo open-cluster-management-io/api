@@ -16,11 +16,8 @@ type CloudEventsOptions interface {
 	// the MQTT topic, for Kafka, the context should contain the message key, etc.
 	WithContext(ctx context.Context, evtContext cloudevents.EventContext) (context.Context, error)
 
-	// Sender returns a cloudevents client for sending the cloudevents
-	Sender(ctx context.Context) (cloudevents.Client, error)
-
-	// Receiver returns a cloudevents client for receiving the cloudevents
-	Receiver(ctx context.Context) (cloudevents.Client, error)
+	// Client returns a cloudevents client for sending and receiving cloudevents
+	Client(ctx context.Context) (cloudevents.Client, error)
 }
 
 // EventRateLimit for limiting the event sending rate.
