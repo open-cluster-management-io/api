@@ -22,10 +22,11 @@ jobs:
       - name: generate changelog
         run: |
           echo "# Open Cluster Management API $RELEASE_VERSION" > /home/runner/work/changelog.txt
-          echo "- See the [CHANGELOG](https://github.com/open-cluster-management-io/api/blob/${RELEASE_VERSION}/CHANGELOG/CHANGELOG-${MAJOR_RELEASE_VERSION}.md) for more details." >> /home/runner/work/changelog.txt
       - name: publish release
-        uses: softprops/action-gh-release@v0.1.5
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           body_path: /home/runner/work/changelog.txt
+          draft: true
+          generate_release_notes: true
