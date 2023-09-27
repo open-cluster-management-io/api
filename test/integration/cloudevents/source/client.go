@@ -9,7 +9,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cloudeventstypes "github.com/cloudevents/sdk-go/v2/types"
-	"k8s.io/klog/v2"
 
 	"open-cluster-management.io/api/cloudevents/generic"
 	"open-cluster-management.io/api/cloudevents/generic/options/mqtt"
@@ -126,13 +125,9 @@ func StartResourceSourceClient(ctx context.Context, config *mqtt.MQTTOptions) (g
 		return nil, err
 	}
 
-	go func() {
-		if err := client.Subscribe(ctx, func(action types.ResourceAction, resource *Resource) error {
-			return GetStore().UpdateStatus(resource)
-		}); err != nil {
-			klog.Fatalf("failed to subscribe to mqtt broker, %v", err)
-		}
-	}()
+	client.Subscribe(ctx, func(action types.ResourceAction, resource *Resource) error {
+		return GetStore().UpdateStatus(resource)
+	})
 
 	return client, nil
 }

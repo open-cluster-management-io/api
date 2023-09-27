@@ -16,6 +16,7 @@ import (
 
 type mqttAgentOptions struct {
 	MQTTOptions
+	errorChan   chan error
 	clusterName string
 	agentID     string
 }
@@ -24,6 +25,7 @@ func NewAgentOptions(mqttOptions *MQTTOptions, clusterName, agentID string) *opt
 	return &options.CloudEventsAgentOptions{
 		CloudEventsOptions: &mqttAgentOptions{
 			MQTTOptions: *mqttOptions,
+			errorChan:   make(chan error),
 			clusterName: clusterName,
 			agentID:     agentID,
 		},
@@ -59,6 +61,9 @@ func (o *mqttAgentOptions) Client(ctx context.Context) (cloudevents.Client, erro
 	receiver, err := o.GetCloudEventsClient(
 		ctx,
 		fmt.Sprintf("%s-client", o.agentID),
+		func(err error) {
+			o.errorChan <- err
+		},
 		cloudeventsmqtt.WithPublish(&paho.Publish{QoS: byte(o.PubQoS)}),
 		cloudeventsmqtt.WithSubscribe(
 			&paho.Subscribe{
@@ -75,4 +80,8 @@ func (o *mqttAgentOptions) Client(ctx context.Context) (cloudevents.Client, erro
 		return nil, err
 	}
 	return receiver, nil
+}
+
+func (o *mqttAgentOptions) ErrorChan() <-chan error {
+	return o.errorChan
 }

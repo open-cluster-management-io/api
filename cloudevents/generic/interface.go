@@ -61,5 +61,5 @@ type CloudEventsClient[T ResourceObject] interface {
 
 	// Subscribe the resources status/spec event to the broker to receive the resources status/spec and use
 	// ResourceHandler to handle them.
-	Subscribe(ctx context.Context, handlers ...ResourceHandler[T]) error
+	Subscribe(ctx context.Context, handlers ...ResourceHandler[T])
 }

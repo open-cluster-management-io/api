@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"k8s.io/client-go/rest"
-	"k8s.io/klog/v2"
 
 	workclientset "open-cluster-management.io/api/client/work/clientset/versioned"
 	workv1client "open-cluster-management.io/api/client/work/clientset/versioned/typed/work/v1"
@@ -144,12 +143,7 @@ func (b *ClientHolderBuilder) newAgentClients(ctx context.Context, config *mqtt.
 	// only written from the server. we may need to revisit the implementation in the future.
 	manifestWorkClient.SetLister(namespacedLister)
 
-	go func() {
-		err := cloudEventsClient.Subscribe(ctx, agenthandler.NewManifestWorkAgentHandler(namespacedLister, watcher))
-		if err != nil {
-			klog.Errorf("failed to subscribe to %s, %v", config.BrokerHost, err)
-		}
-	}()
+	cloudEventsClient.Subscribe(ctx, agenthandler.NewManifestWorkAgentHandler(namespacedLister, watcher))
 
 	return &ClientHolder{
 		workClient:           workClient,

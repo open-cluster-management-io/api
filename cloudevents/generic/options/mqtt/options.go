@@ -124,15 +124,18 @@ func (o *MQTTOptions) GetMQTTConnectOption(clientID string) *paho.Connect {
 func (o *MQTTOptions) GetCloudEventsClient(
 	ctx context.Context,
 	clientID string,
-	clientOpts ...cloudeventsmqtt.Option) (cloudevents.Client, error) {
+	errorHandler func(error),
+	clientOpts ...cloudeventsmqtt.Option,
+) (cloudevents.Client, error) {
 	netConn, err := o.GetNetConn()
 	if err != nil {
 		return nil, err
 	}
 
 	config := &paho.ClientConfig{
-		ClientID: clientID,
-		Conn:     netConn,
+		ClientID:      clientID,
+		Conn:          netConn,
+		OnClientError: errorHandler,
 	}
 
 	opts := []cloudeventsmqtt.Option{cloudeventsmqtt.WithConnect(o.GetMQTTConnectOption(clientID))}

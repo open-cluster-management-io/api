@@ -18,6 +18,10 @@ type CloudEventsOptions interface {
 
 	// Client returns a cloudevents client for sending and receiving cloudevents
 	Client(ctx context.Context) (cloudevents.Client, error)
+
+	// ErrorChan returns a chan which will receive the cloudevents connection error. The source/agent client will try to
+	// reconnect the when this error occurs.
+	ErrorChan() <-chan error
 }
 
 // EventRateLimit for limiting the event sending rate.

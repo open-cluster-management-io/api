@@ -273,9 +273,7 @@ func TestSpecResyncResponse(t *testing.T) {
 				t.Errorf("unexpected error %v", err)
 			}
 
-			if err := source.Subscribe(context.TODO()); err != nil {
-				t.Errorf("unexpected error %v", err)
-			}
+			source.receive(context.TODO(), c.requestEvent)
 
 			c.validate(fakeClient.GetSentEvents())
 		})
@@ -408,13 +406,11 @@ func TestReceiveResourceStatus(t *testing.T) {
 
 			var actualEvent types.ResourceAction
 			var actualRes *mockResource
-			if err := source.Subscribe(context.TODO(), func(event types.ResourceAction, resource *mockResource) error {
+			source.receive(context.TODO(), c.requestEvent, func(event types.ResourceAction, resource *mockResource) error {
 				actualEvent = event
 				actualRes = resource
 				return nil
-			}); err != nil {
-				t.Errorf("unexpected error %v", err)
-			}
+			})
 
 			c.validate(actualEvent, actualRes)
 		})
