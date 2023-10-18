@@ -87,10 +87,13 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 var _ = ginkgo.AfterSuite(func() {
 	ginkgo.By("tearing down the test environment")
 
-	err := kubernetesClient.CoreV1().Namespaces().
-		Delete(context.TODO(), testNamespace, metav1.DeleteOptions{})
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	// Skip if client wasn't instantiated
+	if kubernetesClient != nil {
+		err := kubernetesClient.CoreV1().Namespaces().
+			Delete(context.TODO(), testNamespace, metav1.DeleteOptions{})
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
-	err = testEnv.Stop()
-	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		err = testEnv.Stop()
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	}
 })
