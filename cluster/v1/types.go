@@ -262,15 +262,19 @@ const (
 	// ManagedClusterConditionDeleting is a condition which means the cluster is in deletion process.
 	ManagedClusterConditionDeleting string = "Deleting"
 
-	// ConditionDeletingReasonResourceRemaining is a reason for the condition ManagedClusterIsDeleting, which means
+	// ConditionDeletingReasonResourceRemaining is a reason for the condition ManagedClusterConditionDeleting, which means
 	// there are resources are remaining during deletion process.
 	ConditionDeletingReasonResourceRemaining string = "ResourceRemaining"
 
-	// ConditionDeletingReasonResourceError is a reason for the condition ManagedClusterIsDeleting, which means
+	// ConditionDeletingReasonNoResource is a reason for the condition ManagedClusterConditionDeleting, which means
+	// there is no resources left in the cluster ns during the deletion process.
+	ConditionDeletingReasonNoResource string = "NoResource"
+
+	// ConditionDeletingReasonResourceError is a reason for the condition ManagedClusterConditionDeleting, which means
 	// meet errors during the deletion process.
 	ConditionDeletingReasonResourceError string = "DeletingError"
 
-	// CleanupPriorityAnnotationKey is a annotation for the resources deployed in cluster ns which are waiting to
+	// CleanupPriorityAnnotationKey is an annotation for the resources deployed in cluster ns which are waiting to
 	// be cleaned up after cluster is deleted.
 	// The value is an integer value [0,100], The larger the value, the later the order of deletion.
 	// The deletion order is :
