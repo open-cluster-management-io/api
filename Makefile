@@ -50,8 +50,7 @@ verify-scripts:
 	bash -x hack/verify-crds.sh
 	bash -x hack/verify-codegen.sh
 .PHONY: verify-scripts
-# verify: check-env verify-scripts verify-codegen-crds verify-gocilint
-verify: verify-gocilint
+verify: check-env verify-scripts verify-codegen-crds verify-gocilint
 
 update-scripts:
 	hack/update-deepcopy.sh
@@ -71,7 +70,7 @@ include ./test/integration-test.mk
 
 check-env:
 ifeq ($(GOPATH),)
-	$(warning "environment variable GOPATH is empty, auto set from go env GOPATH") 
+	$(warning "environment variable GOPATH is empty, auto set from go env GOPATH")
 export GOPATH=$(shell go env GOPATH)
 endif
 .PHONY: check-env
