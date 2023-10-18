@@ -38,7 +38,6 @@ const (
 )
 
 // ClusterRolloutStatus holds the rollout status information for a cluster.
-// +k8s:deepcopy-gen=true
 type ClusterRolloutStatus struct {
 	// cluster name
 	ClusterName string
@@ -54,7 +53,6 @@ type ClusterRolloutStatus struct {
 }
 
 // RolloutResult contains list of clusters that are timeOut, removed and required to rollOut
-// +k8s:deepcopy-gen=true
 type RolloutResult struct {
 	// ClustersToRollout is a slice of ClusterRolloutStatus that will be rolled out.
 	ClustersToRollout []ClusterRolloutStatus
