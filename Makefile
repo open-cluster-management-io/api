@@ -54,6 +54,10 @@ verify: check-env verify-scripts verify-codegen-crds verify-gocilint
 
 update-scripts:
 	hack/update-deepcopy.sh
+	# Using controller-gen as a workaround for cluster:v1alpha1 because gengo
+	# isn't respecting deepcopy-gen:false nor does it support generics
+	# Issue: https://github.com/kubernetes/gengo/issues/225
+	$(CONTROLLER_GEN) object:headerFile="hack/empty.txt" paths="./cluster/v1alpha1"
 	hack/update-swagger-docs.sh
 	hack/update-codegen.sh
 	hack/update-v1beta1-crds.sh
