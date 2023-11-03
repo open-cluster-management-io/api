@@ -418,7 +418,7 @@ func progressivePerGroup(
 
 			// As it is perGroup Return if there are clusters to rollOut,
 			// or there was a breach of the MaxFailure configuration
-			if len(rolloutClusters) > 0 || failureBreach {
+			if len(rolloutClusters) > maxGroupFailures || failureBreach {
 				return RolloutResult{
 					ClustersToRollout: rolloutClusters,
 					ClustersTimeOut:   timeoutClusters,

@@ -1255,6 +1255,102 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 		},
 		{
+			name: "test progressivePerGroup rollout with timeout None, first group 1 cluster is failing and maxFailures is 1",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt(1)},
+				},
+			},
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2", "cluster3"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster4", "cluster5", "cluster6"),
+				{GroupName: "", GroupIndex: 2}:       sets.New[string]("cluster7", "cluster8", "cluster9"),
+			},
+			clusterRolloutStatusFunc: dummyWorkloadClusterRolloutStatusFunc,
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt(1)},
+				},
+			},
+			existingWorkloads: []dummyWorkload{
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster1",
+					State:              done,
+					LastTransitionTime: &fakeTime_60s,
+				},
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster2",
+					State:              failed,
+					LastTransitionTime: &fakeTime_120s,
+				},
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster3",
+					State:              done,
+					LastTransitionTime: &fakeTime_60s,
+				},
+			},
+			expectRolloutResult: RolloutResult{
+				ClustersToRollout: []ClusterRolloutStatus{
+					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
+					{ClusterName: "cluster4", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 1}, Status: ToApply},
+					{ClusterName: "cluster5", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 1}, Status: ToApply},
+					{ClusterName: "cluster6", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 1}, Status: ToApply},
+				},
+			},
+		},
+		{
+			name: "test progressivePerGroup rollout with timeout None, first group 2 clusters are failing 2 and maxFailures is 30%",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromString("30%")},
+				},
+			},
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2", "cluster3"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster4", "cluster5", "cluster6"),
+				{GroupName: "", GroupIndex: 2}:       sets.New[string]("cluster7", "cluster8", "cluster9"),
+			},
+			clusterRolloutStatusFunc: dummyWorkloadClusterRolloutStatusFunc,
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromString("30%")},
+				},
+			},
+			existingWorkloads: []dummyWorkload{
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster1",
+					State:              done,
+					LastTransitionTime: &fakeTime_60s,
+				},
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster2",
+					State:              failed,
+					LastTransitionTime: &fakeTime_120s,
+				},
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster3",
+					State:              failed,
+					LastTransitionTime: &fakeTime_120s,
+				},
+			},
+			expectRolloutResult: RolloutResult{
+				ClustersToRollout: []ClusterRolloutStatus{
+					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
+					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
+				},
+			},
+		},
+		{
 			name: "test ProgressivePerGroup rollout with mandatoryDecisionGroup failing and timeout 90s ",
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
@@ -1307,6 +1403,62 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				ClustersTimeOut: []ClusterRolloutStatus{
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
+				},
+			},
+		},
+		{
+			name: "test progressivePerGroup rollout with mandatoryDecisionGroup failing 1 cluster, timeout 90s and with maxFailures is 1",
+			rolloutStrategy: RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(1)},
+				},
+			},
+			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
+				{GroupName: "group1", GroupIndex: 0}: sets.New[string]("cluster1", "cluster2", "cluster3"),
+				{GroupName: "", GroupIndex: 1}:       sets.New[string]("cluster4", "cluster5", "cluster6"),
+				{GroupName: "", GroupIndex: 2}:       sets.New[string]("cluster7", "cluster8", "cluster9"),
+			},
+			clusterRolloutStatusFunc: dummyWorkloadClusterRolloutStatusFunc,
+			expectRolloutStrategy: &RolloutStrategy{
+				Type: ProgressivePerGroup,
+				ProgressivePerGroup: &RolloutProgressivePerGroup{
+					MandatoryDecisionGroups: MandatoryDecisionGroups{
+						MandatoryDecisionGroups: []MandatoryDecisionGroup{
+							{GroupName: "group1"},
+						},
+					},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(1)},
+				},
+			},
+			existingWorkloads: []dummyWorkload{
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster1",
+					State:              done,
+					LastTransitionTime: &fakeTime_60s,
+				},
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster2",
+					State:              failed,
+					LastTransitionTime: &fakeTime_120s,
+				},
+				{
+					ClusterGroup:       clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0},
+					ClusterName:        "cluster3",
+					State:              done,
+					LastTransitionTime: &fakeTime_60s,
+				},
+			},
+			expectRolloutResult: RolloutResult{
+				ClustersTimeOut: []ClusterRolloutStatus{
+					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
 			},
 		},
