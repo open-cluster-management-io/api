@@ -592,11 +592,11 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 		},
 		{
-			name: "test progressive rollout with timeout 0s",
+			name: "test progressive rollout with timeout 0s, maxFailures 3",
 			rolloutStrategy: RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					RolloutConfig:  RolloutConfig{ProgressDeadline: "0s"},
+					RolloutConfig:  RolloutConfig{ProgressDeadline: "0s", MaxFailures: intstr.FromInt(3)},
 					MaxConcurrency: intstr.FromInt(2),
 				},
 			},
@@ -608,7 +608,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					RolloutConfig:  RolloutConfig{ProgressDeadline: "0s"},
+					RolloutConfig:  RolloutConfig{ProgressDeadline: "0s", MaxFailures: intstr.FromInt(3)},
 					MaxConcurrency: intstr.FromInt(2),
 				},
 			},
@@ -644,7 +644,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 		},
 		{
-			name: "test progressive rollout with mandatoryDecisionGroup and timeout 90s ",
+			name: "test progressive rollout with mandatoryDecisionGroup and timeout 90s",
 			rolloutStrategy: RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
@@ -701,6 +701,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				ClustersTimeOut: []ClusterRolloutStatus{
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
+				MaxFailureBreach: true,
 			},
 		},
 		{
@@ -854,6 +855,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				ClustersTimeOut: []ClusterRolloutStatus{
 					{ClusterName: "cluster1", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
+				MaxFailureBreach: true,
 			},
 		},
 		{
@@ -1086,14 +1088,15 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				ClustersTimeOut: []ClusterRolloutStatus{
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
+				MaxFailureBreach: true,
 			},
 		},
 		{
-			name: "test progressivePerGroup rollout with timeout 90s and first group timeOut",
+			name: "test progressivePerGroup rollout with timeout 90s and first group timeOut, maxFailures 2",
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s"},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1105,7 +1108,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s"},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1144,7 +1147,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s"},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1156,7 +1159,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s"},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1252,14 +1255,15 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				ClustersToRollout: []ClusterRolloutStatus{
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
 				},
+				MaxFailureBreach: true,
 			},
 		},
 		{
-			name: "test progressivePerGroup rollout with timeout None, first group 1 cluster is failing and maxFailures is 1",
+			name: "test progressivePerGroup rollout with timeout None, first group 1 cluster is failing and maxFailures is 2",
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt(1)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1271,7 +1275,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt(1)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1348,6 +1352,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
 					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
 				},
+				MaxFailureBreach: true,
 			},
 		},
 		{
@@ -1404,10 +1409,11 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
+				MaxFailureBreach: true,
 			},
 		},
 		{
-			name: "test progressivePerGroup rollout with mandatoryDecisionGroup failing 1 cluster, timeout 90s and with maxFailures is 1",
+			name: "test progressivePerGroup rollout with mandatoryDecisionGroup failing 1 cluster, timeout 90s and with maxFailures is 2",
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
@@ -1416,7 +1422,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(1)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1433,7 +1439,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(1)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1460,6 +1466,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 				ClustersTimeOut: []ClusterRolloutStatus{
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
+				MaxFailureBreach: true,
 			},
 		},
 		{
@@ -2003,11 +2010,11 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 			},
 		},
 		{
-			name: "test progressivePerGroup rollout with timeout 90s and cluster removed after rollout start while the group timeout.",
+			name: "test progressivePerGroup rollout with timeout 90s and cluster removed after rollout start while the group timeout",
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s"},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -2223,7 +2230,7 @@ func TestDetermineRolloutStatus(t *testing.T) {
 	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 	for _, tc := range testCases {
 		var rolloutClusters, timeoutClusters []ClusterRolloutStatus
-		rolloutClusters, timeoutClusters = determineRolloutStatus(tc.clusterStatus, tc.minSuccessTime, tc.timeout, rolloutClusters, timeoutClusters)
+		rolloutClusters, timeoutClusters = determineRolloutStatus(&tc.clusterStatus, tc.minSuccessTime, tc.timeout, rolloutClusters, timeoutClusters)
 		if !reflect.DeepEqual(rolloutClusters, tc.expectRolloutClusters) {
 			t.Errorf("Case: %v Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v", tc.name, tc.expectRolloutClusters, rolloutClusters)
 			return

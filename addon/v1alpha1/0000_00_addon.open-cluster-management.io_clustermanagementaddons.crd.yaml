@@ -160,8 +160,10 @@ spec:
                                     and ProgressivePerGroup. For Progressive, this
                                     is considered over the total number of clusters.
                                     For ProgressivePerGroup, this is considered according
-                                    to the size of the current group. Default is that
-                                    no failures are tolerated.
+                                    to the size of the current group. For both Progressive
+                                    and ProgressivePerGroup, the MaxFailures does
+                                    not apply for MandatoryDecisionGroups, which tolerate
+                                    no failures. Default is that no failures are tolerated.
                                   pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                   x-kubernetes-int-or-string: true
                                 minSuccessTime:
@@ -255,8 +257,10 @@ spec:
                                     and ProgressivePerGroup. For Progressive, this
                                     is considered over the total number of clusters.
                                     For ProgressivePerGroup, this is considered according
-                                    to the size of the current group. Default is that
-                                    no failures are tolerated.
+                                    to the size of the current group. For both Progressive
+                                    and ProgressivePerGroup, the MaxFailures does
+                                    not apply for MandatoryDecisionGroups, which tolerate
+                                    no failures. Default is that no failures are tolerated.
                                   pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                   x-kubernetes-int-or-string: true
                                 minSuccessTime:
@@ -339,8 +343,10 @@ spec:
                                     and ProgressivePerGroup. For Progressive, this
                                     is considered over the total number of clusters.
                                     For ProgressivePerGroup, this is considered according
-                                    to the size of the current group. Default is that
-                                    no failures are tolerated.
+                                    to the size of the current group. For both Progressive
+                                    and ProgressivePerGroup, the MaxFailures does
+                                    not apply for MandatoryDecisionGroups, which tolerate
+                                    no failures. Default is that no failures are tolerated.
                                   pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                   x-kubernetes-int-or-string: true
                                 minSuccessTime:
@@ -385,20 +391,6 @@ spec:
                               type: object
                             type:
                               default: All
-                              description: Rollout strategy Types are All, Progressive
-                                and ProgressivePerGroup 1) All means apply the workload
-                                to all clusters in the decision groups at once. 2)
-                                Progressive means apply the workload to the selected
-                                clusters progressively per cluster. The workload will
-                                not be applied to the next cluster unless one of the
-                                current applied clusters reach the successful state
-                                and haven't breached the MaxFailures configuration.
-                                3) ProgressivePerGroup means apply the workload to
-                                decisionGroup clusters progressively per group. The
-                                workload will not be applied to the next decisionGroup
-                                unless all clusters in the current group reach the
-                                successful state and haven't breached the MaxFailures
-                                configuration.
                               enum:
                               - All
                               - Progressive

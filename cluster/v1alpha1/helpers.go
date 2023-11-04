@@ -162,10 +162,10 @@ func (r *RolloutHandler[T]) getProgressiveClusters(rolloutStrategy RolloutStrate
 	groupKeys := decisionGroupsToGroupKeys(strategy.Progressive.MandatoryDecisionGroups.MandatoryDecisionGroups)
 	clusterGroups = r.pdTracker.ExistingClusterGroups(groupKeys...)
 
-	// Perform progressive rollOut for mandatory decision groups first.
+	// Perform progressive rollOut for mandatory decision groups first, tolerating no failures
 	if len(clusterGroups) > 0 {
 		rolloutResult := progressivePerGroup(
-			clusterGroups, intstr.FromInt(maxFailures), minSuccessTime, failureTimeout, currentClusterStatus, true,
+			clusterGroups, intstr.FromInt(0), minSuccessTime, failureTimeout, currentClusterStatus,
 		)
 		if len(rolloutResult.ClustersToRollout) > 0 || len(rolloutResult.ClustersTimeOut) > 0 {
 			rolloutResult.ClustersRemoved = removedClusterStatus
@@ -219,9 +219,9 @@ func (r *RolloutHandler[T]) getProgressivePerGroupClusters(rolloutStrategy Rollo
 	groupKeys := decisionGroupsToGroupKeys(mandatoryDecisionGroups)
 	clusterGroups = r.pdTracker.ExistingClusterGroups(groupKeys...)
 
-	// Perform progressive rollout per group for mandatory decision groups first
+	// Perform progressive rollout per group for mandatory decision groups first, tolerating no failures
 	if len(clusterGroups) > 0 {
-		rolloutResult := progressivePerGroup(clusterGroups, maxFailures, minSuccessTime, failureTimeout, currentClusterStatus, false)
+		rolloutResult := progressivePerGroup(clusterGroups, intstr.FromInt(0), minSuccessTime, failureTimeout, currentClusterStatus)
 
 		if len(rolloutResult.ClustersToRollout) > 0 || len(rolloutResult.ClustersTimeOut) > 0 {
 			rolloutResult.ClustersRemoved = removedClusterStatus
@@ -233,7 +233,7 @@ func (r *RolloutHandler[T]) getProgressivePerGroupClusters(rolloutStrategy Rollo
 	restClusterGroups := r.pdTracker.ExistingClusterGroupsBesides(groupKeys...)
 
 	// Perform progressive rollout per group for the remaining decision groups
-	rolloutResult := progressivePerGroup(restClusterGroups, maxFailures, minSuccessTime, failureTimeout, currentClusterStatus, false)
+	rolloutResult := progressivePerGroup(restClusterGroups, maxFailures, minSuccessTime, failureTimeout, currentClusterStatus)
 	rolloutResult.ClustersRemoved = removedClusterStatus
 
 	return &strategy, rolloutResult, nil
@@ -291,7 +291,7 @@ func progressivePerCluster(
 
 		// If there was a breach of MaxFailures, only handle clusters that have already had workload applied
 		if !failureBreach || failureBreach && status.Status != ToApply {
-			rolloutClusters, timeoutClusters = determineRolloutStatus(status, minSuccessTime, timeout, rolloutClusters, timeoutClusters)
+			rolloutClusters, timeoutClusters = determineRolloutStatus(&status, minSuccessTime, timeout, rolloutClusters, timeoutClusters)
 		}
 
 		// Keep track of TimeOut or Failed clusters and check total against MaxFailures
@@ -360,44 +360,43 @@ func progressivePerGroup(
 	minSuccessTime time.Duration,
 	timeout time.Duration,
 	existingClusterStatus []ClusterRolloutStatus,
-	accumulateFailures bool,
 ) RolloutResult {
 	var rolloutClusters, timeoutClusters []ClusterRolloutStatus
-	existingClusters := make(map[string]bool)
+	existingClusters := make(map[string]RolloutStatus)
 
 	for _, status := range existingClusterStatus {
 		if status.ClusterName == "" {
 			continue
 		}
 
-		if status.Status == ToApply {
-			// Set as false to consider the cluster in the decisionGroups iteration.
-			existingClusters[status.ClusterName] = false
-		} else {
-			existingClusters[status.ClusterName] = true
-			rolloutClusters, timeoutClusters = determineRolloutStatus(status, minSuccessTime, timeout, rolloutClusters, timeoutClusters)
+		// ToApply will be reconsidered in the decisionGroups iteration.
+		if status.Status != ToApply {
+			rolloutClusters, timeoutClusters = determineRolloutStatus(&status, minSuccessTime, timeout, rolloutClusters, timeoutClusters)
+			existingClusters[status.ClusterName] = status.Status
 		}
 	}
 
-	var failureCount int
+	totalFailureCount := 0
 	failureBreach := false
 	clusterGroupKeys := clusterGroupsMap.GetOrderedGroupKeys()
 	for _, key := range clusterGroupKeys {
+		groupFailureCount := 0
 		if subclusters, ok := clusterGroupsMap[key]; ok {
-			// Only reset the failure count for ProgressivePerGroup
-			// since Progressive is over the total number of clusters
-			if !accumulateFailures {
-				failureCount = 0
-			}
-			failureBreach = false
 			// Calculate the max failure threshold for the group--the returned error was checked
 			// previously, so it's ignored here
-			maxGroupFailures, _ := calculateRolloutSize(maxFailures, subclusters.Len(), 0)
+			maxGroupFailures, _ := calculateRolloutSize(maxFailures, len(subclusters), 0)
 			// Iterate through clusters in the group
 			clusters := subclusters.UnsortedList()
 			sort.Strings(clusters)
 			for _, cluster := range clusters {
-				if existingClusters[cluster] {
+				if status, ok := existingClusters[cluster]; ok {
+					// Keep track of TimeOut or Failed clusters and check total against MaxFailures
+					if status == TimeOut || status == Failed {
+						groupFailureCount++
+
+						failureBreach = groupFailureCount > maxGroupFailures
+					}
+
 					continue
 				}
 
@@ -407,18 +406,13 @@ func progressivePerGroup(
 					GroupKey:    key,
 				}
 				rolloutClusters = append(rolloutClusters, status)
-
-				// Keep track of TimeOut or Failed clusters and check total against MaxFailures
-				if status.Status == TimeOut || status.Status == Failed {
-					failureCount++
-
-					failureBreach = failureCount > maxGroupFailures
-				}
 			}
 
-			// As it is perGroup Return if there are clusters to rollOut,
-			// or there was a breach of the MaxFailure configuration
-			if len(rolloutClusters) > maxGroupFailures || failureBreach {
+			totalFailureCount += groupFailureCount
+
+			// As it is perGroup, return if there are clusters to rollOut that aren't
+			// Failed/Timeout, or there was a breach of the MaxFailure configuration
+			if len(rolloutClusters)-totalFailureCount > 0 || failureBreach {
 				return RolloutResult{
 					ClustersToRollout: rolloutClusters,
 					ClustersTimeOut:   timeoutClusters,
@@ -448,7 +442,7 @@ func progressivePerGroup(
 //     the rollOut Clusters.
 //  2. If timeout is set to 0, the function append the clusterStatus to the timeOut clusters.
 func determineRolloutStatus(
-	status ClusterRolloutStatus,
+	status *ClusterRolloutStatus,
 	minSuccessTime time.Duration,
 	timeout time.Duration,
 	rolloutClusters []ClusterRolloutStatus,
@@ -457,13 +451,13 @@ func determineRolloutStatus(
 
 	switch status.Status {
 	case ToApply:
-		rolloutClusters = append(rolloutClusters, status)
+		rolloutClusters = append(rolloutClusters, *status)
 	case Succeeded:
 		// If the cluster succeeded but is still within the MinSuccessTime (i.e. "soak" time),
 		// still add it to the list of rolloutClusters
 		minSuccessTimeTime := getTimeOutTime(status.LastTransitionTime, minSuccessTime)
 		if RolloutClock.Now().Before(minSuccessTimeTime.Time) {
-			rolloutClusters = append(rolloutClusters, status)
+			rolloutClusters = append(rolloutClusters, *status)
 		}
 
 		return rolloutClusters, timeoutClusters
@@ -474,10 +468,10 @@ func determineRolloutStatus(
 		status.TimeOutTime = timeOutTime
 		// check if current time is before the timeout time
 		if RolloutClock.Now().Before(timeOutTime.Time) {
-			rolloutClusters = append(rolloutClusters, status)
+			rolloutClusters = append(rolloutClusters, *status)
 		} else {
 			status.Status = TimeOut
-			timeoutClusters = append(timeoutClusters, status)
+			timeoutClusters = append(timeoutClusters, *status)
 		}
 	}
 
