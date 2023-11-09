@@ -11,6 +11,7 @@ import (
 
 	cloudeventsmqtt "github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/eclipse/paho.golang/packets"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/spf13/pflag"
 )
@@ -90,7 +91,8 @@ func (o *MQTTOptions) GetNetConn() (net.Conn, error) {
 			return nil, fmt.Errorf("failed to connect to MQTT broker %s, %v", o.BrokerHost, err)
 		}
 
-		return conn, nil
+		// ensure parallel writes are thread-Safe
+		return packets.NewThreadSafeConn(conn), nil
 	}
 
 	conn, err := net.Dial("tcp", o.BrokerHost)
@@ -98,7 +100,8 @@ func (o *MQTTOptions) GetNetConn() (net.Conn, error) {
 		return nil, fmt.Errorf("failed to connect to MQTT broker %s, %v", o.BrokerHost, err)
 	}
 
-	return conn, nil
+	// ensure parallel writes are thread-Safe
+	return packets.NewThreadSafeConn(conn), nil
 }
 
 func (o *MQTTOptions) GetMQTTConnectOption(clientID string) *paho.Connect {

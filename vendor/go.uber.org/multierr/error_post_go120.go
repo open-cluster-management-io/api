@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Uber Technologies, Inc.
+// Copyright (c) 2017-2023 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package atomic
+//go:build go1.20
+// +build go1.20
 
-//go:generate bin/gen-atomicwrapper -name=String -type=string -wrapped=Value -file=string.go
+package multierr
 
-// String returns the wrapped value.
-func (s *String) String() string {
-	return s.Load()
+// Unwrap returns a list of errors wrapped by this multierr.
+func (merr *multiError) Unwrap() []error {
+	return merr.Errors()
 }
 
-// MarshalText encodes the wrapped string into a textual form.
-//
-// This makes it encodable as JSON, YAML, XML, and more.
-func (s *String) MarshalText() ([]byte, error) {
-	return []byte(s.Load()), nil
+type multipleErrors interface {
+	Unwrap() []error
 }
 
-// UnmarshalText decodes text and replaces the wrapped string with it.
-//
-// This makes it decodable from JSON, YAML, XML, and more.
-func (s *String) UnmarshalText(b []byte) error {
-	s.Store(string(b))
-	return nil
+func extractErrors(err error) []error {
+	if err == nil {
+		return nil
+	}
+
+	// check if the given err is an Unwrapable error that
+	// implements multipleErrors interface.
+	eg, ok := err.(multipleErrors)
+	if !ok {
+		return []error{err}
+	}
+
+	return append(([]error)(nil), eg.Unwrap()...)
 }
