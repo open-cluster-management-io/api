@@ -195,8 +195,8 @@ func (r *RolloutHandler[T]) getProgressivePerGroupClusters(rolloutStrategy Rollo
 	if strategy.ProgressivePerGroup == nil {
 		strategy.ProgressivePerGroup = &RolloutProgressivePerGroup{}
 	}
-	minSuccessTime := rolloutStrategy.ProgressivePerGroup.MinSuccessTime.Duration
-	maxFailures := rolloutStrategy.ProgressivePerGroup.MaxFailures
+	minSuccessTime := strategy.ProgressivePerGroup.MinSuccessTime.Duration
+	maxFailures := strategy.ProgressivePerGroup.MaxFailures
 
 	// Parse timeout for non-mandatory decision groups
 	failureTimeout, err := parseTimeout(strategy.ProgressivePerGroup.ProgressDeadline)
