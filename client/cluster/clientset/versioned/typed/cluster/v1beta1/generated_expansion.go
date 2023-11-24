@@ -2,6 +2,10 @@
 
 package v1beta1
 
+type ManagedClusterSetExpansion interface{}
+
+type ManagedClusterSetBindingExpansion interface{}
+
 type PlacementExpansion interface{}
 
 type PlacementDecisionExpansion interface{}
