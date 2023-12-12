@@ -11,17 +11,17 @@ verify="${VERIFY:-}"
 
 set -x
 # Because go mod sux, we have to fake the vendor for generator in order to be able to build it...
-mv ${CODEGEN_PKG}/generate-groups.sh ${CODEGEN_PKG}/generate-groups.sh.orig
-sed 's/GO111MODULE=on go install/#GO111MODULE=on go install/g' ${CODEGEN_PKG}/generate-groups.sh.orig > ${CODEGEN_PKG}/generate-groups.sh
+mv ${CODEGEN_PKG}/kube_codegen.sh ${CODEGEN_PKG}/kube_codegen.sh.orig
+sed 's/GO111MODULE=on go install/#GO111MODULE=on go install/g' ${CODEGEN_PKG}/kube_codegen.sh.orig > ${CODEGEN_PKG}/kube_codegen.sh
 function cleanup {
-  mv ${CODEGEN_PKG}/generate-groups.sh.orig ${CODEGEN_PKG}/generate-groups.sh
+  mv ${CODEGEN_PKG}/kube_codegen.sh.orig ${CODEGEN_PKG}/kube_codegen.sh
 }
 trap cleanup EXIT
 
 go install -mod=vendor ./${CODEGEN_PKG}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
 
 for group in cluster; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
+  bash ${CODEGEN_PKG}/kube_codegen.sh "client,lister,informer" \
     open-cluster-management.io/api/client/${group} \
     open-cluster-management.io/api \
     "${group}:v1,v1alpha1,v1beta1,v1beta2" \
@@ -30,7 +30,7 @@ for group in cluster; do
 done
 
 for group in work; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
+  bash ${CODEGEN_PKG}/kube_codegen.sh "client,lister,informer" \
     open-cluster-management.io/api/client/${group} \
     open-cluster-management.io/api \
     "${group}:v1,v1alpha1" \
@@ -39,7 +39,7 @@ for group in work; do
 done
 
 for group in operator; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
+  bash ${CODEGEN_PKG}/kube_codegen.sh "client,lister,informer" \
     open-cluster-management.io/api/client/${group} \
     open-cluster-management.io/api \
     "${group}:v1" \
@@ -48,7 +48,7 @@ for group in operator; do
 done
 
 for group in addon; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
+  bash ${CODEGEN_PKG}/kube_codegen.sh "client,lister,informer" \
     open-cluster-management.io/api/client/${group} \
     open-cluster-management.io/api \
     "${group}:v1alpha1" \
