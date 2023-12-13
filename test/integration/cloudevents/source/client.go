@@ -5,13 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cloudeventstypes "github.com/cloudevents/sdk-go/v2/types"
 
 	"open-cluster-management.io/api/cloudevents/generic"
-	"open-cluster-management.io/api/cloudevents/generic/options/mqtt"
+	"open-cluster-management.io/api/cloudevents/generic/options"
 	"open-cluster-management.io/api/cloudevents/generic/types"
 	"open-cluster-management.io/api/cloudevents/work/payload"
 	workv1 "open-cluster-management.io/api/work/v1"
@@ -66,14 +65,9 @@ func (c *resourceCodec) Decode(evt *cloudevents.Event) (*Resource, error) {
 		return nil, fmt.Errorf("failed to get resourceid extension: %v", err)
 	}
 
-	resourceVersion, err := cloudeventstypes.ToString(evtExtensions[types.ExtensionResourceVersion])
+	resourceVersion, err := cloudeventstypes.ToInteger(evtExtensions[types.ExtensionResourceVersion])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get resourceversion extension: %v", err)
-	}
-
-	resourceVersionInt, err := strconv.ParseInt(resourceVersion, 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert resourceversion - %v to int64", resourceVersion)
 	}
 
 	clusterName, err := cloudeventstypes.ToString(evtExtensions[types.ExtensionClusterName])
@@ -88,7 +82,7 @@ func (c *resourceCodec) Decode(evt *cloudevents.Event) (*Resource, error) {
 
 	resource := &Resource{
 		ResourceID:      resourceID,
-		ResourceVersion: resourceVersionInt,
+		ResourceVersion: int64(resourceVersion),
 		Namespace:       clusterName,
 		Status: ResourceStatus{
 			Conditions: manifestStatus.Conditions,
@@ -103,21 +97,23 @@ type resourceLister struct{}
 var _ generic.Lister[*Resource] = &resourceLister{}
 
 func (resLister *resourceLister) List(listOpts types.ListOptions) ([]*Resource, error) {
-	return GetStore().List(listOpts.ClusterName), nil
+	return store.List(listOpts.ClusterName), nil
 }
 
-func StartResourceSourceClient(ctx context.Context, config *mqtt.MQTTOptions) (generic.CloudEventsClient[*Resource], error) {
+func statusHashGetter(obj *Resource) (string, error) {
+	statusBytes, err := json.Marshal(&workv1.ManifestWorkStatus{Conditions: obj.Status.Conditions})
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal resource status, %v", err)
+	}
+	return fmt.Sprintf("%x", sha256.Sum256(statusBytes)), nil
+}
+
+func StartMQTTResourceSourceClient(ctx context.Context, sourceOptions *options.CloudEventsSourceOptions) (generic.CloudEventsClient[*Resource], error) {
 	client, err := generic.NewCloudEventSourceClient[*Resource](
 		ctx,
-		mqtt.NewSourceOptions(config, "integration-test"),
+		sourceOptions,
 		&resourceLister{},
-		func(obj *Resource) (string, error) {
-			statusBytes, err := json.Marshal(&workv1.ManifestWorkStatus{Conditions: obj.Status.Conditions})
-			if err != nil {
-				return "", fmt.Errorf("failed to marshal resource status, %v", err)
-			}
-			return fmt.Sprintf("%x", sha256.Sum256(statusBytes)), nil
-		},
+		statusHashGetter,
 		&resourceCodec{},
 	)
 
@@ -126,7 +122,35 @@ func StartResourceSourceClient(ctx context.Context, config *mqtt.MQTTOptions) (g
 	}
 
 	client.Subscribe(ctx, func(action types.ResourceAction, resource *Resource) error {
-		return GetStore().UpdateStatus(resource)
+		return store.UpdateStatus(resource)
+	})
+
+	return client, nil
+}
+
+type consumerResourceLister struct{}
+
+var _ generic.Lister[*Resource] = &consumerResourceLister{}
+
+func (fakeResLister *consumerResourceLister) List(listOpts types.ListOptions) ([]*Resource, error) {
+	return consumerStore.List(listOpts.ClusterName), nil
+}
+
+func StartGRPCResourceSourceClient(ctx context.Context, sourceOptions *options.CloudEventsSourceOptions) (generic.CloudEventsClient[*Resource], error) {
+	client, err := generic.NewCloudEventSourceClient[*Resource](
+		ctx,
+		sourceOptions,
+		&consumerResourceLister{},
+		statusHashGetter,
+		&resourceCodec{},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	client.Subscribe(context.TODO(), func(action types.ResourceAction, resource *Resource) error {
+		return consumerStore.UpdateStatus(resource)
 	})
 
 	return client, nil

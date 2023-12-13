@@ -5,25 +5,31 @@ import (
 	"sync"
 )
 
-type memoryStore struct {
+type MemoryStore struct {
 	sync.RWMutex
 	resources map[string]*Resource
+	eventHub  *EventHub
 }
 
-var store *memoryStore
+var store *MemoryStore
 var once sync.Once
+var consumerStore *MemoryStore
 
-func GetStore() *memoryStore {
+func InitStore(eventHub *EventHub) (*MemoryStore, *MemoryStore) {
 	once.Do(func() {
-		store = &memoryStore{
+		store = &MemoryStore{
+			resources: make(map[string]*Resource),
+			eventHub:  eventHub,
+		}
+		consumerStore = &MemoryStore{
 			resources: make(map[string]*Resource),
 		}
 	})
 
-	return store
+	return store, consumerStore
 }
 
-func (s *memoryStore) Add(resource *Resource) {
+func (s *MemoryStore) Add(resource *Resource) {
 	s.Lock()
 	defer s.Unlock()
 
@@ -33,7 +39,7 @@ func (s *memoryStore) Add(resource *Resource) {
 	}
 }
 
-func (s *memoryStore) Update(resource *Resource) error {
+func (s *MemoryStore) Update(resource *Resource) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -46,7 +52,14 @@ func (s *memoryStore) Update(resource *Resource) error {
 	return nil
 }
 
-func (s *memoryStore) UpdateStatus(resource *Resource) error {
+func (s *MemoryStore) UpSert(resource *Resource) {
+	s.Lock()
+	defer s.Unlock()
+
+	s.resources[resource.ResourceID] = resource
+}
+
+func (s *MemoryStore) UpdateStatus(resource *Resource) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -57,17 +70,18 @@ func (s *memoryStore) UpdateStatus(resource *Resource) error {
 
 	last.Status = resource.Status
 	s.resources[resource.ResourceID] = last
+	s.eventHub.Update(last)
 	return nil
 }
 
-func (s *memoryStore) Delete(resourceID string) {
+func (s *MemoryStore) Delete(resourceID string) {
 	s.Lock()
 	defer s.Unlock()
 
 	delete(s.resources, resourceID)
 }
 
-func (s *memoryStore) Get(resourceID string) (*Resource, error) {
+func (s *MemoryStore) Get(resourceID string) (*Resource, error) {
 	s.RLock()
 	defer s.RUnlock()
 
@@ -79,7 +93,7 @@ func (s *memoryStore) Get(resourceID string) (*Resource, error) {
 	return resource, nil
 }
 
-func (s *memoryStore) List(namespace string) []*Resource {
+func (s *MemoryStore) List(namespace string) []*Resource {
 	s.RLock()
 	defer s.RUnlock()
 

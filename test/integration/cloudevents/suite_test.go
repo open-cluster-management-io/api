@@ -2,6 +2,7 @@ package cloudevents
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	mochimqtt "github.com/mochi-mqtt/server/v2"
@@ -11,15 +12,24 @@ import (
 	"github.com/onsi/gomega"
 
 	"open-cluster-management.io/api/cloudevents/generic"
+	grpcoptions "open-cluster-management.io/api/cloudevents/generic/options/grpc"
 	"open-cluster-management.io/api/cloudevents/generic/options/mqtt"
 	"open-cluster-management.io/api/test/integration/cloudevents/source"
 )
 
 const mqttBrokerHost = "127.0.0.1:1883"
+const grpcServerHost = "127.0.0.1"
+const grpcServerPort = 8881
 
 var mqttBroker *mochimqtt.Server
 var mqttOptions *mqtt.MQTTOptions
-var sourceCloudEventsClient generic.CloudEventsClient[*source.Resource]
+var mqttSourceCloudEventsClient generic.CloudEventsClient[*source.Resource]
+var cloudEventServer *source.CloudEventServer
+var grpcOptions *grpcoptions.GRPCOptions
+var grpcSourceCloudEventsClient generic.CloudEventsClient[*source.Resource]
+var eventHub *source.EventHub
+var store *source.MemoryStore
+var consumerStore *source.MemoryStore
 
 func TestIntegration(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
@@ -28,6 +38,7 @@ func TestIntegration(t *testing.T) {
 
 var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 	ginkgo.By("bootstrapping test environment")
+	ctx := context.TODO()
 
 	// start a MQTT broker
 	mqttBroker = mochimqtt.New(&mochimqtt.Options{})
@@ -43,14 +54,34 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	}()
 
-	ginkgo.By("init the resource source store")
-	source.GetStore().Add(source.NewResource("cluster1", "resource1"))
-	source.GetStore().Add(source.NewResource("cluster2", "resource1"))
+	ginkgo.By("init the event hub")
+	eventHub = source.NewEventHub()
+	go func() {
+		eventHub.Start(ctx)
+	}()
 
-	ginkgo.By("start the resource source")
+	ginkgo.By("init the resource source store")
+	store, consumerStore = source.InitStore(eventHub)
+	// store.Add(source.NewResource("cluster1", "resource1"))
+	// store.Add(source.NewResource("cluster2", "resource1"))
+
+	cloudEventServer = source.NewCloudEventServer(store, eventHub)
+	go func() {
+		err := cloudEventServer.Start(fmt.Sprintf("%s:%d", grpcServerHost, grpcServerPort))
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	}()
+
+	ginkgo.By("start the resource grpc source client")
+	grpcOptions = grpcoptions.NewGRPCOptions()
+	grpcOptions.Host = grpcServerHost
+	grpcOptions.Port = grpcServerPort
+	grpcSourceCloudEventsClient, err = source.StartGRPCResourceSourceClient(ctx, grpcoptions.NewSourceOptions(grpcOptions, "integration-grpc-test"))
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	ginkgo.By("start the resource mqtt source client")
 	mqttOptions = mqtt.NewMQTTOptions()
 	mqttOptions.BrokerHost = mqttBrokerHost
-	sourceCloudEventsClient, err = source.StartResourceSourceClient(context.TODO(), mqttOptions)
+	mqttSourceCloudEventsClient, err = source.StartMQTTResourceSourceClient(ctx, mqtt.NewSourceOptions(mqttOptions, "integration-mqtt-test"))
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	close(done)
