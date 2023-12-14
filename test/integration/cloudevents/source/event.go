@@ -22,8 +22,8 @@ func (c *EventClient) Receive() <-chan *Resource {
 	return c.resChan
 }
 
+// EventHub is a hub that can broadcast resource status change events to registered clients.
 type EventHub struct {
-	// lock for registered watch clients
 	mu sync.RWMutex
 
 	// Registered clients.
@@ -33,7 +33,6 @@ type EventHub struct {
 	broadcast chan *Resource
 }
 
-// NewEventHub creates a new EventHub.
 func NewEventHub() *EventHub {
 	return &EventHub{
 		clients:   make(map[*EventClient]struct{}),
@@ -60,10 +59,7 @@ func (h *EventHub) Broadcast(res *Resource) {
 	h.broadcast <- res
 }
 
-func (h *EventHub) Update(res *Resource) {
-	h.Broadcast(res)
-}
-
+// Start starts the event hub.
 func (h *EventHub) Start(ctx context.Context) {
 	for {
 		select {

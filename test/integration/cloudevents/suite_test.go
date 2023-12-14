@@ -24,7 +24,7 @@ const grpcServerPort = 8881
 var mqttBroker *mochimqtt.Server
 var mqttOptions *mqtt.MQTTOptions
 var mqttSourceCloudEventsClient generic.CloudEventsClient[*source.Resource]
-var cloudEventServer *source.CloudEventServer
+var grpcServer *source.GRPCServer
 var grpcOptions *grpcoptions.GRPCOptions
 var grpcSourceCloudEventsClient generic.CloudEventsClient[*source.Resource]
 var eventHub *source.EventHub
@@ -60,14 +60,13 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 		eventHub.Start(ctx)
 	}()
 
-	ginkgo.By("init the resource source store")
+	ginkgo.By("init the resource store")
 	store, consumerStore = source.InitStore(eventHub)
-	// store.Add(source.NewResource("cluster1", "resource1"))
-	// store.Add(source.NewResource("cluster2", "resource1"))
 
-	cloudEventServer = source.NewCloudEventServer(store, eventHub)
+	ginkgo.By("start the resource grpc server")
+	grpcServer = source.NewGRPCServer(store, eventHub)
 	go func() {
-		err := cloudEventServer.Start(fmt.Sprintf("%s:%d", grpcServerHost, grpcServerPort))
+		err := grpcServer.Start(fmt.Sprintf("%s:%d", grpcServerHost, grpcServerPort))
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	}()
 
@@ -75,13 +74,13 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 	grpcOptions = grpcoptions.NewGRPCOptions()
 	grpcOptions.Host = grpcServerHost
 	grpcOptions.Port = grpcServerPort
-	grpcSourceCloudEventsClient, err = source.StartGRPCResourceSourceClient(ctx, grpcoptions.NewSourceOptions(grpcOptions, "integration-grpc-test"))
+	grpcSourceCloudEventsClient, err = source.StartGRPCResourceSourceClient(ctx, grpcOptions)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	ginkgo.By("start the resource mqtt source client")
 	mqttOptions = mqtt.NewMQTTOptions()
 	mqttOptions.BrokerHost = mqttBrokerHost
-	mqttSourceCloudEventsClient, err = source.StartMQTTResourceSourceClient(ctx, mqtt.NewSourceOptions(mqttOptions, "integration-mqtt-test"))
+	mqttSourceCloudEventsClient, err = source.StartMQTTResourceSourceClient(ctx, mqttOptions, eventHub)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	close(done)

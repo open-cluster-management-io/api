@@ -114,7 +114,7 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 	})
 
 	ginkgo.Context("Publish a resource", func() {
-		ginkgo.It("publish resource from consumer and resync resources between source and agent", func() {
+		ginkgo.It("publish resource from consumer and ensure resource can be received by source and agent", func() {
 			ginkgo.By("Publish a resource from consumer")
 			resourceName := "resource1"
 			clusterName := "cluster2"
@@ -162,12 +162,6 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 				newResource := source.NewResource(clusterName, newResourceName)
 				consumerStore.Add(newResource)
 				err := grpcSourceCloudEventsClient.Publish(context.TODO(), types.CloudEventsType{
-					CloudEventsDataType: payload.ManifestEventDataType,
-					SubResource:         types.SubResourceSpec,
-					Action:              "test_create_request",
-				}, newResource)
-				gomega.Expect(err).ToNot(gomega.HaveOccurred())
-				err = mqttSourceCloudEventsClient.Publish(context.TODO(), types.CloudEventsType{
 					CloudEventsDataType: payload.ManifestEventDataType,
 					SubResource:         types.SubResourceSpec,
 					Action:              "test_create_request",
@@ -269,12 +263,6 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 					Action:              "test_update_request",
 				}, resource)
 				gomega.Expect(err).ToNot(gomega.HaveOccurred())
-				err = mqttSourceCloudEventsClient.Publish(context.TODO(), types.CloudEventsType{
-					CloudEventsDataType: payload.ManifestEventDataType,
-					SubResource:         types.SubResourceSpec,
-					Action:              "test_update_request",
-				}, resource)
-				gomega.Expect(err).ToNot(gomega.HaveOccurred())
 			})
 
 			ginkgo.By("receive updated resource2 on the cluster2", func() {
@@ -302,7 +290,7 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 				}, 10*time.Second, 1*time.Second).Should(gomega.Succeed())
 			})
 
-			ginkgo.By("mark resource2 to be deleting on the consumer and publish to the soource", func() {
+			ginkgo.By("mark resource2 to be deleting on the consumer and publish to the source", func() {
 				resourceID := source.ResourceID(clusterName, newResourceName)
 				resource, err := consumerStore.Get(resourceID)
 				gomega.Expect(err).ToNot(gomega.HaveOccurred())
@@ -313,12 +301,6 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 				gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 				err = grpcSourceCloudEventsClient.Publish(context.TODO(), types.CloudEventsType{
-					CloudEventsDataType: payload.ManifestEventDataType,
-					SubResource:         types.SubResourceSpec,
-					Action:              "test_delete_request",
-				}, resource)
-				gomega.Expect(err).ToNot(gomega.HaveOccurred())
-				err = mqttSourceCloudEventsClient.Publish(context.TODO(), types.CloudEventsType{
 					CloudEventsDataType: payload.ManifestEventDataType,
 					SubResource:         types.SubResourceSpec,
 					Action:              "test_delete_request",
@@ -355,20 +337,26 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 				}, 10*time.Second, 1*time.Second).Should(gomega.Succeed())
 			})
 
-			ginkgo.By("delete resource2 from the consumer", func() {
+			ginkgo.By("delete resource2 from store", func() {
 				gomega.Eventually(func() error {
 					resourceID := source.ResourceID(clusterName, newResourceName)
-					resource, err := consumerStore.Get(resourceID)
+					resource, err := store.Get(resourceID)
 					if err != nil {
 						return err
 					}
 
-					if !meta.IsStatusConditionTrue(resource.Status.Conditions, "Deleted") {
-						return fmt.Errorf("unexpected status %v", resource.Status.Conditions)
+					if meta.IsStatusConditionTrue(resource.Status.Conditions, "Deleted") {
+						store.Delete(resourceID)
 					}
 
-					consumerStore.Delete(resourceID)
-					store.Delete(resourceID)
+					resource, err = consumerStore.Get(resourceID)
+					if err != nil {
+						return err
+					}
+
+					if meta.IsStatusConditionTrue(resource.Status.Conditions, "Deleted") {
+						consumerStore.Delete(resourceID)
+					}
 
 					return nil
 				}, 10*time.Second, 1*time.Second).Should(gomega.Succeed())

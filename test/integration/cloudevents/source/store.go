@@ -11,8 +11,8 @@ type MemoryStore struct {
 	eventHub  *EventHub
 }
 
-var store *MemoryStore
 var once sync.Once
+var store *MemoryStore
 var consumerStore *MemoryStore
 
 func InitStore(eventHub *EventHub) (*MemoryStore, *MemoryStore) {
@@ -37,6 +37,9 @@ func (s *MemoryStore) Add(resource *Resource) {
 	if !ok {
 		s.resources[resource.ResourceID] = resource
 	}
+	if s.eventHub != nil {
+		s.eventHub.Broadcast(resource)
+	}
 }
 
 func (s *MemoryStore) Update(resource *Resource) error {
@@ -49,6 +52,9 @@ func (s *MemoryStore) Update(resource *Resource) error {
 	}
 
 	s.resources[resource.ResourceID] = resource
+	if s.eventHub != nil {
+		s.eventHub.Broadcast(resource)
+	}
 	return nil
 }
 
@@ -57,6 +63,9 @@ func (s *MemoryStore) UpSert(resource *Resource) {
 	defer s.Unlock()
 
 	s.resources[resource.ResourceID] = resource
+	if s.eventHub != nil {
+		s.eventHub.Broadcast(resource)
+	}
 }
 
 func (s *MemoryStore) UpdateStatus(resource *Resource) error {
@@ -70,7 +79,9 @@ func (s *MemoryStore) UpdateStatus(resource *Resource) error {
 
 	last.Status = resource.Status
 	s.resources[resource.ResourceID] = last
-	s.eventHub.Update(last)
+	if s.eventHub != nil {
+		s.eventHub.Broadcast(resource)
+	}
 	return nil
 }
 

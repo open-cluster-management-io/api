@@ -5,12 +5,14 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cloudeventstypes "github.com/cloudevents/sdk-go/v2/types"
 
 	"open-cluster-management.io/api/cloudevents/generic"
-	"open-cluster-management.io/api/cloudevents/generic/options"
+	"open-cluster-management.io/api/cloudevents/generic/options/grpc"
+	"open-cluster-management.io/api/cloudevents/generic/options/mqtt"
 	"open-cluster-management.io/api/cloudevents/generic/types"
 	"open-cluster-management.io/api/cloudevents/work/payload"
 	workv1 "open-cluster-management.io/api/work/v1"
@@ -108,10 +110,10 @@ func statusHashGetter(obj *Resource) (string, error) {
 	return fmt.Sprintf("%x", sha256.Sum256(statusBytes)), nil
 }
 
-func StartMQTTResourceSourceClient(ctx context.Context, sourceOptions *options.CloudEventsSourceOptions) (generic.CloudEventsClient[*Resource], error) {
+func StartMQTTResourceSourceClient(ctx context.Context, config *mqtt.MQTTOptions, eventHub *EventHub) (generic.CloudEventsClient[*Resource], error) {
 	client, err := generic.NewCloudEventSourceClient[*Resource](
 		ctx,
-		sourceOptions,
+		mqtt.NewSourceOptions(config, "integration-test"),
 		&resourceLister{},
 		statusHashGetter,
 		&resourceCodec{},
@@ -125,6 +127,25 @@ func StartMQTTResourceSourceClient(ctx context.Context, sourceOptions *options.C
 		return store.UpdateStatus(resource)
 	})
 
+	eventClient := NewEventClient("+")
+	eventHub.Register(eventClient)
+	go func() {
+		for res := range eventClient.Receive() {
+			action := "test_create_update_request"
+			if !res.DeletionTimestamp.IsZero() {
+				action = "test_delete_request"
+			}
+			err := client.Publish(ctx, types.CloudEventsType{
+				CloudEventsDataType: payload.ManifestEventDataType,
+				SubResource:         types.SubResourceSpec,
+				Action:              types.EventAction(action),
+			}, res)
+			if err != nil {
+				log.Printf("failed to publish resource to mqtt %s, %v", res.ResourceID, err)
+			}
+		}
+	}()
+
 	return client, nil
 }
 
@@ -132,14 +153,14 @@ type consumerResourceLister struct{}
 
 var _ generic.Lister[*Resource] = &consumerResourceLister{}
 
-func (fakeResLister *consumerResourceLister) List(listOpts types.ListOptions) ([]*Resource, error) {
+func (consumerResLister *consumerResourceLister) List(listOpts types.ListOptions) ([]*Resource, error) {
 	return consumerStore.List(listOpts.ClusterName), nil
 }
 
-func StartGRPCResourceSourceClient(ctx context.Context, sourceOptions *options.CloudEventsSourceOptions) (generic.CloudEventsClient[*Resource], error) {
+func StartGRPCResourceSourceClient(ctx context.Context, config *grpc.GRPCOptions) (generic.CloudEventsClient[*Resource], error) {
 	client, err := generic.NewCloudEventSourceClient[*Resource](
 		ctx,
-		sourceOptions,
+		grpc.NewSourceOptions(config, "integration-grpc-test"),
 		&consumerResourceLister{},
 		statusHashGetter,
 		&resourceCodec{},

@@ -12,6 +12,7 @@ import (
 	cloudeventstypes "github.com/cloudevents/sdk-go/v2/types"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbv1 "open-cluster-management.io/api/cloudevents/generic/options/grpc/protobuf/v1"
 	grpcprotocol "open-cluster-management.io/api/cloudevents/generic/options/grpc/protocol"
@@ -19,20 +20,20 @@ import (
 	"open-cluster-management.io/api/cloudevents/work/payload"
 )
 
-type CloudEventServer struct {
+type GRPCServer struct {
 	pbv1.UnimplementedCloudEventServiceServer
 	store    *MemoryStore
 	eventHub *EventHub
 }
 
-func NewCloudEventServer(store *MemoryStore, eventHub *EventHub) *CloudEventServer {
-	return &CloudEventServer{
+func NewGRPCServer(store *MemoryStore, eventHub *EventHub) *GRPCServer {
+	return &GRPCServer{
 		store:    store,
 		eventHub: eventHub,
 	}
 }
 
-func (svr *CloudEventServer) Publish(ctx context.Context, pubReq *pbv1.PublishRequest) (*emptypb.Empty, error) {
+func (svr *GRPCServer) Publish(ctx context.Context, pubReq *pbv1.PublishRequest) (*emptypb.Empty, error) {
 	// pbEvt, err := pb.ToProto(evt)
 	evt, err := binding.ToEvent(ctx, grpcprotocol.NewMessage(pubReq.Event))
 	if err != nil {
@@ -48,7 +49,7 @@ func (svr *CloudEventServer) Publish(ctx context.Context, pubReq *pbv1.PublishRe
 	return &emptypb.Empty{}, nil
 }
 
-func (svr *CloudEventServer) Subscribe(subReq *pbv1.SubscriptionRequest, subServer pbv1.CloudEventService_SubscribeServer) error {
+func (svr *GRPCServer) Subscribe(subReq *pbv1.SubscriptionRequest, subServer pbv1.CloudEventService_SubscribeServer) error {
 	topicSplits := strings.Split(subReq.Topic, "/")
 	if len(topicSplits) != 5 {
 		return fmt.Errorf("invalid topic %s", subReq.Topic)
@@ -78,7 +79,7 @@ func (svr *CloudEventServer) Subscribe(subReq *pbv1.SubscriptionRequest, subServ
 	return nil
 }
 
-func (svr *CloudEventServer) Start(addr string) error {
+func (svr *GRPCServer) Start(addr string) error {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Printf("failed to listen: %v", err)
@@ -148,6 +149,14 @@ func decode(evt *cloudevents.Event) (*Resource, error) {
 		ResourceVersion: int64(resourceVersion),
 		Namespace:       clusterName,
 		Spec:            manifest.Manifest,
+	}
+
+	if deletionTimestampValue, exists := evtExtensions[types.ExtensionDeletionTimestamp]; exists {
+		deletionTimestamp, err := cloudeventstypes.ToTime(deletionTimestampValue)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert deletion timestamp %v to time.Time: %v", deletionTimestampValue, err)
+		}
+		resource.DeletionTimestamp = &metav1.Time{Time: deletionTimestamp}
 	}
 
 	return resource, nil
