@@ -2,7 +2,6 @@ package cloudevents
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	mochimqtt "github.com/mochi-mqtt/server/v2"
@@ -18,8 +17,7 @@ import (
 )
 
 const mqttBrokerHost = "127.0.0.1:1883"
-const grpcServerHost = "127.0.0.1"
-const grpcServerPort = 8881
+const grpcServerHost = "127.0.0.1:8881"
 
 var mqttBroker *mochimqtt.Server
 var mqttOptions *mqtt.MQTTOptions
@@ -66,14 +64,13 @@ var _ = ginkgo.BeforeSuite(func(done ginkgo.Done) {
 	ginkgo.By("start the resource grpc server")
 	grpcServer = source.NewGRPCServer(store, eventHub)
 	go func() {
-		err := grpcServer.Start(fmt.Sprintf("%s:%d", grpcServerHost, grpcServerPort))
+		err := grpcServer.Start(grpcServerHost)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	}()
 
 	ginkgo.By("start the resource grpc source client")
 	grpcOptions = grpcoptions.NewGRPCOptions()
-	grpcOptions.Host = grpcServerHost
-	grpcOptions.Port = grpcServerPort
+	grpcOptions.URL = grpcServerHost
 	grpcSourceCloudEventsClient, err = source.StartGRPCResourceSourceClient(ctx, grpcOptions)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 

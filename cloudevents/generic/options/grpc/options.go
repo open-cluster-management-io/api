@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"gopkg.in/yaml.v2"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
@@ -32,24 +32,60 @@ const (
 	StatusResyncTopic = "sources/+/clusters/statusresync"
 )
 
+// GRPCOptions holds the options that are used to build gRPC client.
 type GRPCOptions struct {
-	Host           string
-	Port           int
+	URL            string
 	CAFile         string
 	ClientCertFile string
 	ClientKeyFile  string
 }
 
-func NewGRPCOptions() *GRPCOptions {
-	return &GRPCOptions{}
+// GRPCConfig holds the information needed to build connect to gRPC server as a given user.
+type GRPCConfig struct {
+	// URL is the address of the gRPC server (host:port).
+	URL string `json:"url" yaml:"url"`
+	// CAFile is the file path to a cert file for the gRPC server certificate authority.
+	CAFile string `json:"caFile,omitempty" yaml:"caFile,omitempty"`
+	// ClientCertFile is the file path to a client cert file for TLS.
+	ClientCertFile string `json:"clientCertFile,omitempty" yaml:"clientCertFile,omitempty"`
+	// ClientKeyFile is the file path to a client key file for TLS.
+	ClientKeyFile string `json:"clientKeyFile,omitempty" yaml:"clientKeyFile,omitempty"`
 }
 
-func (o *GRPCOptions) AddFlags(flags *pflag.FlagSet) {
-	flags.StringVar(&o.Host, "grpc-host", o.Host, "The host of grpc server")
-	flags.IntVar(&o.Port, "grpc-port", o.Port, "The port of grpc server")
-	flags.StringVar(&o.CAFile, "server-ca", o.CAFile, "A file containing trusted CA certificates for server")
-	flags.StringVar(&o.ClientCertFile, "client-certificate", o.ClientCertFile, "The grpc client certificate file")
-	flags.StringVar(&o.ClientKeyFile, "client-key", o.ClientKeyFile, "The grpc client private key file")
+// BuildGRPCOptionsFromFlags builds configs from a config filepath.
+func BuildGRPCOptionsFromFlags(configPath string) (*GRPCOptions, error) {
+	configData, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	config := &GRPCConfig{}
+	if err := yaml.Unmarshal(configData, config); err != nil {
+		return nil, err
+	}
+
+	if config.URL == "" {
+		return nil, fmt.Errorf("url is required")
+	}
+
+	if (config.ClientCertFile == "" && config.ClientKeyFile != "") ||
+		(config.ClientCertFile != "" && config.ClientKeyFile == "") {
+		return nil, fmt.Errorf("either both or none of clientCertFile and clientKeyFile must be set")
+	}
+	if config.ClientCertFile != "" && config.ClientKeyFile != "" && config.CAFile == "" {
+		return nil, fmt.Errorf("setting clientCertFile and clientKeyFile requires caFile")
+	}
+
+	return &GRPCOptions{
+		URL:            config.URL,
+		CAFile:         config.CAFile,
+		ClientCertFile: config.ClientCertFile,
+		ClientKeyFile:  config.ClientKeyFile,
+	}, nil
+}
+
+func NewGRPCOptions() *GRPCOptions {
+	return &GRPCOptions{}
 }
 
 func (o *GRPCOptions) GetGRPCClientConn() (*grpc.ClientConn, error) {
@@ -80,17 +116,17 @@ func (o *GRPCOptions) GetGRPCClientConn() (*grpc.ClientConn, error) {
 			MaxVersion:   tls.VersionTLS13,
 		}
 
-		conn, err := grpc.Dial(fmt.Sprintf("%s:%d", o.Host, o.Port), grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
+		conn, err := grpc.Dial(o.URL, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 		if err != nil {
-			return nil, fmt.Errorf("failed to connect to grpc server %s:%d, %v", o.Host, o.Port, err)
+			return nil, fmt.Errorf("failed to connect to grpc server %s, %v", o.URL, err)
 		}
 
 		return conn, nil
 	}
 
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", o.Host, o.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(o.URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to grpc server %s:%d, %v", o.Host, o.Port, err)
+		return nil, fmt.Errorf("failed to connect to grpc server %s, %v", o.URL, err)
 	}
 
 	return conn, nil
