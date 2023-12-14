@@ -1,3 +1,7 @@
+// After making changes to the *.proto files, always run the following
+// command in current directory to update the generated code:
+// go generate
+
 syntax = "proto3";
 
 package io.cloudevents.v1;
