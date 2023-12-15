@@ -21,7 +21,7 @@ client the developers need to provide
     cluster URL and appending the controller name. Similarly, a RESTful service can select a unique name or generate a
     unique ID in the associated database for its source identification.
     - `CloudEventsOptions`, it provides cloudevents clients to send/receive cloudevents based on different event
-    protocol. We have supported the MQTT protocol (`mqtt.NewSourceOptions`), developers can use it directly.
+    protocol. We have supported [MQTT protocol (`mqtt.NewSourceOptions`)](./generic/options/mqtt) and [gRPC protocol (`grpc.NewSourceOptions`)](./generic/options/grpc) developers can use it directly.
 
 2. A resource lister (`generic.Lister`), it is used to list the resource objects on the source when resyncing the
 resources between sources and agents, for example, a hub controller can list the resources from the resource informers,
@@ -39,7 +39,7 @@ package.
 5. Resource handler methods (`generic.ResourceHandler`), they are used to handle the resources status after the client
 received the resources status from agents.
 
-for example:
+for example, build a generic client on the source using MQTT protocol with the following code:
 
 ```golang
 // build a client for the source1
@@ -71,7 +71,7 @@ this client the developers need to provide
     agent name.
     - `clusterName`, it is the name of a managed cluster on which the agent runs.
     - `CloudEventsOptions`, it provides cloudevents clients to send/receive cloudevents based on different event
-    protocol. We have supported the MQTT protocol (`mqtt.NewAgentOptions`), developers can use it directly.
+    protocol. We have supported [MQTT protocol (`mqtt.NewAgentOptions`)](./generic/options/mqtt) and [gRPC protocol (`grpc.NewAgentOptions`)](./generic/options/grpc) , developers can use it directly.
 
 2. A resource lister (`generic.Lister`), it is used to list the resource objects on a managed cluster when resyncing the
 resources between sources and agents, for example, a work agent can list its works from its work informers.
@@ -88,7 +88,7 @@ package.
 5. Resource handler methods (`generic.ResourceHandler`), they are used to handle the resources after the client received
 the resources from sources.
 
-for example:
+for example, build a generic client on the source using MQTT protocol with the following code:
 
 ```golang
 // build a client for a work agent on the cluster1
