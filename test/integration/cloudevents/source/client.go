@@ -111,9 +111,10 @@ func statusHashGetter(obj *Resource) (string, error) {
 }
 
 func StartMQTTResourceSourceClient(ctx context.Context, config *mqtt.MQTTOptions, eventHub *EventHub) (generic.CloudEventsClient[*Resource], error) {
+	sourceID := "integration-test"
 	client, err := generic.NewCloudEventSourceClient[*Resource](
 		ctx,
-		mqtt.NewSourceOptions(config, "integration-test"),
+		mqtt.NewSourceOptions(config, fmt.Sprintf("%s-client", sourceID), sourceID),
 		&resourceLister{},
 		statusHashGetter,
 		&resourceCodec{},
