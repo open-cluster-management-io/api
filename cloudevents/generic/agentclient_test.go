@@ -62,7 +62,7 @@ func TestAgentResync(t *testing.T) {
 				t.Errorf("unexpected error %v", err)
 			}
 
-			if err := agent.Resync(context.TODO()); err != nil {
+			if err := agent.Resync(context.TODO(), types.ListOptions{}); err != nil {
 				t.Errorf("unexpected error %v", err)
 			}
 

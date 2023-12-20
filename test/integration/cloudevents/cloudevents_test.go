@@ -78,7 +78,7 @@ var _ = ginkgo.Describe("Cloudevents clients test", func() {
 			}, 10*time.Second, 1*time.Second).Should(gomega.Succeed())
 
 			ginkgo.By("resync the status from source")
-			err = mqttSourceCloudEventsClient.Resync(context.TODO())
+			err = mqttSourceCloudEventsClient.Resync(context.TODO(), types.ListOptions{})
 			gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 			gomega.Eventually(func() error {
