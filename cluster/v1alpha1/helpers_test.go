@@ -16,8 +16,6 @@ import (
 )
 
 var fakeTime = metav1.NewTime(time.Date(2022, time.January, 01, 0, 0, 0, 0, time.UTC))
-var fakeTimeMax_60s = metav1.NewTime(fakeTime.Add(maxTimeDuration - time.Minute))
-var fakeTimeMax_120s = metav1.NewTime(fakeTime.Add(maxTimeDuration - 2*time.Minute))
 var fakeTime30s = metav1.NewTime(fakeTime.Add(30 * time.Second))
 var fakeTime60s = metav1.NewTime(fakeTime.Add(time.Minute))
 var fakeTime_30s = metav1.NewTime(fakeTime.Add(-30 * time.Second))
@@ -76,6 +74,7 @@ func (f *FakePlacementDecisionGetter) List(selector labels.Selector, namespace s
 }
 
 func TestGetRolloutCluster_All(t *testing.T) {
+	recheckTime := 30 * time.Second
 	tests := []testCase{
 		{
 			name:            "test rollout all with timeout 90s without workload created",
@@ -149,56 +148,73 @@ func TestGetRolloutCluster_All(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
+				RecheckAfter: &recheckTime,
 			},
 		},
 	}
 
 	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 	for _, test := range tests {
-		// init fake placement decision tracker
-		fakeGetter := FakePlacementDecisionGetter{}
-		tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
+		t.Run(test.name, func(t *testing.T) {
+			// init fake placement decision tracker
+			fakeGetter := FakePlacementDecisionGetter{}
+			tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
 
-		rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
-		existingRolloutClusters := []ClusterRolloutStatus{}
-		for _, workload := range test.existingWorkloads {
-			clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
-			existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
-		}
+			rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
+			var existingRolloutClusters []ClusterRolloutStatus
+			for _, workload := range test.existingWorkloads {
+				clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
+				existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
+			}
 
-		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
+			actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
 
-		if !reflect.DeepEqual(actualRolloutStrategy.All, test.expectRolloutStrategy.All) {
-			t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
-		}
-		if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
-				test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
-		}
+			if !reflect.DeepEqual(actualRolloutStrategy.All, test.expectRolloutStrategy.All) {
+				t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
+			}
+			if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
+					test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
+			}
+			if test.expectRolloutResult.RecheckAfter == nil && actualRolloutResult.RecheckAfter != nil {
+				t.Fatalf("Expect timeout should be nil")
+			}
+			if test.expectRolloutResult.RecheckAfter != nil {
+				if actualRolloutResult.RecheckAfter == nil {
+					t.Fatalf("Expect timeout should not be nil")
+				}
+				if *actualRolloutResult.RecheckAfter != *test.expectRolloutResult.RecheckAfter {
+					t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout: %+v\nActual timeout: %+v",
+						test.name, *test.expectRolloutResult.RecheckAfter, *actualRolloutResult.RecheckAfter)
+				}
+			}
+		})
 	}
 }
 
 func TestGetRolloutCluster_Progressive(t *testing.T) {
+	recheck30Duration := 30 * time.Second
+	recheck60Duration := 60 * time.Second
 	tests := []testCase{
 		{
 			name: "test progressive rollout deprecated timeout",
 			rolloutStrategy: RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					RolloutConfig:  RolloutConfig{Timeout: "90s"},
-					MaxConcurrency: intstr.FromInt(2),
+					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -210,9 +226,9 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
 					RolloutConfig: RolloutConfig{
-						Timeout: "90s",
+						ProgressDeadline: "90s",
 					},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingWorkloads: []dummyWorkload{},
@@ -229,7 +245,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -241,7 +257,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingWorkloads: []dummyWorkload{},
@@ -257,7 +273,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					MaxConcurrency: intstr.FromInt(4),
+					MaxConcurrency: intstr.FromInt32(4),
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
 				},
 			},
@@ -270,7 +286,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					MaxConcurrency: intstr.FromInt(4),
+					MaxConcurrency: intstr.FromInt32(4),
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
 				},
 			},
@@ -337,6 +353,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				ClustersRemoved: []ClusterRolloutStatus{
 					{ClusterName: "cluster10", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 2}, Status: ToApply},
 				},
+				RecheckAfter: &recheck30Duration,
 			},
 		},
 		{
@@ -427,6 +444,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				ClustersRemoved: []ClusterRolloutStatus{
 					{ClusterName: "cluster10", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 2}, Status: ToApply},
 				},
+				RecheckAfter: &recheck30Duration,
 			},
 		},
 		{
@@ -435,7 +453,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -447,7 +465,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -478,6 +496,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
 				MaxFailureBreach: true,
+				RecheckAfter:     &recheck30Duration,
 			},
 		},
 		{
@@ -490,7 +509,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 						MaxFailures:      intstr.FromString("100%"),
 						MinSuccessTime:   metav1.Duration{Duration: time.Minute},
 					},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -506,7 +525,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 						MaxFailures:      intstr.FromString("100%"),
 						MinSuccessTime:   metav1.Duration{Duration: time.Minute},
 					},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -538,6 +557,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
 				MaxFailureBreach: false,
+				RecheckAfter:     &recheck60Duration,
 			},
 		},
 		{
@@ -545,8 +565,8 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(1)},
-					MaxConcurrency: intstr.FromInt(2),
+					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(1)},
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -557,8 +577,8 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(1)},
-					MaxConcurrency: intstr.FromInt(2),
+					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(1)},
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -589,6 +609,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 				ClustersTimeOut: []ClusterRolloutStatus{
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
+				RecheckAfter: &recheck30Duration,
 			},
 		},
 		{
@@ -596,8 +617,8 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					RolloutConfig:  RolloutConfig{ProgressDeadline: "0s", MaxFailures: intstr.FromInt(3)},
-					MaxConcurrency: intstr.FromInt(2),
+					RolloutConfig:  RolloutConfig{ProgressDeadline: "0s", MaxFailures: intstr.FromInt32(3)},
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -608,8 +629,8 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
-					RolloutConfig:  RolloutConfig{ProgressDeadline: "0s", MaxFailures: intstr.FromInt(3)},
-					MaxConcurrency: intstr.FromInt(2),
+					RolloutConfig:  RolloutConfig{ProgressDeadline: "0s", MaxFailures: intstr.FromInt32(3)},
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -654,7 +675,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 						},
 					},
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(3),
+					MaxConcurrency: intstr.FromInt32(3),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -671,7 +692,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 						},
 					},
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(3),
+					MaxConcurrency: intstr.FromInt32(3),
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -702,6 +723,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
 				MaxFailureBreach: true,
+				RecheckAfter:     &recheck30Duration,
 			},
 		},
 		{
@@ -747,8 +769,8 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			expectRolloutResult: RolloutResult{
 				ClustersToRollout: []ClusterRolloutStatus{
-					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
-					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Progressing, LastTransitionTime: &fakeTime_60s, TimeOutTime: &fakeTimeMax_60s},
+					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s},
+					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Progressing, LastTransitionTime: &fakeTime_60s},
 					{ClusterName: "cluster4", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: ToApply},
 				},
 			},
@@ -796,8 +818,8 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 			},
 			expectRolloutResult: RolloutResult{
 				ClustersToRollout: []ClusterRolloutStatus{
-					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
-					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Progressing, LastTransitionTime: &fakeTime_60s, TimeOutTime: &fakeTimeMax_60s},
+					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s},
+					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Progressing, LastTransitionTime: &fakeTime_60s},
 				},
 				MaxFailureBreach: true,
 			},
@@ -812,7 +834,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					MaxConcurrency: intstr.FromInt(3),
+					MaxConcurrency: intstr.FromInt32(3),
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
 				},
 			},
@@ -830,7 +852,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					MaxConcurrency: intstr.FromInt(3),
+					MaxConcurrency: intstr.FromInt32(3),
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
 				},
 			},
@@ -856,6 +878,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 					{ClusterName: "cluster1", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
 				MaxFailureBreach: true,
+				RecheckAfter:     &recheck30Duration,
 			},
 		},
 		{
@@ -868,7 +891,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					MaxConcurrency: intstr.FromInt(3),
+					MaxConcurrency: intstr.FromInt32(3),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -885,7 +908,7 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					MaxConcurrency: intstr.FromInt(3),
+					MaxConcurrency: intstr.FromInt32(3),
 					RolloutConfig:  RolloutConfig{ProgressDeadline: ""},
 				},
 			},
@@ -917,42 +940,57 @@ func TestGetRolloutCluster_Progressive(t *testing.T) {
 	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 
 	for _, test := range tests {
-		// Init fake placement decision tracker
-		fakeGetter := FakePlacementDecisionGetter{}
-		tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
+		t.Run(test.name, func(t *testing.T) {
+			// Init fake placement decision tracker
+			fakeGetter := FakePlacementDecisionGetter{}
+			tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
 
-		rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
-		existingRolloutClusters := []ClusterRolloutStatus{}
-		for _, workload := range test.existingWorkloads {
-			clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
-			existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
-		}
+			rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
+			var existingRolloutClusters []ClusterRolloutStatus
+			for _, workload := range test.existingWorkloads {
+				clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
+				existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
+			}
 
-		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
+			actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
 
-		if !reflect.DeepEqual(actualRolloutStrategy.Progressive, test.expectRolloutStrategy.Progressive) {
-			t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
-		}
-		if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
-				test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
-		}
+			if !reflect.DeepEqual(actualRolloutStrategy.Progressive, test.expectRolloutStrategy.Progressive) {
+				t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
+			}
+			if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
+					test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
+			}
+			if test.expectRolloutResult.RecheckAfter == nil && actualRolloutResult.RecheckAfter != nil {
+				t.Fatalf("Expect timeout should be nil")
+			}
+			if test.expectRolloutResult.RecheckAfter != nil {
+				if actualRolloutResult.RecheckAfter == nil {
+					t.Fatalf("Expect timeout should not be nil")
+				}
+				if *actualRolloutResult.RecheckAfter != *test.expectRolloutResult.RecheckAfter {
+					t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout: %+v\nActual timeout: %+v",
+						test.name, *test.expectRolloutResult.RecheckAfter, *actualRolloutResult.RecheckAfter)
+				}
+			}
+		})
 	}
 }
 
 func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
+	recheck30Duration := 30 * time.Second
 	tests := []testCase{
 		{
 			name: "test progressivePerGroup rollout with timeout 90s without workload created",
@@ -1040,6 +1078,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
 					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
 				},
+				RecheckAfter: &recheck30Duration,
 			},
 		},
 		{
@@ -1089,6 +1128,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
 				MaxFailureBreach: true,
+				RecheckAfter:     &recheck30Duration,
 			},
 		},
 		{
@@ -1096,7 +1136,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1108,7 +1148,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1147,7 +1187,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1159,7 +1199,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1253,7 +1293,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			expectRolloutResult: RolloutResult{
 				ClustersToRollout: []ClusterRolloutStatus{
-					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
+					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s},
 				},
 				MaxFailureBreach: true,
 			},
@@ -1263,7 +1303,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1275,7 +1315,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			expectRolloutStrategy: &RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "None", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1300,7 +1340,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			expectRolloutResult: RolloutResult{
 				ClustersToRollout: []ClusterRolloutStatus{
-					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
+					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s},
 					{ClusterName: "cluster4", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 1}, Status: ToApply},
 					{ClusterName: "cluster5", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 1}, Status: ToApply},
 					{ClusterName: "cluster6", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 1}, Status: ToApply},
@@ -1349,8 +1389,8 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 			},
 			expectRolloutResult: RolloutResult{
 				ClustersToRollout: []ClusterRolloutStatus{
-					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
-					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTimeMax_120s},
+					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s},
+					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s},
 				},
 				MaxFailureBreach: true,
 			},
@@ -1422,7 +1462,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1439,7 +1479,7 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1533,42 +1573,57 @@ func TestGetRolloutCluster_ProgressivePerGroup(t *testing.T) {
 	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 
 	for _, test := range tests {
-		// Init fake placement decision tracker
-		fakeGetter := FakePlacementDecisionGetter{}
-		tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
+		t.Run(test.name, func(t *testing.T) {
+			// Init fake placement decision tracker
+			fakeGetter := FakePlacementDecisionGetter{}
+			tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
 
-		rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
-		existingRolloutClusters := []ClusterRolloutStatus{}
-		for _, workload := range test.existingWorkloads {
-			clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
-			existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
-		}
+			rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
+			var existingRolloutClusters []ClusterRolloutStatus
+			for _, workload := range test.existingWorkloads {
+				clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
+				existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
+			}
 
-		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
+			actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
 
-		if !reflect.DeepEqual(actualRolloutStrategy.ProgressivePerGroup, test.expectRolloutStrategy.ProgressivePerGroup) {
-			t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
-		}
-		if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
-				test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
-		}
+			if !reflect.DeepEqual(actualRolloutStrategy.ProgressivePerGroup, test.expectRolloutStrategy.ProgressivePerGroup) {
+				t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
+			}
+			if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
+					test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
+			}
+			if test.expectRolloutResult.RecheckAfter == nil && actualRolloutResult.RecheckAfter != nil {
+				t.Fatalf("Expect timeout should be nil")
+			}
+			if test.expectRolloutResult.RecheckAfter != nil {
+				if actualRolloutResult.RecheckAfter == nil {
+					t.Fatalf("Expect timeout should not be nil")
+				}
+				if *actualRolloutResult.RecheckAfter != *test.expectRolloutResult.RecheckAfter {
+					t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout: %+v\nActual timeout: %+v",
+						test.name, *test.expectRolloutResult.RecheckAfter, *actualRolloutResult.RecheckAfter)
+				}
+			}
+		})
 	}
 }
 
 func TestGetRolloutCluster_ClusterAdded(t *testing.T) {
+	recheck30Time := 30 * time.Second
 	tests := []testCase{
 		{
 			name:            "test rollout all with timeout 90s and cluster added",
@@ -1622,6 +1677,7 @@ func TestGetRolloutCluster_ClusterAdded(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: TimeOut, LastTransitionTime: &fakeTime_120s, TimeOutTime: &fakeTime_30s},
 				},
+				RecheckAfter: &recheck30Time,
 			},
 		},
 		{
@@ -1634,7 +1690,7 @@ func TestGetRolloutCluster_ClusterAdded(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					MaxConcurrency: intstr.FromInt(3),
+					MaxConcurrency: intstr.FromInt32(3),
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
 				},
 			},
@@ -1652,7 +1708,7 @@ func TestGetRolloutCluster_ClusterAdded(t *testing.T) {
 							{GroupName: "group1"},
 						},
 					},
-					MaxConcurrency: intstr.FromInt(3),
+					MaxConcurrency: intstr.FromInt32(3),
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
 				},
 			},
@@ -1694,6 +1750,7 @@ func TestGetRolloutCluster_ClusterAdded(t *testing.T) {
 					{ClusterName: "cluster5", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 2}, Status: Progressing, LastTransitionTime: &fakeTime_60s, TimeOutTime: &fakeTime30s},
 					{ClusterName: "cluster7", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
 				},
+				RecheckAfter: &recheck30Time,
 			},
 		},
 		{
@@ -1747,6 +1804,7 @@ func TestGetRolloutCluster_ClusterAdded(t *testing.T) {
 					{ClusterName: "cluster5", GroupKey: clusterv1beta1.GroupKey{GroupIndex: 1}, Status: Progressing, LastTransitionTime: &fakeTime_60s, TimeOutTime: &fakeTime30s},
 					{ClusterName: "cluster3", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: ToApply},
 				},
+				RecheckAfter: &recheck30Time,
 			},
 		},
 	}
@@ -1755,42 +1813,57 @@ func TestGetRolloutCluster_ClusterAdded(t *testing.T) {
 	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 
 	for _, test := range tests {
-		// Init fake placement decision tracker
-		fakeGetter := FakePlacementDecisionGetter{}
-		tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
+		t.Run(test.name, func(t *testing.T) {
+			// Init fake placement decision tracker
+			fakeGetter := FakePlacementDecisionGetter{}
+			tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
 
-		rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
-		existingRolloutClusters := []ClusterRolloutStatus{}
-		for _, workload := range test.existingWorkloads {
-			clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
-			existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
-		}
+			rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
+			var existingRolloutClusters []ClusterRolloutStatus
+			for _, workload := range test.existingWorkloads {
+				clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
+				existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
+			}
 
-		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
+			actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
 
-		if !reflect.DeepEqual(actualRolloutStrategy.All, test.expectRolloutStrategy.All) {
-			t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
-		}
-		if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
-				test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
-		}
+			if !reflect.DeepEqual(actualRolloutStrategy.All, test.expectRolloutStrategy.All) {
+				t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
+			}
+			if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
+					test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
+			}
+			if test.expectRolloutResult.RecheckAfter == nil && actualRolloutResult.RecheckAfter != nil {
+				t.Fatalf("Expect timeout should be nil")
+			}
+			if test.expectRolloutResult.RecheckAfter != nil {
+				if actualRolloutResult.RecheckAfter == nil {
+					t.Fatalf("Expect timeout should not be nil")
+				}
+				if *actualRolloutResult.RecheckAfter != *test.expectRolloutResult.RecheckAfter {
+					t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout: %+v\nActual timeout: %+v",
+						test.name, *test.expectRolloutResult.RecheckAfter, *actualRolloutResult.RecheckAfter)
+				}
+			}
+		})
 	}
 }
 
 func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
+	recheck30Time := 30 * time.Second
 	tests := []testCase{
 		{
 			name:            "test rollout all with timeout 90s and clusters removed",
@@ -1844,6 +1917,7 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_120s},
 					{ClusterName: "cluster4", GroupKey: clusterv1beta1.GroupKey{GroupName: "", GroupIndex: 1}, Status: Failed, LastTransitionTime: &fakeTime_60s},
 				},
+				RecheckAfter: &recheck30Time,
 			},
 		},
 		{
@@ -1852,7 +1926,7 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromString("100%")},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1864,7 +1938,7 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 				Type: Progressive,
 				Progressive: &RolloutProgressive{
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -1898,6 +1972,7 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 				ClustersRemoved: []ClusterRolloutStatus{
 					{ClusterName: "cluster1", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Succeeded, LastTransitionTime: &fakeTime_60s},
 				},
+				RecheckAfter: &recheck30Time,
 			},
 		},
 		{
@@ -1911,7 +1986,7 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 						},
 					},
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -1928,7 +2003,7 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 						},
 					},
 					RolloutConfig:  RolloutConfig{ProgressDeadline: "90s"},
-					MaxConcurrency: intstr.FromInt(2),
+					MaxConcurrency: intstr.FromInt32(2),
 				},
 			},
 			existingWorkloads: []dummyWorkload{
@@ -2007,6 +2082,7 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 				ClustersRemoved: []ClusterRolloutStatus{
 					{ClusterName: "cluster2", GroupKey: clusterv1beta1.GroupKey{GroupName: "group1", GroupIndex: 0}, Status: Failed, LastTransitionTime: &fakeTime_60s},
 				},
+				RecheckAfter: &recheck30Time,
 			},
 		},
 		{
@@ -2014,7 +2090,7 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 			rolloutStrategy: RolloutStrategy{
 				Type: ProgressivePerGroup,
 				ProgressivePerGroup: &RolloutProgressivePerGroup{
-					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt(2)},
+					RolloutConfig: RolloutConfig{ProgressDeadline: "90s", MaxFailures: intstr.FromInt32(2)},
 				},
 			},
 			existingScheduledClusterGroups: map[clusterv1beta1.GroupKey]sets.Set[string]{
@@ -2129,38 +2205,52 @@ func TestGetRolloutCluster_ClusterRemoved(t *testing.T) {
 	RolloutClock = testingclock.NewFakeClock(fakeTime.Time)
 
 	for _, test := range tests {
-		// Init fake placement decision tracker
-		fakeGetter := FakePlacementDecisionGetter{}
-		tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
+		t.Run(test.name, func(t *testing.T) {
+			// Init fake placement decision tracker
+			fakeGetter := FakePlacementDecisionGetter{}
+			tracker := clusterv1beta1.NewPlacementDecisionClustersTrackerWithGroups(nil, &fakeGetter, test.existingScheduledClusterGroups)
 
-		rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
-		existingRolloutClusters := []ClusterRolloutStatus{}
-		for _, workload := range test.existingWorkloads {
-			clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
-			existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
-		}
+			rolloutHandler, _ := NewRolloutHandler(tracker, test.clusterRolloutStatusFunc)
+			var existingRolloutClusters []ClusterRolloutStatus
+			for _, workload := range test.existingWorkloads {
+				clsRolloutStatus, _ := test.clusterRolloutStatusFunc(workload.ClusterName, workload)
+				existingRolloutClusters = append(existingRolloutClusters, clsRolloutStatus)
+			}
 
-		actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
+			actualRolloutStrategy, actualRolloutResult, _ := rolloutHandler.GetRolloutCluster(test.rolloutStrategy, existingRolloutClusters)
 
-		if !reflect.DeepEqual(actualRolloutStrategy.Type, test.expectRolloutStrategy.Type) {
-			t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
-		}
-		if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
-				test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
-		}
-		if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
-			t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
-				test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
-		}
+			if !reflect.DeepEqual(actualRolloutStrategy.Type, test.expectRolloutStrategy.Type) {
+				t.Errorf("Case: %v, Failed to run NewRolloutHandler.\nExpect strategy: %+v\nActual strategy: %+v", test.name, test.expectRolloutStrategy, actualRolloutStrategy)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersToRollout, test.expectRolloutResult.ClustersToRollout) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect rollout clusters: %+v\nActual rollout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersToRollout, actualRolloutResult.ClustersToRollout)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersTimeOut, test.expectRolloutResult.ClustersTimeOut) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout clusters: %+v\nActual timeout clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersTimeOut, actualRolloutResult.ClustersTimeOut)
+			}
+			if !reflect.DeepEqual(actualRolloutResult.ClustersRemoved, test.expectRolloutResult.ClustersRemoved) {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect removed clusters: %+v\nActual removed clusters: %+v",
+					test.name, test.expectRolloutResult.ClustersRemoved, actualRolloutResult.ClustersRemoved)
+			}
+			if actualRolloutResult.MaxFailureBreach != test.expectRolloutResult.MaxFailureBreach {
+				t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect failure breach: %+v\nActual failure breach: %+v",
+					test.name, test.expectRolloutResult.MaxFailureBreach, actualRolloutResult.MaxFailureBreach)
+			}
+			if test.expectRolloutResult.RecheckAfter == nil && actualRolloutResult.RecheckAfter != nil {
+				t.Fatalf("Expect timeout should be nil")
+			}
+			if test.expectRolloutResult.RecheckAfter != nil {
+				if actualRolloutResult.RecheckAfter == nil {
+					t.Fatalf("Expect timeout should not be nil")
+				}
+				if *actualRolloutResult.RecheckAfter != *test.expectRolloutResult.RecheckAfter {
+					t.Errorf("Case: %v: Failed to run NewRolloutHandler.\nExpect timeout: %+v\nActual timeout: %+v",
+						test.name, *test.expectRolloutResult.RecheckAfter, *actualRolloutResult.RecheckAfter)
+				}
+			}
+		})
 	}
 
 }
@@ -2251,11 +2341,11 @@ func TestCalculateRolloutSize(t *testing.T) {
 		expected       int
 		expectedError  error
 	}{
-		{"maxConcurrency type is int", intstr.FromInt(50), 50, nil},
+		{"maxConcurrency type is int", intstr.FromInt32(50), 50, nil},
 		{"maxConcurrency type is string with percentage", intstr.FromString("30%"), int(math.Ceil(0.3 * float64(total))), nil},
 		{"maxConcurrency type is string without percentage", intstr.FromString("invalid"), total, fmt.Errorf("'%s' is an invalid maximum threshold value: string is not a percentage", intstr.FromString("invalid").StrVal)},
-		{"maxConcurrency type is int 0", intstr.FromInt(0), total, nil},
-		{"maxConcurrency type is int but out of range", intstr.FromInt(total + 1), total, nil},
+		{"maxConcurrency type is int 0", intstr.FromInt32(0), total, nil},
+		{"maxConcurrency type is int but out of range", intstr.FromInt32(int32(total + 1)), total, nil},
 		{"maxConcurrency type is string with percentage but out of range", intstr.FromString("200%"), total, nil},
 	}
 
