@@ -61,3 +61,75 @@ To generate `zz_generated.deepcopy.go` & `zz_generated.swagger_doc_generated.go`
 
 ## Verify
 Before you commit you changes, please run `make verify` locally to make sure you have generated all required files.
+
+## API upgrade flow
+OCM community doc [Changing the API](https://github.com/open-cluster-management-io/community/blob/main/sig-architecture/api_changes.md) describes the things to consider when updating the API, suggest you read it before upgrading the API.
+
+Once you decided to introduce a new version API, you will also need to consider deprecate the old version API and then remove it in the future. 
+Below is the suggested API migration flow, the example code is to migrate `ManagedClusterSet` API from v1beta1 to v1beta2.
+
+### Relase N (add new version)
+- Update the CRD to include the new version v1beta2. 
+
+  Set served version as both v1beta1 and v1beta2, keep storage version as v1beta1. For example:
+  - https://github.com/open-cluster-management-io/api/pull/174
+
+- Pick a conversion strategy.
+
+  At this stage, both v1beta1 and v1beta2 are in served versions and storage versoin is v1beta1. The custom resource objects must sometimes be converted between the version they are stored at and the version they are served at. If there are no schema changes, the default None conversion strategy may be used and only the apiVersion field will be modified when serving different versions. If the v1beta2 schema changes and requires custom logic, you need to add conversion webhook to transform CRs between v1beta1 and v1beta2. For example: 
+  - https://github.com/open-cluster-management-io/registration/pull/272
+  - https://github.com/open-cluster-management-io/registration-operator/pull/279
+
+- The consumers (eg, ui/foundation/submarinar-addon/placement) CAN start to migrate to clusterset api v1beta2.
+
+- See also [How to add a new version](https://github.com/open-cluster-management-io/community/blob/main/sig-architecture/api_changes.md#how-to-add-a-new-version)
+
+### Relase N+1 (deprecated old version and start migration)
+
+- Update the CRD to modify the storage version to v1beta2.
+
+  Mark v1beta1 as deprecated, served versions are v1beta1 and v1beta2, set storage: true on v1beta2. For example:
+  - https://github.com/open-cluster-management-io/api/pull/202
+
+- Ensure the new CRD is applied first, then create a `StorageVersionMigration` resource to migrate stored version to v1beta2, and then remove v1beta1 from CRD `status.storedVersions`. 
+
+  **The migration sequence is important:**
+  - Ensure the new CRD (set storage: true on v1beta2) is applied before you do the migration. If the order is reversed, the migration will not take effect.
+  - `StorageVersionMigration` is running like a job. If you need to run the migration again for other version in the future, keep the same resource name and just change the spec won't trigger a new migration. So strongly suggest you append version info into the `StorageVersionMigration` resource name, for example `managedclustersets.v1beta1-to-v1beta2.cluster.open-cluster-management.io`.
+  And when adding the `StorageVersionMigration`, make the version field equals to the version you want to migrate from. In terms of this example, the version you want to migration from is v1beta1, so the resource should be:
+
+  ```yaml
+  apiVersion: migration.k8s.io/v1alpha1
+  kind: StorageVersionMigration
+  metadata:
+    name: managedclustersets.v1beta1-to-v1beta2.cluster.open-cluster-management.io # Append version info into the resource name
+  spec:
+    resource:
+      group: cluster.open-cluster-management.io
+      resource: managedclustersets
+      version: v1beta1 # The version must be v1beta1
+  ```
+
+  - Ensure all the stored version has migrated to v1beta2 (check the `StorageVersionMigration` status) before you remove v1beta1 from `status.storedVersion`.
+  - Suggest you do the migration and change the stored version in the same release.
+
+  In registration-operator it has a migration controller and crd status controller to handle the progress, code example: 
+  - https://github.com/open-cluster-management-io/registration-operator/pull/315
+  - https://github.com/open-cluster-management-io/registration-operator/pull/332
+  - https://github.com/open-cluster-management-io/registration/pull/297
+  - https://github.com/open-cluster-management-io/ocm/pull/328
+
+- The consumers (eg, ui/foundation/submarinar-addon/placement) SHOULD migrate to clusterset api v1beta2 before it's removed.
+
+- See also [Migrate stored objects to the new version](https://github.com/open-cluster-management-io/community/blob/main/sig-architecture/api_changes.md#migrate-stored-objects-to-the-new-version)
+
+### Relase N+x (remove old version)
+
+When the new version API becomes mature, validate if all the API has migrated to new version and then you can remove the old version 
+related code.
+- The consumers MUST have adopted the new version API.
+- Delete v1beta1 in clusterset crd. For example:
+  - https://github.com/open-cluster-management-io/api/pull/266
+- Delete conversion webhook about clusterset v1beta1
+- Remove migration files in registration-operator
+  - https://github.com/open-cluster-management-io/ocm/pull/257
