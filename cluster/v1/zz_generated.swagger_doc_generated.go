@@ -70,6 +70,7 @@ var map_ManagedClusterStatus = map[string]string{
 	"allocatable":   "Allocatable represents the total allocatable resources on the managed cluster.",
 	"version":       "Version represents the kubernetes version of the managed cluster.",
 	"clusterClaims": "ClusterClaims represents cluster information that a managed cluster claims, for example a unique cluster identifier (id.k8s.io) and kubernetes version (kubeversion.open-cluster-management.io). They are written from the managed cluster. The set of claims is not uniform across a fleet, some claims can be vendor or version specific and may not be included from all managed clusters.",
+	"nodeStatus":    "NodeStatus represents the status of nodes on the managed cluster.",
 }
 
 func (ManagedClusterStatus) SwaggerDoc() map[string]string {
@@ -83,6 +84,17 @@ var map_ManagedClusterVersion = map[string]string{
 
 func (ManagedClusterVersion) SwaggerDoc() map[string]string {
 	return map_ManagedClusterVersion
+}
+
+var map_NodeStatus = map[string]string{
+	"":            "NodeStatus represents the status of nodes on the managed cluster.",
+	"ready":       "Ready represents the number of ready nodes on the managed cluster.",
+	"schedulable": "Schedulable represents the number of schedulable nodes on the managed cluster.",
+	"total":       "Total represents the total number of nodes on the managed cluster.",
+}
+
+func (NodeStatus) SwaggerDoc() map[string]string {
+	return map_NodeStatus
 }
 
 var map_Taint = map[string]string{

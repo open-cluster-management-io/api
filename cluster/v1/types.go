@@ -163,6 +163,25 @@ type ManagedClusterStatus struct {
 	// vendor or version specific and may not be included from all managed clusters.
 	// +optional
 	ClusterClaims []ManagedClusterClaim `json:"clusterClaims,omitempty"`
+
+	// NodeStatus represents the status of nodes on the managed cluster.
+	// +optional
+	NodeStatus NodeStatus `json:"nodeStatus,omitempty"`
+}
+
+// NodeStatus represents the status of nodes on the managed cluster.
+type NodeStatus struct {
+	// Ready represents the number of ready nodes on the managed cluster.
+	// +optional
+	Ready int32 `json:"ready,omitempty"`
+
+	// Schedulable represents the number of schedulable nodes on the managed cluster.
+	// +optional
+	Schedulable int32 `json:"schedulable,omitempty"`
+
+	// Total represents the total number of nodes on the managed cluster.
+	// +optional
+	Total int32 `json:"total,omitempty"`
 }
 
 // ManagedClusterVersion represents version information about the managed cluster.
