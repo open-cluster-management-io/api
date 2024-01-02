@@ -92,9 +92,7 @@ func TestManifestBundleEncode(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			codec := NewManifestBundleCodec()
-
-			_, err := codec.Encode("cluster1-work-agent", c.eventType, c.work)
+			_, err := NewManifestBundleCodec().Encode("cluster1-work-agent", c.eventType, c.work)
 			if c.expectedErr {
 				if err == nil {
 					t.Errorf("expected an error, but failed")
@@ -231,9 +229,7 @@ func TestManifestBundleDecode(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			codec := NewManifestBundleCodec()
-
-			_, err := codec.Decode(c.event)
+			_, err := NewManifestBundleCodec().Decode(c.event)
 			if c.expectedErr {
 				if err == nil {
 					t.Errorf("expected an error, but failed")
