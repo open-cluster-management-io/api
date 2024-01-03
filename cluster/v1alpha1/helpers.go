@@ -167,7 +167,7 @@ func (r *RolloutHandler[T]) getProgressiveClusters(rolloutStrategy RolloutStrate
 	// Perform progressive rollOut for mandatory decision groups first, tolerating no failures
 	if len(clusterGroups) > 0 {
 		rolloutResult := progressivePerGroup(
-			clusterGroups, intstr.FromInt(0), minSuccessTime, failureTimeout, currentClusterStatus,
+			clusterGroups, intstr.FromInt32(0), minSuccessTime, failureTimeout, currentClusterStatus,
 		)
 		if len(rolloutResult.ClustersToRollout) > 0 || len(rolloutResult.ClustersTimeOut) > 0 {
 			rolloutResult.ClustersRemoved = removedClusterStatus
@@ -223,7 +223,7 @@ func (r *RolloutHandler[T]) getProgressivePerGroupClusters(rolloutStrategy Rollo
 
 	// Perform progressive rollout per group for mandatory decision groups first, tolerating no failures
 	if len(clusterGroups) > 0 {
-		rolloutResult := progressivePerGroup(clusterGroups, intstr.FromInt(0), minSuccessTime, failureTimeout, currentClusterStatus)
+		rolloutResult := progressivePerGroup(clusterGroups, intstr.FromInt32(0), minSuccessTime, failureTimeout, currentClusterStatus)
 
 		if len(rolloutResult.ClustersToRollout) > 0 || len(rolloutResult.ClustersTimeOut) > 0 {
 			rolloutResult.ClustersRemoved = removedClusterStatus
@@ -585,7 +585,7 @@ func parseTimeout(timeoutStr string) (time.Duration, error) {
 }
 
 func decisionGroupsToGroupKeys(decisionsGroup []MandatoryDecisionGroup) []clusterv1beta1.GroupKey {
-	result := []clusterv1beta1.GroupKey{}
+	var result []clusterv1beta1.GroupKey
 	for _, d := range decisionsGroup {
 		gk := clusterv1beta1.GroupKey{}
 		// GroupName is considered first to select the decisionGroups then GroupIndex.
@@ -609,7 +609,7 @@ func minRecheckAfter(rolloutClusters []ClusterRolloutStatus, minSuccessTime time
 			}
 		}
 	}
-	if minSuccessTime != 0 && minSuccessTime < *minRecheckAfter {
+	if minSuccessTime != 0 && (minRecheckAfter == nil || minSuccessTime < *minRecheckAfter) {
 		minRecheckAfter = &minSuccessTime
 	}
 
