@@ -2463,7 +2463,7 @@ func TestDecisionGroupsToGroupKeys(t *testing.T) {
 		{
 			name:     "Empty MandatoryDecisionGroup",
 			input:    []MandatoryDecisionGroup{},
-			expected: []clusterv1beta1.GroupKey{},
+			expected: nil,
 		},
 	}
 
