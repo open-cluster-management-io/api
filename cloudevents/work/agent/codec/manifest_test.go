@@ -18,7 +18,6 @@ import (
 
 func TestManifestEventDataType(t *testing.T) {
 	codec := NewManifestCodec(nil)
-
 	if codec.EventDataType() != payload.ManifestEventDataType {
 		t.Errorf("unexpected event data type %s", codec.EventDataType())
 	}
@@ -143,9 +142,7 @@ func TestManifestEncode(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			codec := NewManifestCodec(nil)
-
-			_, err := codec.Encode("cluster1-work-agent", c.eventType, c.work)
+			_, err := NewManifestCodec(nil).Encode("cluster1-work-agent", c.eventType, c.work)
 			if c.expectedErr {
 				if err == nil {
 					t.Errorf("expected an error, but failed")
@@ -283,9 +280,7 @@ func TestManifestDecode(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			codec := NewManifestCodec(nil)
-
-			_, err := codec.Decode(c.event)
+			_, err := NewManifestCodec(nil).Decode(c.event)
 			if c.expectedErr {
 				if err == nil {
 					t.Errorf("expected an error, but failed")
