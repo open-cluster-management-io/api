@@ -283,7 +283,7 @@ func progressivePerCluster(
 		return existingClusterStatus[i].ClusterName < existingClusterStatus[j].ClusterName
 	})
 
-	// Collect current cluster status and determine any TimeOut statuses
+	// Collect existing cluster status and determine any TimeOut statuses
 	for _, status := range existingClusterStatus {
 		if status.ClusterName == "" {
 			continue
@@ -293,6 +293,10 @@ func progressivePerCluster(
 
 		// If there was a breach of MaxFailures, only handle clusters that have already had workload applied
 		if !failureBreach || failureBreach && status.Status != ToApply {
+			// For progress per cluster, the length of existing `rolloutClusters` will be compared with the
+			// target rollout size to determine whether to return or not first.
+			// The timeoutClusters, as well as failed clusters will be counted into failureCount, the next rollout
+			// will stop if failureCount > maxFailures.
 			rolloutClusters, timeoutClusters = determineRolloutStatus(&status, minSuccessTime, timeout, rolloutClusters, timeoutClusters)
 		}
 
@@ -303,7 +307,7 @@ func progressivePerCluster(
 			failureBreach = failureCount > maxFailures
 		}
 
-		// Return if the list of rollout clusters has reached the target rollout size
+		// Return if the list of exsiting rollout clusters has reached the target rollout size
 		if len(rolloutClusters) >= rolloutSize {
 			return RolloutResult{
 				ClustersToRollout: rolloutClusters,
@@ -314,6 +318,7 @@ func progressivePerCluster(
 		}
 	}
 
+	// Return if the exsiting rollout clusters maxFailures is breached.
 	if failureBreach {
 		return RolloutResult{
 			ClustersToRollout: rolloutClusters,
@@ -370,6 +375,7 @@ func progressivePerGroup(
 	var rolloutClusters, timeoutClusters []ClusterRolloutStatus
 	existingClusters := make(map[string]RolloutStatus)
 
+	// Collect existing cluster status and determine any TimeOut statuses
 	for _, status := range existingClusterStatus {
 		if status.ClusterName == "" {
 			continue
@@ -377,6 +383,8 @@ func progressivePerGroup(
 
 		// ToApply will be reconsidered in the decisionGroups iteration.
 		if status.Status != ToApply {
+			// For progress per group, the existing rollout clusters and timeout clusters status will be recored in existingClusters first,
+			// then go through group by group.
 			rolloutClusters, timeoutClusters = determineRolloutStatus(&status, minSuccessTime, timeout, rolloutClusters, timeoutClusters)
 			existingClusters[status.ClusterName] = status.Status
 		}
