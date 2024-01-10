@@ -43,7 +43,7 @@ func (o *mqttSourceOptions) WithContext(ctx context.Context, evtCtx cloudevents.
 
 	if eventType.Action == types.ResyncRequestAction {
 		// source publishes event to status resync topic to request to get resources status from all clusters
-		return cloudeventscontext.WithTopic(ctx, strings.Replace(StatusResyncTopic, "+", o.sourceID, -1)), nil
+		return cloudeventscontext.WithTopic(ctx, strings.Replace(o.StatusResyncTopic, "+", o.sourceID, -1)), nil
 	}
 
 	clusterName, err := evtCtx.GetExtension(types.ExtensionClusterName)
@@ -52,7 +52,7 @@ func (o *mqttSourceOptions) WithContext(ctx context.Context, evtCtx cloudevents.
 	}
 
 	// source publishes event to spec topic to send the resource spec to a specified cluster
-	specTopic := strings.Replace(SpecTopic, "+", o.sourceID, 1)
+	specTopic := strings.Replace(o.SpecTopic, "+", o.sourceID, 1)
 	specTopic = strings.Replace(specTopic, "+", fmt.Sprintf("%s", clusterName), -1)
 	return cloudeventscontext.WithTopic(ctx, specTopic), nil
 }
@@ -69,9 +69,9 @@ func (o *mqttSourceOptions) Client(ctx context.Context) (cloudevents.Client, err
 			&paho.Subscribe{
 				Subscriptions: map[string]paho.SubscribeOptions{
 					// receiving the resources status from agents with status topic
-					strings.Replace(StatusTopic, "+", o.sourceID, 1): {QoS: byte(o.SubQoS)},
+					strings.Replace(o.StatusTopic, "+", o.sourceID, 1): {QoS: byte(o.SubQoS)},
 					// receiving the resources spec resync request from agents with spec resync topic
-					SpecResyncTopic: {QoS: byte(o.SubQoS)},
+					o.SpecResyncTopic: {QoS: byte(o.SubQoS)},
 				},
 			},
 		),

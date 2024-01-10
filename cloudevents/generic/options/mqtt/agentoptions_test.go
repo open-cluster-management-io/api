@@ -2,6 +2,7 @@ package mqtt
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -17,6 +18,21 @@ var mockEventDataType = types.CloudEventsDataType{
 }
 
 func TestAgentContext(t *testing.T) {
+	file, err := os.CreateTemp("", "mqtt-config-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
+	if err := os.WriteFile(file.Name(), []byte("{\"brokerHost\":\"test\"}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	options, err := BuildMQTTOptionsFromFlags(file.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	cases := []struct {
 		name          string
 		event         cloudevents.Event
@@ -103,7 +119,10 @@ func TestAgentContext(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			agentOptions := &mqttAgentOptions{clusterName: "cluster1"}
+			agentOptions := &mqttAgentOptions{
+				MQTTOptions: *options,
+				clusterName: "cluster1",
+			}
 			ctx, err := agentOptions.WithContext(context.TODO(), c.event.Context)
 			c.assertError(err)
 

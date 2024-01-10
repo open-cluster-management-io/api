@@ -2,6 +2,7 @@ package mqtt
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -11,6 +12,21 @@ import (
 )
 
 func TestSourceContext(t *testing.T) {
+	file, err := os.CreateTemp("", "mqtt-config-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
+	if err := os.WriteFile(file.Name(), []byte("{\"brokerHost\":\"test\"}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	options, err := BuildMQTTOptionsFromFlags(file.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	cases := []struct {
 		name          string
 		event         cloudevents.Event
@@ -94,7 +110,10 @@ func TestSourceContext(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			sourceOptions := &mqttSourceOptions{sourceID: "hub1"}
+			sourceOptions := &mqttSourceOptions{
+				MQTTOptions: *options,
+				sourceID:    "hub1",
+			}
 			ctx, err := sourceOptions.WithContext(context.TODO(), c.event.Context)
 			c.assertError(err)
 

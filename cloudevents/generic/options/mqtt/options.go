@@ -17,30 +17,34 @@ import (
 )
 
 const (
-	// SpecTopic is a MQTT topic for resource spec.
-	SpecTopic = "sources/+/clusters/+/spec"
+	// defaultSpecTopic is a default MQTT topic for resource spec.
+	defaultSpecTopic = "sources/+/clusters/+/spec"
 
-	// StatusTopic is a MQTT topic for resource status.
-	StatusTopic = "sources/+/clusters/+/status"
+	// defaultStatusTopic is a default MQTT topic for resource status.
+	defaultStatusTopic = "sources/+/clusters/+/status"
 
-	// SpecResyncTopic is a MQTT topic for resource spec resync.
-	SpecResyncTopic = "sources/clusters/+/specresync"
+	// defaultSpecResyncTopic is a default MQTT topic for resource spec resync.
+	defaultSpecResyncTopic = "sources/clusters/+/specresync"
 
-	// StatusResyncTopic is a MQTT topic for resource status resync.
-	StatusResyncTopic = "sources/+/clusters/statusresync"
+	// defaultStatusResyncTopic is a default MQTT topic for resource status resync.
+	defaultStatusResyncTopic = "sources/+/clusters/statusresync"
 )
 
 // MQTTOptions holds the options that are used to build MQTT client.
 type MQTTOptions struct {
-	BrokerHost     string
-	Username       string
-	Password       string
-	CAFile         string
-	ClientCertFile string
-	ClientKeyFile  string
-	KeepAlive      uint16
-	PubQoS         int
-	SubQoS         int
+	BrokerHost        string
+	Username          string
+	Password          string
+	CAFile            string
+	ClientCertFile    string
+	ClientKeyFile     string
+	SpecTopic         string
+	StatusTopic       string
+	SpecResyncTopic   string
+	StatusResyncTopic string
+	KeepAlive         uint16
+	PubQoS            int
+	SubQoS            int
 }
 
 // MQTTConfig holds the information needed to build connect to MQTT broker as a given user.
@@ -62,17 +66,31 @@ type MQTTConfig struct {
 
 	// KeepAlive is the keep alive time in seconds for MQTT clients, by default is 60s
 	KeepAlive *uint16 `json:"keepAlive,omitempty" yaml:"keepAlive,omitempty"`
+
 	// PubQoS is the QoS for publish, by default is 1
 	PubQoS *int `json:"pubQoS,omitempty" yaml:"pubQoS,omitempty"`
 	// SubQoS is the Qos for subscribe, by default is 1
 	SubQoS *int `json:"subQoS,omitempty" yaml:"subQoS,omitempty"`
+
+	// SpecTopic is a MQTT topic for resource spec, by default is sources/+/clusters/+/spec.
+	SpecTopic string `json:"specTopic,omitempty" yaml:"specTopic,omitempty"`
+	// StatusTopic is a  MQTT topic for resource status, by default is sources/+/clusters/+/status.
+	StatusTopic string `json:"statusTopic,omitempty" yaml:"statusTopic,omitempty"`
+	// SpecResyncTopic is a MQTT topic for resource spec resync, by default is sources/clusters/+/specresync.
+	SpecResyncTopic string `json:"specResyncTopic,omitempty" yaml:"specResyncTopic,omitempty"`
+	// StatusResyncTopic is a MQTT topic for resource status resync, by default is sources/+/clusters/statusresync.
+	StatusResyncTopic string `json:"statusResyncTopic,omitempty" yaml:"statusResyncTopic,omitempty"`
 }
 
 func NewMQTTOptions() *MQTTOptions {
 	return &MQTTOptions{
-		KeepAlive: 60,
-		PubQoS:    1,
-		SubQoS:    1,
+		SpecTopic:         defaultSpecTopic,
+		StatusTopic:       defaultStatusTopic,
+		SpecResyncTopic:   defaultSpecResyncTopic,
+		StatusResyncTopic: defaultStatusResyncTopic,
+		KeepAlive:         60,
+		PubQoS:            1,
+		SubQoS:            1,
 	}
 }
 
@@ -101,15 +119,19 @@ func BuildMQTTOptionsFromFlags(configPath string) (*MQTTOptions, error) {
 	}
 
 	options := &MQTTOptions{
-		BrokerHost:     config.BrokerHost,
-		Username:       config.Username,
-		Password:       config.Password,
-		CAFile:         config.CAFile,
-		ClientCertFile: config.ClientCertFile,
-		ClientKeyFile:  config.ClientKeyFile,
-		KeepAlive:      60,
-		PubQoS:         1,
-		SubQoS:         1,
+		BrokerHost:        config.BrokerHost,
+		Username:          config.Username,
+		Password:          config.Password,
+		CAFile:            config.CAFile,
+		ClientCertFile:    config.ClientCertFile,
+		ClientKeyFile:     config.ClientKeyFile,
+		SpecTopic:         defaultSpecTopic,
+		StatusTopic:       defaultStatusTopic,
+		SpecResyncTopic:   defaultSpecResyncTopic,
+		StatusResyncTopic: defaultStatusResyncTopic,
+		KeepAlive:         60,
+		PubQoS:            1,
+		SubQoS:            1,
 	}
 
 	if config.KeepAlive != nil {
@@ -122,6 +144,22 @@ func BuildMQTTOptionsFromFlags(configPath string) (*MQTTOptions, error) {
 
 	if config.SubQoS != nil {
 		options.SubQoS = *config.SubQoS
+	}
+
+	if config.SpecTopic != "" {
+		options.SpecTopic = config.SpecTopic
+	}
+
+	if config.StatusTopic != "" {
+		options.StatusTopic = config.StatusTopic
+	}
+
+	if config.SpecResyncTopic != "" {
+		options.SpecResyncTopic = config.SpecResyncTopic
+	}
+
+	if config.StatusResyncTopic != "" {
+		options.SpecResyncTopic = config.StatusResyncTopic
 	}
 
 	return options, nil

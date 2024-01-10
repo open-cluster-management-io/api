@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"log"
 	"os"
 	"reflect"
 	"testing"
@@ -10,7 +9,7 @@ import (
 func TestBuildMQTTOptionsFromFlags(t *testing.T) {
 	file, err := os.CreateTemp("", "mqtt-config-test-")
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	defer os.Remove(file.Name())
 
@@ -39,30 +38,42 @@ func TestBuildMQTTOptionsFromFlags(t *testing.T) {
 			name:   "default options",
 			config: "{\"brokerHost\":\"test\"}",
 			expectedOptions: &MQTTOptions{
-				BrokerHost: "test",
-				KeepAlive:  60,
-				PubQoS:     1,
-				SubQoS:     1,
+				BrokerHost:        "test",
+				KeepAlive:         60,
+				PubQoS:            1,
+				SubQoS:            1,
+				SpecTopic:         "sources/+/clusters/+/spec",
+				StatusTopic:       "sources/+/clusters/+/status",
+				SpecResyncTopic:   "sources/clusters/+/specresync",
+				StatusResyncTopic: "sources/+/clusters/statusresync",
 			},
 		},
 		{
 			name:   "default options with yaml format",
 			config: "brokerHost: test",
 			expectedOptions: &MQTTOptions{
-				BrokerHost: "test",
-				KeepAlive:  60,
-				PubQoS:     1,
-				SubQoS:     1,
+				BrokerHost:        "test",
+				KeepAlive:         60,
+				PubQoS:            1,
+				SubQoS:            1,
+				SpecTopic:         "sources/+/clusters/+/spec",
+				StatusTopic:       "sources/+/clusters/+/status",
+				SpecResyncTopic:   "sources/clusters/+/specresync",
+				StatusResyncTopic: "sources/+/clusters/statusresync",
 			},
 		},
 		{
 			name:   "customized options",
 			config: "{\"brokerHost\":\"test\",\"keepAlive\":30,\"pubQoS\":0,\"subQoS\":2}",
 			expectedOptions: &MQTTOptions{
-				BrokerHost: "test",
-				KeepAlive:  30,
-				PubQoS:     0,
-				SubQoS:     2,
+				BrokerHost:        "test",
+				KeepAlive:         30,
+				PubQoS:            0,
+				SubQoS:            2,
+				SpecTopic:         "sources/+/clusters/+/spec",
+				StatusTopic:       "sources/+/clusters/+/status",
+				SpecResyncTopic:   "sources/clusters/+/specresync",
+				StatusResyncTopic: "sources/+/clusters/statusresync",
 			},
 		},
 	}
