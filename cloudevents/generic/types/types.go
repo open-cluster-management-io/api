@@ -60,6 +60,9 @@ const (
 
 	// ExtensionOriginalSource is the cloud event extension key of the original source.
 	ExtensionOriginalSource = "originalsource"
+
+	// ExtensionResourceMeta is the cloud event extension key of the original resource meta.
+	ExtensionResourceMeta = "resourcemeta"
 )
 
 // ResourceAction represents an action on a resource object on the source or agent.
@@ -88,6 +91,15 @@ type ListOptions struct {
 	// Agent use the source ID to restrict the list of returned objects by their source ID.
 	// Defaults to all sources.
 	Source string
+}
+
+// ResourceMeta represents a resource original meta data on the source
+type ResourceMeta struct {
+	Group     string `json:"group"`
+	Version   string `json:"version"`
+	Resource  string `json:"resource"`
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
 }
 
 // CloudEventsDataType uniquely identifies the type of cloud event data.

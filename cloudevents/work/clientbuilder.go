@@ -16,6 +16,8 @@ import (
 	agentclient "open-cluster-management.io/api/cloudevents/work/agent/client"
 	agenthandler "open-cluster-management.io/api/cloudevents/work/agent/handler"
 	"open-cluster-management.io/api/cloudevents/work/internal"
+	sourceclient "open-cluster-management.io/api/cloudevents/work/source/client"
+	sourcehandler "open-cluster-management.io/api/cloudevents/work/source/handler"
 	"open-cluster-management.io/api/cloudevents/work/watcher"
 	workv1 "open-cluster-management.io/api/work/v1"
 )
@@ -50,6 +52,7 @@ type ClientHolderBuilder struct {
 	informerOptions    []workinformers.SharedInformerOption
 	informerResyncTime time.Duration
 	clusterName        string
+	sourceID           string
 	clientID           string
 }
 
@@ -64,6 +67,11 @@ func NewClientHolderBuilder(clientID string, config any) *ClientHolderBuilder {
 		config:             config,
 		informerResyncTime: defaultInformerResyncTime,
 	}
+}
+
+func (b *ClientHolderBuilder) WithSourceID(sourceID string) *ClientHolderBuilder {
+	b.sourceID = sourceID
+	return b
 }
 
 // WithClusterName set the managed cluster name when building a  manifestwork client for an agent.
@@ -107,8 +115,8 @@ func (b *ClientHolderBuilder) NewClientHolder(ctx context.Context) (*ClientHolde
 			return b.newAgentClients(ctx, config)
 		}
 
-		//TODO build manifestwork clients for source
-		return nil, nil
+		// build manifestwork clients for source
+		return b.newSourceClients(ctx, config)
 	default:
 		return nil, fmt.Errorf("unsupported client configuration type %T", config)
 	}
@@ -144,6 +152,39 @@ func (b *ClientHolderBuilder) newAgentClients(ctx context.Context, config *mqtt.
 	manifestWorkClient.SetLister(namespacedLister)
 
 	cloudEventsClient.Subscribe(ctx, agenthandler.NewManifestWorkAgentHandler(namespacedLister, watcher))
+
+	return &ClientHolder{
+		workClient:           workClient,
+		manifestWorkInformer: informers,
+	}, nil
+}
+
+func (b *ClientHolderBuilder) newSourceClients(ctx context.Context, config *mqtt.MQTTOptions) (*ClientHolder, error) {
+	workLister := &ManifestWorkLister{}
+	watcher := watcher.NewManifestWorkWatcher()
+	sourceOptions := mqtt.NewSourceOptions(config, b.clientID, b.sourceID)
+	cloudEventsClient, err := generic.NewCloudEventSourceClient[*workv1.ManifestWork](
+		ctx,
+		sourceOptions,
+		workLister,
+		ManifestWorkStatusHash,
+		b.codecs...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	manifestWorkClient := sourceclient.NewManifestWorkSourceClient(cloudEventsClient, watcher)
+	workClient := &internal.WorkV1ClientWrapper{ManifestWorkClient: manifestWorkClient}
+	workClientSet := &internal.WorkClientSetWrapper{WorkV1ClientWrapper: workClient}
+	factory := workinformers.NewSharedInformerFactoryWithOptions(workClientSet, b.informerResyncTime, b.informerOptions...)
+	informers := factory.Work().V1().ManifestWorks()
+	manifestWorkLister := informers.Lister()
+	// Set informer lister back to work lister and client.
+	workLister.Lister = manifestWorkLister
+	manifestWorkClient.SetLister(manifestWorkLister)
+
+	cloudEventsClient.Subscribe(ctx, sourcehandler.NewManifestWorkSourceHandler(manifestWorkLister, watcher))
 
 	return &ClientHolder{
 		workClient:           workClient,
