@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -118,7 +117,7 @@ var _ = Describe("Klusterlet API test with WorkConfiguration", func() {
 				Name: klusterletName,
 			},
 			Spec: operatorv1.KlusterletSpec{
-				WorkConfiguration: &operatorv1.WorkConfiguration{
+				WorkConfiguration: &operatorv1.WorkAgentConfiguration{
 					FeatureGates: []operatorv1.FeatureGate{
 						{
 							Feature: "Foo",
@@ -138,7 +137,7 @@ var _ = Describe("Klusterlet API test with WorkConfiguration", func() {
 				Name: klusterletName,
 			},
 			Spec: operatorv1.KlusterletSpec{
-				WorkConfiguration: &operatorv1.WorkConfiguration{
+				WorkConfiguration: &operatorv1.WorkAgentConfiguration{
 					FeatureGates: []operatorv1.FeatureGate{
 						{
 							Feature: "Foo",
@@ -158,7 +157,7 @@ var _ = Describe("Klusterlet API test with WorkConfiguration", func() {
 				Name: klusterletName,
 			},
 			Spec: operatorv1.KlusterletSpec{
-				WorkConfiguration: &operatorv1.WorkConfiguration{
+				WorkConfiguration: &operatorv1.WorkAgentConfiguration{
 					FeatureGates: []operatorv1.FeatureGate{
 						{
 							Feature: "Foo",
