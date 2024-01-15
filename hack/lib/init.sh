@@ -30,3 +30,10 @@ open-cluster-management.io/api/work/v1alpha1,\
 open-cluster-management.io/api/operator/v1,\
 open-cluster-management.io/api/addon/v1alpha1\
 "
+
+set -x
+
+SED_CMD=sed
+if [[ `uname` == 'Darwin' ]]; then
+    SED_CMD=gsed
+fi
