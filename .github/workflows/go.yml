@@ -3,14 +3,10 @@ name: Go
 on:
   workflow_dispatch: {}
   pull_request:
-    paths-ignore:
-      - 'cloudevents/**'
     branches:
       - main
       - release-*
   push:
-    paths-ignore:
-      - 'cloudevents/**'
     branches:
       - main
       - release-*
