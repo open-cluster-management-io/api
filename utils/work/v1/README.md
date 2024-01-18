@@ -3,6 +3,9 @@
 Introduce 2 libs `workBuilder` and `workApplier` to help user to build the manifest objects into manifestWorks 
 and apply/delete the manifestWorks easily.
 
+The code is moved to https://github.com/open-cluster-management-io/sdk-go/tree/main/pkg/apis/work/v1, the code here
+will be removed in the future.
+
 # Usage
 
 ## `workBuilder`

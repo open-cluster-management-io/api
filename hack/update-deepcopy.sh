@@ -9,18 +9,9 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-ge
 
 source "${CODEGEN_PKG}/kube_codegen.sh"
 
-for group in operator work addon; do
+for group in cluster operator work addon; do
 kube::codegen::gen_helpers \
     --input-pkg-root open-cluster-management.io/api/${group} \
-    --output-base "${SCRIPT_ROOT}/../.." \
-    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.txt"
-done
-
-# skip cluster/v1alpha1 since failed to handle ClusterRolloutStatusFunc RolloutHandler in helper.go
-# TODO: will added back until helper.go is removed.
-for version in v1 v1beta1 v1beta2; do
-kube::codegen::gen_helpers \
-    --input-pkg-root open-cluster-management.io/api/cluster/${version} \
     --output-base "${SCRIPT_ROOT}/../.." \
     --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.txt"
 done
