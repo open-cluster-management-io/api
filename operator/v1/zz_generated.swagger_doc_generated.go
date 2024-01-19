@@ -245,15 +245,6 @@ func (RegistrationConfiguration) SwaggerDoc() map[string]string {
 	return map_RegistrationConfiguration
 }
 
-var map_ResourceRequirement = map[string]string{
-	"":                     "ResourceRequirement allow user override the default pod QoS classes",
-	"resourceRequirements": "ResourceRequirements defines resource requests and limits when Type is ResourceQosClassResourceRequirement",
-}
-
-func (ResourceRequirement) SwaggerDoc() map[string]string {
-	return map_ResourceRequirement
-}
-
 var map_ServerURL = map[string]string{
 	"":         "ServerURL represents the apiserver url and ca bundle that is accessible externally",
 	"url":      "URL is the url of apiserver endpoint of the managed cluster.",
