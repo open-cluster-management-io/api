@@ -1,6 +1,7 @@
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -162,6 +163,51 @@ type RegistrationConfiguration struct {
 	// +optional
 	// +kubebuilder:default:=100
 	KubeAPIBurst int32 `json:"kubeAPIBurst,omitempty"`
+
+	// PriorityBootstrapKubeconfigs defines the list of bootstrap kubeconfigs in order.
+	// They are used for agent to connect to multiple hubs in cases like failover, backup&restore, rollout upgrade etc.
+	//
+	// When the agent loses the connection to the current hub over HubConnectionTimeoutSeconds, or the managedcluster CR
+	// is set `hubAcceptsClient=false` on the hub, we call it a "failed" bootstrapkubeconfig.
+	//
+	// If that happens, the agent will try to choose another bootstrapkubeconfig from the list by order to rebootstrap.
+	// If a bootstrapkubeconfig fails, it will be marked and be filtered out from the list for the time duration of SkipFailedBootstrapKubeconfigSeconds.
+	// +optional
+	PriorityBootstrapKubeconfigs *PriorityBootstrapKubeconfigs `json:"priorityBootstrapKubeconfigs,omitempty"`
+
+	// HubConnectionTimeoutSeconds is used to set the timeout of connecting to the hub cluster.
+	// When agent loses the connection to the hub over the timeout seconds, the agent do a rebootstrap.
+	// By default is 10 mins.
+	// +optional
+	// +kubebuilder:default:=600
+	// +kubebuilder:validation:Minimum=0
+	HubConnectionTimeoutSeconds int32 `json:"hubConnectionTimeoutSeconds,omitempty"`
+
+	// SkipFailedBootstrapKubeconfigSeconds. The controller will skip the bootstrapkubeconfigs that fails recently when it rebootstraping.
+	// By default is 3 mins.
+	// +optional
+	// +kubebuilder:default:=180
+	// +kubebuilder:validation:Minimum=0
+	SkipFailedBootstrapKubeconfigSeconds int32 `json:"skipFailedBootstrapKubeconfigSeconds,omitempty"`
+}
+
+type TypePriorityBootstrapKubeconfigs string
+
+const (
+	LocalSecrets TypePriorityBootstrapKubeconfigs = "LocalSecrets"
+)
+
+type PriorityBootstrapKubeconfigs struct {
+	// Type specifies the type of priority bootstrap kubeconfigs.
+	// By default, it is set to LocalSecrets.
+	// +required
+	// +kubebuilder:default:=LocalSecrets
+	Type TypePriorityBootstrapKubeconfigs `json:"type,omitempty"`
+
+	// LocalSecrets is a list of secrets that contains the kubeconfigs for priority bootstrap.
+	// The secrets must be in the same namespace where the agent controller runs.
+	// +optional
+	LocalSecrets []corev1.LocalObjectReference `json:"localSecrets,omitempty"`
 }
 
 type WorkAgentConfiguration struct {

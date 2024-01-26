@@ -234,12 +234,24 @@ func (KlusterletStatus) SwaggerDoc() map[string]string {
 	return map_KlusterletStatus
 }
 
+var map_PriorityBootstrapKubeconfigs = map[string]string{
+	"type":         "Type specifies the type of priority bootstrap kubeconfigs. By default, it is set to LocalSecrets.",
+	"localSecrets": "LocalSecrets is a list of secrets that contains the kubeconfigs for priority bootstrap. The secrets must be in the same namespace where the agent controller runs.",
+}
+
+func (PriorityBootstrapKubeconfigs) SwaggerDoc() map[string]string {
+	return map_PriorityBootstrapKubeconfigs
+}
+
 var map_RegistrationConfiguration = map[string]string{
-	"clientCertExpirationSeconds": "clientCertExpirationSeconds represents the seconds of a client certificate to expire. If it is not set or 0, the default duration seconds will be set by the hub cluster. If the value is larger than the max signing duration seconds set on the hub cluster, the max signing duration seconds will be set.",
-	"featureGates":                "FeatureGates represents the list of feature gates for registration If it is set empty, default feature gates will be used. If it is set, featuregate/Foo is an example of one item in FeatureGates:\n  1. If featuregate/Foo does not exist, registration-operator will discard it\n  2. If featuregate/Foo exists and is false by default. It is now possible to set featuregate/Foo=[false|true]\n  3. If featuregate/Foo exists and is true by default. If a cluster-admin upgrading from 1 to 2 wants to continue having featuregate/Foo=false,\n \the can set featuregate/Foo=false before upgrading. Let's say the cluster-admin wants featuregate/Foo=false.",
-	"clusterAnnotations":          "ClusterAnnotations is annotations with the reserve prefix \"agent.open-cluster-management.io\" set on ManagedCluster when creating only, other actors can update it afterwards.",
-	"kubeAPIQPS":                  "KubeAPIQPS indicates the maximum QPS while talking with apiserver of hub cluster from the spoke cluster. If it is set empty, use the default value: 50",
-	"kubeAPIBurst":                "KubeAPIBurst indicates the maximum burst of the throttle while talking with apiserver of hub cluster from the spoke cluster. If it is set empty, use the default value: 100",
+	"clientCertExpirationSeconds":          "clientCertExpirationSeconds represents the seconds of a client certificate to expire. If it is not set or 0, the default duration seconds will be set by the hub cluster. If the value is larger than the max signing duration seconds set on the hub cluster, the max signing duration seconds will be set.",
+	"featureGates":                         "FeatureGates represents the list of feature gates for registration If it is set empty, default feature gates will be used. If it is set, featuregate/Foo is an example of one item in FeatureGates:\n  1. If featuregate/Foo does not exist, registration-operator will discard it\n  2. If featuregate/Foo exists and is false by default. It is now possible to set featuregate/Foo=[false|true]\n  3. If featuregate/Foo exists and is true by default. If a cluster-admin upgrading from 1 to 2 wants to continue having featuregate/Foo=false,\n \the can set featuregate/Foo=false before upgrading. Let's say the cluster-admin wants featuregate/Foo=false.",
+	"clusterAnnotations":                   "ClusterAnnotations is annotations with the reserve prefix \"agent.open-cluster-management.io\" set on ManagedCluster when creating only, other actors can update it afterwards.",
+	"kubeAPIQPS":                           "KubeAPIQPS indicates the maximum QPS while talking with apiserver of hub cluster from the spoke cluster. If it is set empty, use the default value: 50",
+	"kubeAPIBurst":                         "KubeAPIBurst indicates the maximum burst of the throttle while talking with apiserver of hub cluster from the spoke cluster. If it is set empty, use the default value: 100",
+	"priorityBootstrapKubeconfigs":         "PriorityBootstrapKubeconfigs defines the list of bootstrap kubeconfigs in order. They are used for agent to connect to multiple hubs in cases like failover, backup&restore, rollout upgrade etc.\n\nWhen the agent loses the connection to the current hub over HubConnectionTimeoutSeconds, or the managedcluster CR is set `hubAcceptsClient=false` on the hub, we call it a \"failed\" bootstrapkubeconfig.\n\nIf that happens, the agent will try to choose another bootstrapkubeconfig from the list by order to rebootstrap. If a bootstrapkubeconfig fails, it will be marked and be filtered out from the list for the time duration of SkipFailedBootstrapKubeconfigSeconds.",
+	"hubConnectionTimeoutSeconds":          "HubConnectionTimeoutSeconds is used to set the timeout of connecting to the hub cluster. When agent loses the connection to the hub over the timeout seconds, the agent do a rebootstrap. By default is 10 mins.",
+	"skipFailedBootstrapKubeconfigSeconds": "SkipFailedBootstrapKubeconfigSeconds. The controller will skip the bootstrapkubeconfigs that fails recently when it rebootstraping. By default is 3 mins.",
 }
 
 func (RegistrationConfiguration) SwaggerDoc() map[string]string {
