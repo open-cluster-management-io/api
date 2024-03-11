@@ -309,6 +309,22 @@ spec:
                     addon agent to register to hub. The Klusterlet agent will create
                     a csr for the addon agent with the registrationConfig.
                   properties:
+                    clientCertAdditionalData:
+                      additionalProperties:
+                        type: string
+                      description: The signed CSR client certificates will be stored
+                        as a secret on the agent, clientCertAdditionalData is the
+                        additional data that will be stored alongside with the client
+                        certificate in that secret. Also, the change of the additional
+                        data will trigger the CSR renewal.
+                      type: object
+                    hubSensitive:
+                      default: true
+                      description: HubSensitive is a flag to indicate whether the
+                        registrationConfig is sensitive to the hub. If it is set to
+                        true, the renewal of the CSR will be triggered when the hub
+                        is changed.
+                      type: boolean
                     signerName:
                       description: signerName is the name of signer that addon agent
                         will use to create csr.

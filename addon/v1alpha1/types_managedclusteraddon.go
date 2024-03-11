@@ -68,6 +68,18 @@ type RegistrationConfig struct {
 	//
 	// +optional
 	Subject Subject `json:"subject,omitempty"`
+
+	// HubSensitive is a flag to indicate whether the registrationConfig is sensitive to the hub.
+	// If it is set to true, the renewal of the CSR will be triggered when the hub is changed.
+	// +optional
+	// +kubebuilder:default=true
+	HubSensitive bool `json:"hubSensitive,omitempty"`
+
+	// The signed CSR client certificates will be stored as a secret on the agent, clientCertAdditionalData
+	// is the additional data that will be stored alongside with the client certificate in that secret.
+	// Also, the change of the additional data will trigger the CSR renewal.
+	// +optional
+	ClientCertAdditionalData map[string]string `json:"clientCertAdditionalData,omitempty"`
 }
 
 type AddOnConfig struct {

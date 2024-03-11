@@ -415,9 +415,11 @@ func (ObjectReference) SwaggerDoc() map[string]string {
 }
 
 var map_RegistrationConfig = map[string]string{
-	"":           "RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will create a csr for the addon agent with the registrationConfig.",
-	"signerName": "signerName is the name of signer that addon agent will use to create csr.",
-	"subject":    "subject is the user subject of the addon agent to be registered to the hub. If it is not set, the addon agent will have the default subject \"subject\": {\n  \"user\": \"system:open-cluster-management:cluster:{clusterName}:addon:{addonName}:agent:{agentName}\",\n  \"groups: [\"system:open-cluster-management:cluster:{clusterName}:addon:{addonName}\",\n            \"system:open-cluster-management:addon:{addonName}\", \"system:authenticated\"]\n}",
+	"":                         "RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will create a csr for the addon agent with the registrationConfig.",
+	"signerName":               "signerName is the name of signer that addon agent will use to create csr.",
+	"subject":                  "subject is the user subject of the addon agent to be registered to the hub. If it is not set, the addon agent will have the default subject \"subject\": {\n  \"user\": \"system:open-cluster-management:cluster:{clusterName}:addon:{addonName}:agent:{agentName}\",\n  \"groups: [\"system:open-cluster-management:cluster:{clusterName}:addon:{addonName}\",\n            \"system:open-cluster-management:addon:{addonName}\", \"system:authenticated\"]\n}",
+	"hubSensitive":             "HubSensitive is a flag to indicate whether the registrationConfig is sensitive to the hub. If it is set to true, the renewal of the CSR will be triggered when the hub is changed.",
+	"clientCertAdditionalData": "The signed CSR client certificates will be stored as a secret on the agent, clientCertAdditionalData is the additional data that will be stored alongside with the client certificate in that secret. Also, the change of the additional data will trigger the CSR renewal.",
 }
 
 func (RegistrationConfig) SwaggerDoc() map[string]string {
