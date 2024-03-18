@@ -65,6 +65,7 @@ type ClusterManagerSpec struct {
 
 	// WorkConfiguration contains the configuration of work
 	// +optional
+	// +kubebuilder:default={workDriver: kube}
 	WorkConfiguration *WorkConfiguration `json:"workConfiguration,omitempty"`
 
 	// AddOnManagerConfiguration contains the configuration of addon manager
@@ -119,6 +120,21 @@ type WorkConfiguration struct {
 	//  	he can set featuregate/Foo=false before upgrading. Let's say the cluster-admin wants featuregate/Foo=false.
 	// +optional
 	FeatureGates []FeatureGate `json:"featureGates,omitempty"`
+
+	// WorkDriver represents the type of work driver. Possible values are "kube", "mqtt", or "grpc".
+	// If not provided, the default value is "kube".
+	// If set to non-"kube" drivers, the klusterlet need to use the same driver.
+	// and the driver configuration must be provided in a secret named "work-driver-config"
+	// in the namespace where the cluster manager is running, adhering to the following structure:
+	// config.yaml: |
+	//   <driver-config-in-yaml>
+	//
+	// For detailed driver configuration, please refer to the sdk-go documentation: https://github.com/open-cluster-management-io/sdk-go/blob/main/pkg/cloudevents/README.md#supported-protocols-and-drivers
+	//
+	// +optional
+	// +kubebuilder:default:=kube
+	// +kubebuilder:validation:Enum=kube;mqtt;grpc
+	WorkDriver string `json:"workDriver,omitempty"`
 }
 
 type AddOnManagerConfiguration struct {
