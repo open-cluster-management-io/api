@@ -281,7 +281,22 @@ var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
 		clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(clusterManager.Spec.WorkConfiguration).To(BeNil())
+		Expect(clusterManager.Spec.WorkConfiguration.WorkDriver).Should(Equal("kube"))
+	})
+
+	It("Create a cluster manager with wrong driver type", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagerName,
+			},
+			Spec: operatorv1.ClusterManagerSpec{
+				WorkConfiguration: &operatorv1.WorkConfiguration{
+					WorkDriver: "WrongDriver",
+				},
+			},
+		}
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(HaveOccurred())
 	})
 
 	It("Create a cluster manager with empty work feature gate mode", func() {
