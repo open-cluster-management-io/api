@@ -228,6 +228,15 @@ spec:
                       - feature
                       type: object
                     type: array
+                  hubConnectionTimeoutSeconds:
+                    default: 600
+                    description: HubConnectionTimeoutSeconds is used to set the timeout
+                      of connecting to the hub cluster. When agent loses the connection
+                      to the hub over the timeout seconds, the agent do a rebootstrap.
+                      By default is 10 mins.
+                    format: int32
+                    minimum: 0
+                    type: integer
                   kubeAPIBurst:
                     default: 100
                     description: 'KubeAPIBurst indicates the maximum burst of the
@@ -241,6 +250,49 @@ spec:
                       with apiserver of hub cluster from the spoke cluster. If it
                       is set empty, use the default value: 50'
                     format: int32
+                    type: integer
+                  priorityBootstrapKubeconfigs:
+                    description: "PriorityBootstrapKubeconfigs defines the list of
+                      bootstrap kubeconfigs in order. They are used for agent to connect
+                      to multiple hubs in cases like failover, backup&restore, rollout
+                      upgrade etc. \n When the agent loses the connection to the current
+                      hub over HubConnectionTimeoutSeconds, or the managedcluster
+                      CR is set `hubAcceptsClient=false` on the hub, we call it a
+                      \"failed\" bootstrapkubeconfig. \n If that happens, the agent
+                      will try to choose another bootstrapkubeconfig from the list
+                      by order to rebootstrap. If a bootstrapkubeconfig fails, it
+                      will be marked and be filtered out from the list for the time
+                      duration of SkipFailedBootstrapKubeconfigSeconds."
+                    properties:
+                      localSecrets:
+                        description: LocalSecrets is a list of secrets that contains
+                          the kubeconfigs for priority bootstrap. The secrets must
+                          be in the same namespace where the agent controller runs.
+                        items:
+                          description: LocalObjectReference contains enough information
+                            to let you locate the referenced object inside the same
+                            namespace.
+                          properties:
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        type: array
+                      type:
+                        default: LocalSecrets
+                        description: Type specifies the type of priority bootstrap
+                          kubeconfigs. By default, it is set to LocalSecrets.
+                        type: string
+                    type: object
+                  skipFailedBootstrapKubeconfigSeconds:
+                    default: 180
+                    description: SkipFailedBootstrapKubeconfigSeconds. The controller
+                      will skip the bootstrapkubeconfigs that fails recently when
+                      it rebootstraping. By default is 3 mins.
+                    format: int32
+                    minimum: 0
                     type: integer
                 type: object
               registrationImagePullSpec:
