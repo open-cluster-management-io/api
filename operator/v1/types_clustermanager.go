@@ -134,8 +134,20 @@ type WorkConfiguration struct {
 	// +optional
 	// +kubebuilder:default:=kube
 	// +kubebuilder:validation:Enum=kube;mqtt;grpc
-	WorkDriver string `json:"workDriver,omitempty"`
+	WorkDriver WorkDriverType `json:"workDriver,omitempty"`
 }
+
+// WorkDriverType represents the type of work driver.
+type WorkDriverType string
+
+const (
+	// WorkDriverTypeKube is the work driver type for kube.
+	WorkDriverTypeKube WorkDriverType = "kube"
+	// WorkDriverTypeMqtt is the work driver type for mqtt.
+	WorkDriverTypeMqtt WorkDriverType = "mqtt"
+	// WorkDriverTypeGrpc is the work driver type for grpc.
+	WorkDriverTypeGrpc WorkDriverType = "grpc"
+)
 
 type AddOnManagerConfiguration struct {
 	// FeatureGates represents the list of feature gates for addon manager

@@ -281,7 +281,7 @@ var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
 		clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(clusterManager.Spec.WorkConfiguration.WorkDriver).Should(Equal("kube"))
+		Expect(clusterManager.Spec.WorkConfiguration.WorkDriver).Should(Equal(operatorv1.WorkDriverTypeKube))
 	})
 
 	It("Create a cluster manager with wrong driver type", func() {
