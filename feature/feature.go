@@ -64,9 +64,9 @@ const (
 	// of clusters selected by a placement. For more info check ManifestWorkReplicaSet APIs
 	ManifestWorkReplicaSet featuregate.Feature = "ManifestWorkReplicaSet"
 
-	// ManifestWorkReplicaSetCloudEventsDrivers will enable the cloud events drivers (mqtt or grpc) for the
-	// ManifestWorkReplicaSet controller, so that the controller can send manifestworks through cloud events.
-	ManifestWorkReplicaSetCloudEventsDrivers featuregate.Feature = "ManifestWorkReplicaSetCloudEventsDrivers"
+	// CloudEventsDrivers will enable the cloud events drivers (mqtt or grpc) for the hub controller,
+	// so that the controller can deliver manifestworks to the managed clusters via cloud events.
+	CloudEventsDrivers featuregate.Feature = "CloudEventsDrivers"
 
 	// RawFeedbackJsonString will make the work agent to return the feedback result as a json string if the result
 	// is not a scalar value.
@@ -102,9 +102,9 @@ var DefaultHubAddonManagerFeatureGates = map[featuregate.Feature]featuregate.Fea
 // DefaultHubWorkFeatureGates consists of all known acm work wehbook feature keys.
 // To add a new feature, define a key for it above and add it here.
 var DefaultHubWorkFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
-	NilExecutorValidating:                    {Default: false, PreRelease: featuregate.Alpha},
-	ManifestWorkReplicaSet:                   {Default: false, PreRelease: featuregate.Alpha},
-	ManifestWorkReplicaSetCloudEventsDrivers: {Default: false, PreRelease: featuregate.Alpha},
+	NilExecutorValidating:  {Default: false, PreRelease: featuregate.Alpha},
+	ManifestWorkReplicaSet: {Default: false, PreRelease: featuregate.Alpha},
+	CloudEventsDrivers:     {Default: false, PreRelease: featuregate.Alpha},
 }
 
 // DefaultSpokeWorkFeatureGates consists of all known ocm work feature keys for work agent.
