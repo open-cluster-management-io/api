@@ -115,7 +115,7 @@ spec:
                   like service accounts, roles and rolebindings, while the agent is
                   deployed to the namespace with the same name as klusterlet on the
                   management cluster.
-                maxLength: 63
+                maxLength: 57
                 pattern: ^open-cluster-management-[-a-z0-9]*[a-z0-9]$
                 type: string
               nodePlacement:
