@@ -139,6 +139,9 @@ const (
 	// 1) The cluster has no condition 'ManagedClusterConditionAvailable';
 	// 2) Or the status of condition 'ManagedClusterConditionAvailable' is 'Unknown';
 	ManagedClusterTaintUnreachable string = "cluster.open-cluster-management.io/unreachable"
+	// ManagedClusterTaintTerminating is the key of the taint added to a managed cluster when it is being deleted.
+	// To be specific, the cluster's deletion timestamp is set.
+	ManagedClusterTaintTerminating string = "cluster.open-cluster-management.io/terminating"
 )
 
 // ManagedClusterStatus represents the current status of joined managed cluster.
