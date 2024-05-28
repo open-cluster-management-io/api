@@ -14,13 +14,6 @@ ${SED_CMD} -i 's,^exec \(.*/generate-internal-groups.sh\),bash \1,g' ${CODEGEN_P
 # Because go mod sux, we have to fake the vendor for generator in order to be able to build it...
 ${SED_CMD} -i 's/GO111MODULE=on go install/#GO111MODULE=on go install/g' ${CODEGEN_PKG}/generate-internal-groups.sh
 
-# For verification we need to ensure we don't remove files
-# TODO: this should be properly resolved upstream so that we can get
-# rid of the below if condition for verify scripts
-if [ ! -z "$verify" ]; then
-  ${SED_CMD} -i 's/xargs \-0 rm \-f/xargs -0 echo ""/g' ${CODEGEN_PKG}/generate-internal-groups.sh
-fi
-
 # ...but we have to put it back, or `verify` will puke.
 trap "git checkout ${CODEGEN_PKG}" EXIT
 
