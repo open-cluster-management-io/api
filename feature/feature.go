@@ -117,3 +117,9 @@ var DefaultSpokeWorkFeatureGates = map[featuregate.Feature]featuregate.FeatureSp
 	ExecutorValidatingCaches: {Default: false, PreRelease: featuregate.Alpha},
 	RawFeedbackJsonString:    {Default: false, PreRelease: featuregate.Alpha},
 }
+
+// DefaultSpokeOperatorFeatureGates consists of all known ocm operator feature keys for operator.
+// To add a new feature, define a key for it above and add it here.
+var DefaultSpokeOperatorFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
+	MultipleHubs: {Default: false, PreRelease: featuregate.Alpha},
+}
