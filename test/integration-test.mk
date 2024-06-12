@@ -2,7 +2,7 @@ TEST_TMP :=/tmp
 
 export KUBEBUILDER_ASSETS ?=$(TEST_TMP)/kubebuilder/bin
 
-K8S_VERSION ?=1.23.1
+K8S_VERSION ?=1.29.3
 GOHOSTOS ?=$(shell go env GOHOSTOS)
 GOHOSTARCH =amd64
 KB_TOOLS_ARCHIVE_NAME :=kubebuilder-tools-$(K8S_VERSION)-$(GOHOSTOS)-$(GOHOSTARCH).tar.gz

@@ -107,7 +107,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 
 		mca.Status.Registrations = []addonv1alpha1.RegistrationConfig{
 			{
-				SignerName: "addontest",
+				SignerName: "open-cluster-management.io/addontest",
 			},
 		}
 
@@ -117,6 +117,42 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 			metav1.UpdateOptions{},
 		)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	})
+
+	ginkgo.It("Update failed with wrong signer name in the ManagedClusterAddOn", func() {
+		managedClusterAddOn := &addonv1alpha1.ManagedClusterAddOn{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: managedClusterAddOnName,
+			},
+			Spec: addonv1alpha1.ManagedClusterAddOnSpec{},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Create(
+			context.TODO(),
+			managedClusterAddOn,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		mca, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Get(
+			context.TODO(),
+			managedClusterAddOnName,
+			metav1.GetOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		mca.Status.Registrations = []addonv1alpha1.RegistrationConfig{
+			{
+				SignerName: "addontest",
+			},
+		}
+
+		_, err = hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+			context.TODO(),
+			mca,
+			metav1.UpdateOptions{},
+		)
+		gomega.Expect(err).To(gomega.HaveOccurred())
 	})
 
 	ginkgo.It("Should update the ManagedClusterAddOn status with config", func() {
