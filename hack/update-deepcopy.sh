@@ -10,8 +10,7 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-ge
 source "${CODEGEN_PKG}/kube_codegen.sh"
 
 for group in cluster operator work addon; do
-kube::codegen::gen_helpers \
-    --input-pkg-root open-cluster-management.io/api/${group} \
-    --output-base "${SCRIPT_ROOT}/../.." \
-    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.txt"
+  kube::codegen::gen_helpers \
+    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.txt" \
+    ${group}
 done
