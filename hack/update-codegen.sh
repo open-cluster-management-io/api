@@ -9,48 +9,37 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-ge
 
 verify="${VERIFY:-}"
 
-# HACK: For some reason this script is not executable.
-${SED_CMD} -i 's,^exec \(.*/generate-internal-groups.sh\),bash \1,g' ${CODEGEN_PKG}/generate-groups.sh
-# Because go mod sux, we have to fake the vendor for generator in order to be able to build it...
-${SED_CMD} -i 's/GO111MODULE=on go install/#GO111MODULE=on go install/g' ${CODEGEN_PKG}/generate-internal-groups.sh
+source "${CODEGEN_PKG}/kube_codegen.sh"
 
-# ...but we have to put it back, or `verify` will puke.
-trap "git checkout ${CODEGEN_PKG}" EXIT
+kube::codegen::gen_client \
+  --output-pkg "open-cluster-management.io/api/client/cluster" \
+  --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.txt" \
+  --output-dir ${SCRIPT_ROOT}/client/cluster \
+  --one-input-api cluster \
+  --with-watch \
+  .
 
-go install -mod=vendor ./${CODEGEN_PKG}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
+kube::codegen::gen_client \
+  --output-pkg "open-cluster-management.io/api/client/work" \
+  --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.txt" \
+  --output-dir ${SCRIPT_ROOT}/client/work \
+  --one-input-api work \
+  --with-watch \
+  .
 
-for group in cluster; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
-    open-cluster-management.io/api/client/${group} \
-    open-cluster-management.io/api \
-    "${group}:v1,v1alpha1,v1beta1,v1beta2" \
-    --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
-    ${verify}
-done
+kube::codegen::gen_client \
+  --output-pkg "open-cluster-management.io/api/client/operator" \
+  --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.txt" \
+  --output-dir ${SCRIPT_ROOT}/client/operator \
+  --one-input-api operator \
+  --with-watch \
+  .
 
-for group in work; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
-    open-cluster-management.io/api/client/${group} \
-    open-cluster-management.io/api \
-    "${group}:v1,v1alpha1" \
-    --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
-    ${verify}
-done
+kube::codegen::gen_client \
+  --output-pkg "open-cluster-management.io/api/client/addon" \
+  --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.txt" \
+  --output-dir ${SCRIPT_ROOT}/client/addon \
+  --one-input-api addon \
+  --with-watch \
+  .
 
-for group in operator; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
-    open-cluster-management.io/api/client/${group} \
-    open-cluster-management.io/api \
-    "${group}:v1" \
-    --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
-    ${verify}
-done
-
-for group in addon; do
-  bash ${CODEGEN_PKG}/generate-groups.sh "client,lister,informer" \
-    open-cluster-management.io/api/client/${group} \
-    open-cluster-management.io/api \
-    "${group}:v1alpha1" \
-    --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.txt \
-    ${verify}
-done

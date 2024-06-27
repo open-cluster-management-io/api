@@ -16,5 +16,8 @@ import (
 	_ "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 	_ "k8s.io/apimachinery/pkg/apis/testapigroup/v1"
 	_ "k8s.io/code-generator"
+	_ "k8s.io/code-generator/cmd/conversion-gen"
+	_ "k8s.io/code-generator/cmd/deepcopy-gen"
+	_ "k8s.io/code-generator/cmd/defaulter-gen"
 	_ "k8s.io/code-generator/cmd/go-to-protobuf/protoc-gen-gogo"
 )
