@@ -193,7 +193,14 @@ type AwsIrsa struct {
 	// The arn of the hub cluster (ie: an EKS cluster). This will be required to pass information to hub, which hub will use to create IAM identities for this klusterlet.
 	// Example - arn:eks:us-west-2:12345678910:cluster/hub-cluster1.
 	// +required
+	// +kubebuilder:validation:MinLength=1
 	HubClusterArn string `json:"hubClusterArn"`
+	// The arn of the managed cluster (ie: an EKS cluster). This will be required to generate the md5hash which will be used as a suffix to create IAM role on hub
+	// as well as used by kluslerlet-agent, to assume role suffixed with the md5hash, on startup.
+	// Example - arn:eks:us-west-2:12345678910:cluster/managed-cluster1.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	ManagedClusterArn string `json:"managedClusterArn"`
 }
 
 type TypeBootstrapKubeConfigs string
