@@ -252,8 +252,8 @@ spec:
                           properties:
                             serverSideApply:
                               description: |-
-                                serverSideApply defines the configuration for server side apply. It is honored only when
-                                type of updateStrategy is ServerSideApply
+                                serverSideApply defines the configuration for server side apply. It is honored only when the
+                                type of the updateStrategy is ServerSideApply
                               properties:
                                 fieldManager:
                                   default: work-agent
@@ -266,6 +266,24 @@ spec:
                                   description: Force represents to force apply the
                                     manifest.
                                   type: boolean
+                                ignoreFields:
+                                  description: IgnoreFields defines a list of json
+                                    paths in the resource that will not be updated
+                                    on the spoke.
+                                  items:
+                                    type: string
+                                  type: array
+                                onSpokeChange:
+                                  default: Override
+                                  description: |-
+                                    OnSpokeChange defines whether the resource should be overriden by the manifestwork it is changed
+                                    on the spoke by another actor.
+                                  enum:
+                                  - Override
+                                  - NoOverride
+                                  type: string
+                              required:
+                              - onSpokeChange
                               type: object
                             type:
                               default: Update
@@ -284,6 +302,17 @@ spec:
                               - ServerSideApply
                               - ReadOnly
                               type: string
+                            update:
+                              description: |-
+                                update defines the configuration for update. It is honored only when the type of the updateStrategy
+                                is Update
+                              properties:
+                                onSpokeChange:
+                                  description: |-
+                                    OnSpokeChange defines whether the resource should be overriden by the manifestwork it is changed
+                                    on the spoke by another actor.
+                                  type: string
+                              type: object
                           required:
                           - type
                           type: object

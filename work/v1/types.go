@@ -170,10 +170,14 @@ type UpdateStrategy struct {
 	// +required
 	Type UpdateStrategyType `json:"type,omitempty"`
 
-	// serverSideApply defines the configuration for server side apply. It is honored only when
-	// type of updateStrategy is ServerSideApply
+	// serverSideApply defines the configuration for server side apply. It is honored only when the
+	// type of the updateStrategy is ServerSideApply
 	// +optional
 	ServerSideApply *ServerSideApplyConfig `json:"serverSideApply,omitempty"`
+
+	// update defines the configuration for update. It is honored only when the type of the updateStrategy
+	// is Update
+	Update *UpdateConfig `json:"update,omitempty"`
 }
 
 type UpdateStrategyType string
@@ -209,6 +213,23 @@ type ServerSideApplyConfig struct {
 	// +kubebuilder:validation:Pattern=`^work-agent`
 	// +optional
 	FieldManager string `json:"fieldManager,omitempty"`
+
+	// IgnoreFields defines a list of json paths in the resource that will not be updated on the spoke.
+	IgnoreFields []string `json:"ignoreFields,omitempty"`
+
+	// OnSpokeChange defines whether the resource should be overriden by the manifestwork it is changed
+	// on the spoke by another actor.
+	// +kubebuilder:default=Override
+	// +kubebuilder:validation:Enum=Override;NoOverride
+	// +kubebuilder:validation:Required
+	// +required
+	OnSpokeChange string `json:"onSpokeChange,omitempty"`
+}
+
+type UpdateConfig struct {
+	// OnSpokeChange defines whether the resource should be overriden by the manifestwork it is changed
+	// on the spoke by another actor.
+	OnSpokeChange string `json:"onSpokeChange,omitempty"`
 }
 
 // DefaultFieldManager is the default field manager of the manifestwork when the field manager is not set.
