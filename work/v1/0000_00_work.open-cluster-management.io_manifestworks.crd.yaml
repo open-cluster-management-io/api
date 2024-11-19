@@ -253,19 +253,32 @@ spec:
                               description: IgnoreFields defines a list of json paths
                                 in the resource that will not be updated on the spoke.
                               items:
-                                type: string
+                                properties:
+                                  condition:
+                                    default: OnSpokePresent
+                                    description: |-
+                                      Condition defines the condition that the fields should be ignored when apply the resource.
+                                      Fields in JSONPaths are all ignored when condition is met, otherwise no fields is ignored
+                                      in the apply operation.
+                                    enum:
+                                    - OnSpokePresent
+                                    - OnSpokeChange
+                                    type: string
+                                  jsonPaths:
+                                    description: JSONPaths defines the list of json
+                                      path in the resource to be ignored
+                                    items:
+                                      type: string
+                                    minItems: 1
+                                    type: array
+                                required:
+                                - condition
+                                - jsonPaths
+                                type: object
                               type: array
-                            onSpokeChange:
-                              default: Override
-                              description: |-
-                                OnSpokeChange defines whether the resource should be overriden by the manifestwork it is changed
-                                on the spoke by another actor.
-                              enum:
-                              - Override
-                              - NoOverride
-                              type: string
-                          required:
-                          - onSpokeChange
+                              x-kubernetes-list-map-keys:
+                              - condition
+                              x-kubernetes-list-type: map
                           type: object
                         type:
                           default: Update
@@ -284,17 +297,6 @@ spec:
                           - ServerSideApply
                           - ReadOnly
                           type: string
-                        update:
-                          description: |-
-                            update defines the configuration for update. It is honored only when the type of the updateStrategy
-                            is Update
-                          properties:
-                            onSpokeChange:
-                              description: |-
-                                OnSpokeChange defines whether the resource should be overriden by the manifestwork it is changed
-                                on the spoke by another actor.
-                              type: string
-                          type: object
                       required:
                       - type
                       type: object

@@ -102,6 +102,15 @@ func (FieldValue) SwaggerDoc() map[string]string {
 	return map_FieldValue
 }
 
+var map_IgnoreField = map[string]string{
+	"condition": "Condition defines the condition that the fields should be ignored when apply the resource. Fields in JSONPaths are all ignored when condition is met, otherwise no fields is ignored in the apply operation.",
+	"jsonPaths": "JSONPaths defines the list of json path in the resource to be ignored",
+}
+
+func (IgnoreField) SwaggerDoc() map[string]string {
+	return map_IgnoreField
+}
+
 var map_JsonPath = map[string]string{
 	"name":    "Name represents the alias name for this field",
 	"version": "Version is the version of the Kubernetes resource. If it is not specified, the resource with the semantically latest version is used to resolve the path.",
@@ -268,10 +277,9 @@ func (SelectivelyOrphan) SwaggerDoc() map[string]string {
 }
 
 var map_ServerSideApplyConfig = map[string]string{
-	"force":         "Force represents to force apply the manifest.",
-	"fieldManager":  "FieldManager is the manager to apply the resource. It is work-agent by default, but can be other name with work-agent as the prefix.",
-	"ignoreFields":  "IgnoreFields defines a list of json paths in the resource that will not be updated on the spoke.",
-	"onSpokeChange": "OnSpokeChange defines whether the resource should be overriden by the manifestwork it is changed on the spoke by another actor.",
+	"force":        "Force represents to force apply the manifest.",
+	"fieldManager": "FieldManager is the manager to apply the resource. It is work-agent by default, but can be other name with work-agent as the prefix.",
+	"ignoreFields": "IgnoreFields defines a list of json paths in the resource that will not be updated on the spoke.",
 }
 
 func (ServerSideApplyConfig) SwaggerDoc() map[string]string {
@@ -287,19 +295,10 @@ func (StatusFeedbackResult) SwaggerDoc() map[string]string {
 	return map_StatusFeedbackResult
 }
 
-var map_UpdateConfig = map[string]string{
-	"onSpokeChange": "OnSpokeChange defines whether the resource should be overriden by the manifestwork it is changed on the spoke by another actor.",
-}
-
-func (UpdateConfig) SwaggerDoc() map[string]string {
-	return map_UpdateConfig
-}
-
 var map_UpdateStrategy = map[string]string{
 	"":                "UpdateStrategy defines the strategy to update this manifest",
 	"type":            "type defines the strategy to update this manifest, default value is Update. Update type means to update resource by an update call. CreateOnly type means do not update resource based on current manifest. ServerSideApply type means to update resource using server side apply with work-controller as the field manager. If there is conflict, the related Applied condition of manifest will be in the status of False with the reason of ApplyConflict. ReadOnly type means the agent will only check the existence of the resource based on its metadata, statusFeedBackRules can still be used to get feedbackResults.",
 	"serverSideApply": "serverSideApply defines the configuration for server side apply. It is honored only when the type of the updateStrategy is ServerSideApply",
-	"update":          "update defines the configuration for update. It is honored only when the type of the updateStrategy is Update",
 }
 
 func (UpdateStrategy) SwaggerDoc() map[string]string {
