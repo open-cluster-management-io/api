@@ -214,7 +214,7 @@ var _ = ginkgo.Describe("ManifestWork API test", func() {
 			gomega.Expect(err).To(gomega.HaveOccurred())
 		})
 
-		ginkgo.It("set feedback rule", func() {
+		ginkgo.It("set well known status feedback rule", func() {
 			work := &workv1.ManifestWork{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: manifestWorkName,
@@ -238,6 +238,70 @@ var _ = ginkgo.Describe("ManifestWork API test", func() {
 			_, err := hubWorkClient.WorkV1().ManifestWorks(testNamespace).
 				Create(context.TODO(), work, metav1.CreateOptions{})
 			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("set jsonpath feedback rule", func() {
+			work := &workv1.ManifestWork{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: manifestWorkName,
+				},
+				Spec: workv1.ManifestWorkSpec{
+					ManifestConfigs: []workv1.ManifestConfigOption{
+						{
+							ResourceIdentifier: workv1.ResourceIdentifier{
+								Resource:  "foo",
+								Name:      "test",
+								Namespace: "testns",
+							},
+							FeedbackRules: []workv1.FeedbackRule{
+								{
+									Type: workv1.JSONPathsType,
+									JsonPaths: []workv1.JsonPath{
+										{Name: "Replica", Path: ".spec.replicas"},
+										{Name: "StatusReplica", Path: ".status.replicas"},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			_, err := hubWorkClient.WorkV1().ManifestWorks(testNamespace).
+				Create(context.TODO(), work, metav1.CreateOptions{})
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("set feedback rule with same jsonpath name", func() {
+			work := &workv1.ManifestWork{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: manifestWorkName,
+				},
+				Spec: workv1.ManifestWorkSpec{
+					ManifestConfigs: []workv1.ManifestConfigOption{
+						{
+							ResourceIdentifier: workv1.ResourceIdentifier{
+								Resource:  "foo",
+								Name:      "test",
+								Namespace: "testns",
+							},
+							FeedbackRules: []workv1.FeedbackRule{
+								{
+									Type: workv1.JSONPathsType,
+									JsonPaths: []workv1.JsonPath{
+										{Name: "Replica", Path: ".spec.replicas"},
+										{Name: "Replica", Path: ".status.replicas"},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			_, err := hubWorkClient.WorkV1().ManifestWorks(testNamespace).
+				Create(context.TODO(), work, metav1.CreateOptions{})
+			gomega.Expect(err).To(gomega.HaveOccurred())
 		})
 	})
 })
