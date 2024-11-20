@@ -94,8 +94,6 @@ type ManifestConfigOption struct {
 
 	// FeedbackRules defines what resource status field should be returned. If it is not set or empty,
 	// no feedback rules will be honored.
-	// +listType:=map
-	// +listMapKey:=type
 	// +optional
 	FeedbackRules []FeedbackRule `json:"feedbackRules,omitempty"`
 

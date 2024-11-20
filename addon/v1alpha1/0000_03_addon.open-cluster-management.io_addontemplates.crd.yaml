@@ -222,9 +222,6 @@ spec:
                             - type
                             type: object
                           type: array
-                          x-kubernetes-list-map-keys:
-                          - type
-                          x-kubernetes-list-type: map
                         resourceIdentifier:
                           description: |-
                             ResourceIdentifier represents the group, resource, name and namespace of a resoure.
