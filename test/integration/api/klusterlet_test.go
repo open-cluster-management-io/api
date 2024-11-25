@@ -37,6 +37,38 @@ var _ = Describe("Create Klusterlet API", func() {
 			Expect(err).NotTo(BeNil())
 		})
 	})
+
+	Context("Create with aws auth and invalid arn", func() {
+		It("should reject the klusterlet creation", func() {
+			klusterlet.Spec.RegistrationConfiguration = &operatorv1.RegistrationConfiguration{
+				RegistrationDriver: operatorv1.RegistrationDriver{
+					AuthType: "awsirsa",
+					AwsIrsa: &operatorv1.AwsIrsa{
+						ManagedClusterArn: "arn:aws:bks:us-west-2:123456789012:cluster/managed-cluster1",
+						HubClusterArn:     "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1",
+					},
+				},
+			}
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).NotTo(BeNil())
+		})
+	})
+
+	Context("Create with aws auth and valid arn", func() {
+		It("should create successfully", func() {
+			klusterlet.Spec.RegistrationConfiguration = &operatorv1.RegistrationConfiguration{
+				RegistrationDriver: operatorv1.RegistrationDriver{
+					AuthType: "awsirsa",
+					AwsIrsa: &operatorv1.AwsIrsa{
+						ManagedClusterArn: "arn:aws:eks:us-west-2:123456789012:cluster/managed-cluster1",
+						HubClusterArn:     "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1",
+					},
+				},
+			}
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(BeNil())
+		})
+	})
 })
 
 var _ = Describe("valid HubApiServerHostAlias", func() {
