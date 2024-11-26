@@ -3,8 +3,8 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1alpha1 "open-cluster-management.io/api/cluster/v1alpha1"
 )
@@ -23,30 +23,10 @@ type ClusterClaimLister interface {
 
 // clusterClaimLister implements the ClusterClaimLister interface.
 type clusterClaimLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.ClusterClaim]
 }
 
 // NewClusterClaimLister returns a new ClusterClaimLister.
 func NewClusterClaimLister(indexer cache.Indexer) ClusterClaimLister {
-	return &clusterClaimLister{indexer: indexer}
-}
-
-// List lists all ClusterClaims in the indexer.
-func (s *clusterClaimLister) List(selector labels.Selector) (ret []*v1alpha1.ClusterClaim, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ClusterClaim))
-	})
-	return ret, err
-}
-
-// Get retrieves the ClusterClaim from the index for a given name.
-func (s *clusterClaimLister) Get(name string) (*v1alpha1.ClusterClaim, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("clusterclaim"), name)
-	}
-	return obj.(*v1alpha1.ClusterClaim), nil
+	return &clusterClaimLister{listers.New[*v1alpha1.ClusterClaim](indexer, v1alpha1.Resource("clusterclaim"))}
 }

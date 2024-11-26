@@ -25,22 +25,24 @@ var manifestworkreplicasetsKind = v1alpha1.SchemeGroupVersion.WithKind("Manifest
 
 // Get takes name of the manifestWorkReplicaSet, and returns the corresponding manifestWorkReplicaSet object, and an error if there is any.
 func (c *FakeManifestWorkReplicaSets) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ManifestWorkReplicaSet, err error) {
+	emptyResult := &v1alpha1.ManifestWorkReplicaSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(manifestworkreplicasetsResource, c.ns, name), &v1alpha1.ManifestWorkReplicaSet{})
+		Invokes(testing.NewGetActionWithOptions(manifestworkreplicasetsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ManifestWorkReplicaSet), err
 }
 
 // List takes label and field selectors, and returns the list of ManifestWorkReplicaSets that match those selectors.
 func (c *FakeManifestWorkReplicaSets) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ManifestWorkReplicaSetList, err error) {
+	emptyResult := &v1alpha1.ManifestWorkReplicaSetList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(manifestworkreplicasetsResource, manifestworkreplicasetsKind, c.ns, opts), &v1alpha1.ManifestWorkReplicaSetList{})
+		Invokes(testing.NewListActionWithOptions(manifestworkreplicasetsResource, manifestworkreplicasetsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -59,40 +61,43 @@ func (c *FakeManifestWorkReplicaSets) List(ctx context.Context, opts v1.ListOpti
 // Watch returns a watch.Interface that watches the requested manifestWorkReplicaSets.
 func (c *FakeManifestWorkReplicaSets) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(manifestworkreplicasetsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(manifestworkreplicasetsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a manifestWorkReplicaSet and creates it.  Returns the server's representation of the manifestWorkReplicaSet, and an error, if there is any.
 func (c *FakeManifestWorkReplicaSets) Create(ctx context.Context, manifestWorkReplicaSet *v1alpha1.ManifestWorkReplicaSet, opts v1.CreateOptions) (result *v1alpha1.ManifestWorkReplicaSet, err error) {
+	emptyResult := &v1alpha1.ManifestWorkReplicaSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(manifestworkreplicasetsResource, c.ns, manifestWorkReplicaSet), &v1alpha1.ManifestWorkReplicaSet{})
+		Invokes(testing.NewCreateActionWithOptions(manifestworkreplicasetsResource, c.ns, manifestWorkReplicaSet, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ManifestWorkReplicaSet), err
 }
 
 // Update takes the representation of a manifestWorkReplicaSet and updates it. Returns the server's representation of the manifestWorkReplicaSet, and an error, if there is any.
 func (c *FakeManifestWorkReplicaSets) Update(ctx context.Context, manifestWorkReplicaSet *v1alpha1.ManifestWorkReplicaSet, opts v1.UpdateOptions) (result *v1alpha1.ManifestWorkReplicaSet, err error) {
+	emptyResult := &v1alpha1.ManifestWorkReplicaSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(manifestworkreplicasetsResource, c.ns, manifestWorkReplicaSet), &v1alpha1.ManifestWorkReplicaSet{})
+		Invokes(testing.NewUpdateActionWithOptions(manifestworkreplicasetsResource, c.ns, manifestWorkReplicaSet, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ManifestWorkReplicaSet), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeManifestWorkReplicaSets) UpdateStatus(ctx context.Context, manifestWorkReplicaSet *v1alpha1.ManifestWorkReplicaSet, opts v1.UpdateOptions) (*v1alpha1.ManifestWorkReplicaSet, error) {
+func (c *FakeManifestWorkReplicaSets) UpdateStatus(ctx context.Context, manifestWorkReplicaSet *v1alpha1.ManifestWorkReplicaSet, opts v1.UpdateOptions) (result *v1alpha1.ManifestWorkReplicaSet, err error) {
+	emptyResult := &v1alpha1.ManifestWorkReplicaSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(manifestworkreplicasetsResource, "status", c.ns, manifestWorkReplicaSet), &v1alpha1.ManifestWorkReplicaSet{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(manifestworkreplicasetsResource, "status", c.ns, manifestWorkReplicaSet, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ManifestWorkReplicaSet), err
 }
@@ -107,7 +112,7 @@ func (c *FakeManifestWorkReplicaSets) Delete(ctx context.Context, name string, o
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeManifestWorkReplicaSets) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(manifestworkreplicasetsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(manifestworkreplicasetsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ManifestWorkReplicaSetList{})
 	return err
@@ -115,11 +120,12 @@ func (c *FakeManifestWorkReplicaSets) DeleteCollection(ctx context.Context, opts
 
 // Patch applies the patch and returns the patched manifestWorkReplicaSet.
 func (c *FakeManifestWorkReplicaSets) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ManifestWorkReplicaSet, err error) {
+	emptyResult := &v1alpha1.ManifestWorkReplicaSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(manifestworkreplicasetsResource, c.ns, name, pt, data, subresources...), &v1alpha1.ManifestWorkReplicaSet{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(manifestworkreplicasetsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ManifestWorkReplicaSet), err
 }

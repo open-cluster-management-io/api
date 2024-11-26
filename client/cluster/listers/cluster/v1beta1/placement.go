@@ -3,8 +3,8 @@
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1beta1 "open-cluster-management.io/api/cluster/v1beta1"
 )
@@ -22,25 +22,17 @@ type PlacementLister interface {
 
 // placementLister implements the PlacementLister interface.
 type placementLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1beta1.Placement]
 }
 
 // NewPlacementLister returns a new PlacementLister.
 func NewPlacementLister(indexer cache.Indexer) PlacementLister {
-	return &placementLister{indexer: indexer}
-}
-
-// List lists all Placements in the indexer.
-func (s *placementLister) List(selector labels.Selector) (ret []*v1beta1.Placement, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.Placement))
-	})
-	return ret, err
+	return &placementLister{listers.New[*v1beta1.Placement](indexer, v1beta1.Resource("placement"))}
 }
 
 // Placements returns an object that can list and get Placements.
 func (s *placementLister) Placements(namespace string) PlacementNamespaceLister {
-	return placementNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return placementNamespaceLister{listers.NewNamespaced[*v1beta1.Placement](s.ResourceIndexer, namespace)}
 }
 
 // PlacementNamespaceLister helps list and get Placements.
@@ -58,26 +50,5 @@ type PlacementNamespaceLister interface {
 // placementNamespaceLister implements the PlacementNamespaceLister
 // interface.
 type placementNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all Placements in the indexer for a given namespace.
-func (s placementNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.Placement, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.Placement))
-	})
-	return ret, err
-}
-
-// Get retrieves the Placement from the indexer for a given namespace and name.
-func (s placementNamespaceLister) Get(name string) (*v1beta1.Placement, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1beta1.Resource("placement"), name)
-	}
-	return obj.(*v1beta1.Placement), nil
+	listers.ResourceIndexer[*v1beta1.Placement]
 }

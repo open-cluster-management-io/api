@@ -24,20 +24,22 @@ var managedclustersKind = v1.SchemeGroupVersion.WithKind("ManagedCluster")
 
 // Get takes name of the managedCluster, and returns the corresponding managedCluster object, and an error if there is any.
 func (c *FakeManagedClusters) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ManagedCluster, err error) {
+	emptyResult := &v1.ManagedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(managedclustersResource, name), &v1.ManagedCluster{})
+		Invokes(testing.NewRootGetActionWithOptions(managedclustersResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ManagedCluster), err
 }
 
 // List takes label and field selectors, and returns the list of ManagedClusters that match those selectors.
 func (c *FakeManagedClusters) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ManagedClusterList, err error) {
+	emptyResult := &v1.ManagedClusterList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(managedclustersResource, managedclustersKind, opts), &v1.ManagedClusterList{})
+		Invokes(testing.NewRootListActionWithOptions(managedclustersResource, managedclustersKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -56,36 +58,39 @@ func (c *FakeManagedClusters) List(ctx context.Context, opts metav1.ListOptions)
 // Watch returns a watch.Interface that watches the requested managedClusters.
 func (c *FakeManagedClusters) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(managedclustersResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(managedclustersResource, opts))
 }
 
 // Create takes the representation of a managedCluster and creates it.  Returns the server's representation of the managedCluster, and an error, if there is any.
 func (c *FakeManagedClusters) Create(ctx context.Context, managedCluster *v1.ManagedCluster, opts metav1.CreateOptions) (result *v1.ManagedCluster, err error) {
+	emptyResult := &v1.ManagedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(managedclustersResource, managedCluster), &v1.ManagedCluster{})
+		Invokes(testing.NewRootCreateActionWithOptions(managedclustersResource, managedCluster, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ManagedCluster), err
 }
 
 // Update takes the representation of a managedCluster and updates it. Returns the server's representation of the managedCluster, and an error, if there is any.
 func (c *FakeManagedClusters) Update(ctx context.Context, managedCluster *v1.ManagedCluster, opts metav1.UpdateOptions) (result *v1.ManagedCluster, err error) {
+	emptyResult := &v1.ManagedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(managedclustersResource, managedCluster), &v1.ManagedCluster{})
+		Invokes(testing.NewRootUpdateActionWithOptions(managedclustersResource, managedCluster, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ManagedCluster), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeManagedClusters) UpdateStatus(ctx context.Context, managedCluster *v1.ManagedCluster, opts metav1.UpdateOptions) (*v1.ManagedCluster, error) {
+func (c *FakeManagedClusters) UpdateStatus(ctx context.Context, managedCluster *v1.ManagedCluster, opts metav1.UpdateOptions) (result *v1.ManagedCluster, err error) {
+	emptyResult := &v1.ManagedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(managedclustersResource, "status", managedCluster), &v1.ManagedCluster{})
+		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(managedclustersResource, "status", managedCluster, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ManagedCluster), err
 }
@@ -99,7 +104,7 @@ func (c *FakeManagedClusters) Delete(ctx context.Context, name string, opts meta
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeManagedClusters) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(managedclustersResource, listOpts)
+	action := testing.NewRootDeleteCollectionActionWithOptions(managedclustersResource, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.ManagedClusterList{})
 	return err
@@ -107,10 +112,11 @@ func (c *FakeManagedClusters) DeleteCollection(ctx context.Context, opts metav1.
 
 // Patch applies the patch and returns the patched managedCluster.
 func (c *FakeManagedClusters) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ManagedCluster, err error) {
+	emptyResult := &v1.ManagedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(managedclustersResource, name, pt, data, subresources...), &v1.ManagedCluster{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(managedclustersResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ManagedCluster), err
 }

@@ -3,8 +3,8 @@
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1beta1 "open-cluster-management.io/api/cluster/v1beta1"
 )
@@ -22,25 +22,17 @@ type PlacementDecisionLister interface {
 
 // placementDecisionLister implements the PlacementDecisionLister interface.
 type placementDecisionLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1beta1.PlacementDecision]
 }
 
 // NewPlacementDecisionLister returns a new PlacementDecisionLister.
 func NewPlacementDecisionLister(indexer cache.Indexer) PlacementDecisionLister {
-	return &placementDecisionLister{indexer: indexer}
-}
-
-// List lists all PlacementDecisions in the indexer.
-func (s *placementDecisionLister) List(selector labels.Selector) (ret []*v1beta1.PlacementDecision, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.PlacementDecision))
-	})
-	return ret, err
+	return &placementDecisionLister{listers.New[*v1beta1.PlacementDecision](indexer, v1beta1.Resource("placementdecision"))}
 }
 
 // PlacementDecisions returns an object that can list and get PlacementDecisions.
 func (s *placementDecisionLister) PlacementDecisions(namespace string) PlacementDecisionNamespaceLister {
-	return placementDecisionNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return placementDecisionNamespaceLister{listers.NewNamespaced[*v1beta1.PlacementDecision](s.ResourceIndexer, namespace)}
 }
 
 // PlacementDecisionNamespaceLister helps list and get PlacementDecisions.
@@ -58,26 +50,5 @@ type PlacementDecisionNamespaceLister interface {
 // placementDecisionNamespaceLister implements the PlacementDecisionNamespaceLister
 // interface.
 type placementDecisionNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all PlacementDecisions in the indexer for a given namespace.
-func (s placementDecisionNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.PlacementDecision, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.PlacementDecision))
-	})
-	return ret, err
-}
-
-// Get retrieves the PlacementDecision from the indexer for a given namespace and name.
-func (s placementDecisionNamespaceLister) Get(name string) (*v1beta1.PlacementDecision, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1beta1.Resource("placementdecision"), name)
-	}
-	return obj.(*v1beta1.PlacementDecision), nil
+	listers.ResourceIndexer[*v1beta1.PlacementDecision]
 }

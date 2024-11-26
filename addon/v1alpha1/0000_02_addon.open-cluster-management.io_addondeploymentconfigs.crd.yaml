@@ -160,7 +160,6 @@ spec:
                   the following example will override image "quay.io/open-cluster-management/addon-agent" to
                   "quay.io/ocm/addon-agent" when deploying the addon agent
 
-
                   registries:
                     - source: quay.io/open-cluster-management/addon-agent
                       mirror: quay.io/ocm/addon-agent
@@ -180,6 +179,8 @@ spec:
                   type: object
                 type: array
             type: object
+        required:
+        - spec
         type: object
     served: true
     storage: true

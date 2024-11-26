@@ -25,22 +25,24 @@ var addonplacementscoresKind = v1alpha1.SchemeGroupVersion.WithKind("AddOnPlacem
 
 // Get takes name of the addOnPlacementScore, and returns the corresponding addOnPlacementScore object, and an error if there is any.
 func (c *FakeAddOnPlacementScores) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AddOnPlacementScore, err error) {
+	emptyResult := &v1alpha1.AddOnPlacementScore{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(addonplacementscoresResource, c.ns, name), &v1alpha1.AddOnPlacementScore{})
+		Invokes(testing.NewGetActionWithOptions(addonplacementscoresResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddOnPlacementScore), err
 }
 
 // List takes label and field selectors, and returns the list of AddOnPlacementScores that match those selectors.
 func (c *FakeAddOnPlacementScores) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AddOnPlacementScoreList, err error) {
+	emptyResult := &v1alpha1.AddOnPlacementScoreList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(addonplacementscoresResource, addonplacementscoresKind, c.ns, opts), &v1alpha1.AddOnPlacementScoreList{})
+		Invokes(testing.NewListActionWithOptions(addonplacementscoresResource, addonplacementscoresKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -59,40 +61,43 @@ func (c *FakeAddOnPlacementScores) List(ctx context.Context, opts v1.ListOptions
 // Watch returns a watch.Interface that watches the requested addOnPlacementScores.
 func (c *FakeAddOnPlacementScores) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(addonplacementscoresResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(addonplacementscoresResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a addOnPlacementScore and creates it.  Returns the server's representation of the addOnPlacementScore, and an error, if there is any.
 func (c *FakeAddOnPlacementScores) Create(ctx context.Context, addOnPlacementScore *v1alpha1.AddOnPlacementScore, opts v1.CreateOptions) (result *v1alpha1.AddOnPlacementScore, err error) {
+	emptyResult := &v1alpha1.AddOnPlacementScore{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(addonplacementscoresResource, c.ns, addOnPlacementScore), &v1alpha1.AddOnPlacementScore{})
+		Invokes(testing.NewCreateActionWithOptions(addonplacementscoresResource, c.ns, addOnPlacementScore, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddOnPlacementScore), err
 }
 
 // Update takes the representation of a addOnPlacementScore and updates it. Returns the server's representation of the addOnPlacementScore, and an error, if there is any.
 func (c *FakeAddOnPlacementScores) Update(ctx context.Context, addOnPlacementScore *v1alpha1.AddOnPlacementScore, opts v1.UpdateOptions) (result *v1alpha1.AddOnPlacementScore, err error) {
+	emptyResult := &v1alpha1.AddOnPlacementScore{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(addonplacementscoresResource, c.ns, addOnPlacementScore), &v1alpha1.AddOnPlacementScore{})
+		Invokes(testing.NewUpdateActionWithOptions(addonplacementscoresResource, c.ns, addOnPlacementScore, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddOnPlacementScore), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeAddOnPlacementScores) UpdateStatus(ctx context.Context, addOnPlacementScore *v1alpha1.AddOnPlacementScore, opts v1.UpdateOptions) (*v1alpha1.AddOnPlacementScore, error) {
+func (c *FakeAddOnPlacementScores) UpdateStatus(ctx context.Context, addOnPlacementScore *v1alpha1.AddOnPlacementScore, opts v1.UpdateOptions) (result *v1alpha1.AddOnPlacementScore, err error) {
+	emptyResult := &v1alpha1.AddOnPlacementScore{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(addonplacementscoresResource, "status", c.ns, addOnPlacementScore), &v1alpha1.AddOnPlacementScore{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(addonplacementscoresResource, "status", c.ns, addOnPlacementScore, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddOnPlacementScore), err
 }
@@ -107,7 +112,7 @@ func (c *FakeAddOnPlacementScores) Delete(ctx context.Context, name string, opts
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeAddOnPlacementScores) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(addonplacementscoresResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(addonplacementscoresResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.AddOnPlacementScoreList{})
 	return err
@@ -115,11 +120,12 @@ func (c *FakeAddOnPlacementScores) DeleteCollection(ctx context.Context, opts v1
 
 // Patch applies the patch and returns the patched addOnPlacementScore.
 func (c *FakeAddOnPlacementScores) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AddOnPlacementScore, err error) {
+	emptyResult := &v1alpha1.AddOnPlacementScore{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(addonplacementscoresResource, c.ns, name, pt, data, subresources...), &v1alpha1.AddOnPlacementScore{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(addonplacementscoresResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddOnPlacementScore), err
 }

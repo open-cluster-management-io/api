@@ -25,22 +25,24 @@ var managedclustersetbindingsKind = v1beta2.SchemeGroupVersion.WithKind("Managed
 
 // Get takes name of the managedClusterSetBinding, and returns the corresponding managedClusterSetBinding object, and an error if there is any.
 func (c *FakeManagedClusterSetBindings) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta2.ManagedClusterSetBinding, err error) {
+	emptyResult := &v1beta2.ManagedClusterSetBinding{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(managedclustersetbindingsResource, c.ns, name), &v1beta2.ManagedClusterSetBinding{})
+		Invokes(testing.NewGetActionWithOptions(managedclustersetbindingsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta2.ManagedClusterSetBinding), err
 }
 
 // List takes label and field selectors, and returns the list of ManagedClusterSetBindings that match those selectors.
 func (c *FakeManagedClusterSetBindings) List(ctx context.Context, opts v1.ListOptions) (result *v1beta2.ManagedClusterSetBindingList, err error) {
+	emptyResult := &v1beta2.ManagedClusterSetBindingList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(managedclustersetbindingsResource, managedclustersetbindingsKind, c.ns, opts), &v1beta2.ManagedClusterSetBindingList{})
+		Invokes(testing.NewListActionWithOptions(managedclustersetbindingsResource, managedclustersetbindingsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -59,40 +61,43 @@ func (c *FakeManagedClusterSetBindings) List(ctx context.Context, opts v1.ListOp
 // Watch returns a watch.Interface that watches the requested managedClusterSetBindings.
 func (c *FakeManagedClusterSetBindings) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(managedclustersetbindingsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(managedclustersetbindingsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a managedClusterSetBinding and creates it.  Returns the server's representation of the managedClusterSetBinding, and an error, if there is any.
 func (c *FakeManagedClusterSetBindings) Create(ctx context.Context, managedClusterSetBinding *v1beta2.ManagedClusterSetBinding, opts v1.CreateOptions) (result *v1beta2.ManagedClusterSetBinding, err error) {
+	emptyResult := &v1beta2.ManagedClusterSetBinding{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(managedclustersetbindingsResource, c.ns, managedClusterSetBinding), &v1beta2.ManagedClusterSetBinding{})
+		Invokes(testing.NewCreateActionWithOptions(managedclustersetbindingsResource, c.ns, managedClusterSetBinding, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta2.ManagedClusterSetBinding), err
 }
 
 // Update takes the representation of a managedClusterSetBinding and updates it. Returns the server's representation of the managedClusterSetBinding, and an error, if there is any.
 func (c *FakeManagedClusterSetBindings) Update(ctx context.Context, managedClusterSetBinding *v1beta2.ManagedClusterSetBinding, opts v1.UpdateOptions) (result *v1beta2.ManagedClusterSetBinding, err error) {
+	emptyResult := &v1beta2.ManagedClusterSetBinding{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(managedclustersetbindingsResource, c.ns, managedClusterSetBinding), &v1beta2.ManagedClusterSetBinding{})
+		Invokes(testing.NewUpdateActionWithOptions(managedclustersetbindingsResource, c.ns, managedClusterSetBinding, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta2.ManagedClusterSetBinding), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeManagedClusterSetBindings) UpdateStatus(ctx context.Context, managedClusterSetBinding *v1beta2.ManagedClusterSetBinding, opts v1.UpdateOptions) (*v1beta2.ManagedClusterSetBinding, error) {
+func (c *FakeManagedClusterSetBindings) UpdateStatus(ctx context.Context, managedClusterSetBinding *v1beta2.ManagedClusterSetBinding, opts v1.UpdateOptions) (result *v1beta2.ManagedClusterSetBinding, err error) {
+	emptyResult := &v1beta2.ManagedClusterSetBinding{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(managedclustersetbindingsResource, "status", c.ns, managedClusterSetBinding), &v1beta2.ManagedClusterSetBinding{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(managedclustersetbindingsResource, "status", c.ns, managedClusterSetBinding, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta2.ManagedClusterSetBinding), err
 }
@@ -107,7 +112,7 @@ func (c *FakeManagedClusterSetBindings) Delete(ctx context.Context, name string,
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeManagedClusterSetBindings) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(managedclustersetbindingsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(managedclustersetbindingsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1beta2.ManagedClusterSetBindingList{})
 	return err
@@ -115,11 +120,12 @@ func (c *FakeManagedClusterSetBindings) DeleteCollection(ctx context.Context, op
 
 // Patch applies the patch and returns the patched managedClusterSetBinding.
 func (c *FakeManagedClusterSetBindings) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta2.ManagedClusterSetBinding, err error) {
+	emptyResult := &v1beta2.ManagedClusterSetBinding{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(managedclustersetbindingsResource, c.ns, name, pt, data, subresources...), &v1beta2.ManagedClusterSetBinding{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(managedclustersetbindingsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta2.ManagedClusterSetBinding), err
 }
