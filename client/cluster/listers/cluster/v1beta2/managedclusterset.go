@@ -3,8 +3,8 @@
 package v1beta2
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1beta2 "open-cluster-management.io/api/cluster/v1beta2"
 )
@@ -23,30 +23,10 @@ type ManagedClusterSetLister interface {
 
 // managedClusterSetLister implements the ManagedClusterSetLister interface.
 type managedClusterSetLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1beta2.ManagedClusterSet]
 }
 
 // NewManagedClusterSetLister returns a new ManagedClusterSetLister.
 func NewManagedClusterSetLister(indexer cache.Indexer) ManagedClusterSetLister {
-	return &managedClusterSetLister{indexer: indexer}
-}
-
-// List lists all ManagedClusterSets in the indexer.
-func (s *managedClusterSetLister) List(selector labels.Selector) (ret []*v1beta2.ManagedClusterSet, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta2.ManagedClusterSet))
-	})
-	return ret, err
-}
-
-// Get retrieves the ManagedClusterSet from the index for a given name.
-func (s *managedClusterSetLister) Get(name string) (*v1beta2.ManagedClusterSet, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1beta2.Resource("managedclusterset"), name)
-	}
-	return obj.(*v1beta2.ManagedClusterSet), nil
+	return &managedClusterSetLister{listers.New[*v1beta2.ManagedClusterSet](indexer, v1beta2.Resource("managedclusterset"))}
 }

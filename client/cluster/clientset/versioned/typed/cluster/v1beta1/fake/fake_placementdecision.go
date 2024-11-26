@@ -25,22 +25,24 @@ var placementdecisionsKind = v1beta1.SchemeGroupVersion.WithKind("PlacementDecis
 
 // Get takes name of the placementDecision, and returns the corresponding placementDecision object, and an error if there is any.
 func (c *FakePlacementDecisions) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.PlacementDecision, err error) {
+	emptyResult := &v1beta1.PlacementDecision{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(placementdecisionsResource, c.ns, name), &v1beta1.PlacementDecision{})
+		Invokes(testing.NewGetActionWithOptions(placementdecisionsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.PlacementDecision), err
 }
 
 // List takes label and field selectors, and returns the list of PlacementDecisions that match those selectors.
 func (c *FakePlacementDecisions) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.PlacementDecisionList, err error) {
+	emptyResult := &v1beta1.PlacementDecisionList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(placementdecisionsResource, placementdecisionsKind, c.ns, opts), &v1beta1.PlacementDecisionList{})
+		Invokes(testing.NewListActionWithOptions(placementdecisionsResource, placementdecisionsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -59,40 +61,43 @@ func (c *FakePlacementDecisions) List(ctx context.Context, opts v1.ListOptions) 
 // Watch returns a watch.Interface that watches the requested placementDecisions.
 func (c *FakePlacementDecisions) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(placementdecisionsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(placementdecisionsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a placementDecision and creates it.  Returns the server's representation of the placementDecision, and an error, if there is any.
 func (c *FakePlacementDecisions) Create(ctx context.Context, placementDecision *v1beta1.PlacementDecision, opts v1.CreateOptions) (result *v1beta1.PlacementDecision, err error) {
+	emptyResult := &v1beta1.PlacementDecision{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(placementdecisionsResource, c.ns, placementDecision), &v1beta1.PlacementDecision{})
+		Invokes(testing.NewCreateActionWithOptions(placementdecisionsResource, c.ns, placementDecision, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.PlacementDecision), err
 }
 
 // Update takes the representation of a placementDecision and updates it. Returns the server's representation of the placementDecision, and an error, if there is any.
 func (c *FakePlacementDecisions) Update(ctx context.Context, placementDecision *v1beta1.PlacementDecision, opts v1.UpdateOptions) (result *v1beta1.PlacementDecision, err error) {
+	emptyResult := &v1beta1.PlacementDecision{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(placementdecisionsResource, c.ns, placementDecision), &v1beta1.PlacementDecision{})
+		Invokes(testing.NewUpdateActionWithOptions(placementdecisionsResource, c.ns, placementDecision, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.PlacementDecision), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakePlacementDecisions) UpdateStatus(ctx context.Context, placementDecision *v1beta1.PlacementDecision, opts v1.UpdateOptions) (*v1beta1.PlacementDecision, error) {
+func (c *FakePlacementDecisions) UpdateStatus(ctx context.Context, placementDecision *v1beta1.PlacementDecision, opts v1.UpdateOptions) (result *v1beta1.PlacementDecision, err error) {
+	emptyResult := &v1beta1.PlacementDecision{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(placementdecisionsResource, "status", c.ns, placementDecision), &v1beta1.PlacementDecision{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(placementdecisionsResource, "status", c.ns, placementDecision, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.PlacementDecision), err
 }
@@ -107,7 +112,7 @@ func (c *FakePlacementDecisions) Delete(ctx context.Context, name string, opts v
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakePlacementDecisions) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(placementdecisionsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(placementdecisionsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1beta1.PlacementDecisionList{})
 	return err
@@ -115,11 +120,12 @@ func (c *FakePlacementDecisions) DeleteCollection(ctx context.Context, opts v1.D
 
 // Patch applies the patch and returns the patched placementDecision.
 func (c *FakePlacementDecisions) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.PlacementDecision, err error) {
+	emptyResult := &v1beta1.PlacementDecision{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(placementdecisionsResource, c.ns, name, pt, data, subresources...), &v1beta1.PlacementDecision{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(placementdecisionsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.PlacementDecision), err
 }
