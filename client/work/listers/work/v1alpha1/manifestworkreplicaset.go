@@ -3,8 +3,8 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1alpha1 "open-cluster-management.io/api/work/v1alpha1"
 )
@@ -22,25 +22,17 @@ type ManifestWorkReplicaSetLister interface {
 
 // manifestWorkReplicaSetLister implements the ManifestWorkReplicaSetLister interface.
 type manifestWorkReplicaSetLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.ManifestWorkReplicaSet]
 }
 
 // NewManifestWorkReplicaSetLister returns a new ManifestWorkReplicaSetLister.
 func NewManifestWorkReplicaSetLister(indexer cache.Indexer) ManifestWorkReplicaSetLister {
-	return &manifestWorkReplicaSetLister{indexer: indexer}
-}
-
-// List lists all ManifestWorkReplicaSets in the indexer.
-func (s *manifestWorkReplicaSetLister) List(selector labels.Selector) (ret []*v1alpha1.ManifestWorkReplicaSet, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ManifestWorkReplicaSet))
-	})
-	return ret, err
+	return &manifestWorkReplicaSetLister{listers.New[*v1alpha1.ManifestWorkReplicaSet](indexer, v1alpha1.Resource("manifestworkreplicaset"))}
 }
 
 // ManifestWorkReplicaSets returns an object that can list and get ManifestWorkReplicaSets.
 func (s *manifestWorkReplicaSetLister) ManifestWorkReplicaSets(namespace string) ManifestWorkReplicaSetNamespaceLister {
-	return manifestWorkReplicaSetNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return manifestWorkReplicaSetNamespaceLister{listers.NewNamespaced[*v1alpha1.ManifestWorkReplicaSet](s.ResourceIndexer, namespace)}
 }
 
 // ManifestWorkReplicaSetNamespaceLister helps list and get ManifestWorkReplicaSets.
@@ -58,26 +50,5 @@ type ManifestWorkReplicaSetNamespaceLister interface {
 // manifestWorkReplicaSetNamespaceLister implements the ManifestWorkReplicaSetNamespaceLister
 // interface.
 type manifestWorkReplicaSetNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ManifestWorkReplicaSets in the indexer for a given namespace.
-func (s manifestWorkReplicaSetNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.ManifestWorkReplicaSet, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ManifestWorkReplicaSet))
-	})
-	return ret, err
-}
-
-// Get retrieves the ManifestWorkReplicaSet from the indexer for a given namespace and name.
-func (s manifestWorkReplicaSetNamespaceLister) Get(name string) (*v1alpha1.ManifestWorkReplicaSet, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("manifestworkreplicaset"), name)
-	}
-	return obj.(*v1alpha1.ManifestWorkReplicaSet), nil
+	listers.ResourceIndexer[*v1alpha1.ManifestWorkReplicaSet]
 }
