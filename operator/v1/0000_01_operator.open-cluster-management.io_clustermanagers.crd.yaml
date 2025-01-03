@@ -255,6 +255,18 @@ spec:
                       - feature
                       type: object
                     type: array
+                  registrationDriverHub:
+                    description: This provides details to initialize Hub cluster
+                    properties:
+                      authType:
+                        default: csr
+                        description: Type of the authentication used by hub to initialize
+                          the Hub cluster. Possible values are csr and awsirsa.
+                        enum:
+                        - csr
+                        - awsirsa
+                        type: string
+                    type: object
                 type: object
               registrationImagePullSpec:
                 default: quay.io/open-cluster-management/registration

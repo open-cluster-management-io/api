@@ -108,6 +108,19 @@ type RegistrationHubConfiguration struct {
 	//  	he can set featuregate/Foo=false before upgrading. Let's say the cluster-admin wants featuregate/Foo=false.
 	// +optional
 	FeatureGates []FeatureGate `json:"featureGates,omitempty"`
+
+	// This provides details to initialize Hub cluster
+	// +optional
+	RegistrationDriverHub RegistrationDriverHub `json:"registrationDriverHub,omitempty"`
+}
+
+type RegistrationDriverHub struct {
+
+	// Type of the authentication used by hub to initialize the Hub cluster. Possible values are csr and awsirsa.
+	// +required
+	// +kubebuilder:default:=csr
+	// +kubebuilder:validation:Enum=csr;awsirsa
+	AuthType string `json:"authType,omitempty"`
 }
 
 type WorkConfiguration struct {
