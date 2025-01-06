@@ -109,12 +109,13 @@ type RegistrationHubConfiguration struct {
 	// +optional
 	FeatureGates []FeatureGate `json:"featureGates,omitempty"`
 
-	// This provides details to initialize Hub cluster
+	// AuthDrivers represent the list of authentication drivers for registration
+	// An AuthDriver helps to specify the type of authentication to be supported by the hub
 	// +optional
-	RegistrationDriverHub RegistrationDriverHub `json:"registrationDriverHub,omitempty"`
+	AuthDrivers []AuthDriver `json:"authDrivers,omitempty"`
 }
 
-type RegistrationDriverHub struct {
+type AuthDriver struct {
 
 	// Type of the authentication used by hub to initialize the Hub cluster. Possible values are csr and awsirsa.
 	// +required
