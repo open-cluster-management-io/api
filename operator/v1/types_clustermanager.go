@@ -123,10 +123,9 @@ type AuthDriver struct {
 	// +kubebuilder:validation:Enum=csr;awsirsa
 	AuthType string `json:"authType,omitempty"`
 
-	// This represents the role ARN assumed by registration controller on hub to create roles for each managed cluster
-	// This ARN follows the naming convention as arn:aws:iam::<hub-account-id>:role/<hub-cluster-name>_managed-cluster-identity-creator
+	// This represents the hub cluster ARN
 	// +optional
-	ManagedClusterIdentityCreatorRole string `json:"managedClusterIdentityCreatorRole,omitempty"`
+	HubClusterArn string `json:"hubClusterArn,omitempty"`
 }
 
 type WorkConfiguration struct {
