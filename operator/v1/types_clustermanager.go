@@ -112,6 +112,8 @@ type RegistrationHubConfiguration struct {
 	// RegistrationDrivers represent the list of hub registration drivers that contain information used by hub to initialize the hub cluster
 	// A RegistrationDriverHub contains details of authentication type and the hub cluster ARN
 	// +optional
+	// +listType=map
+	// +listMapKey=authType
 	RegistrationDrivers []RegistrationDriverHub `json:"registrationDrivers,omitempty"`
 }
 

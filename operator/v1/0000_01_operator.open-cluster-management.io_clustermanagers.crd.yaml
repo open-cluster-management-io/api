@@ -274,6 +274,9 @@ spec:
                           type: string
                       type: object
                     type: array
+                    x-kubernetes-list-map-keys:
+                    - authType
+                    x-kubernetes-list-type: map
                 type: object
               registrationImagePullSpec:
                 default: quay.io/open-cluster-management/registration
