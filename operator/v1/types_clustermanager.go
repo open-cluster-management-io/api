@@ -108,6 +108,22 @@ type RegistrationHubConfiguration struct {
 	//  	he can set featuregate/Foo=false before upgrading. Let's say the cluster-admin wants featuregate/Foo=false.
 	// +optional
 	FeatureGates []FeatureGate `json:"featureGates,omitempty"`
+
+	// ImporterConfiguration is the configuration to import managed clusters from the hub cluster. It applies only when
+	// feature gate ClusterImporter is enabled.
+	// +optional
+	ImporterConfiguration ImporterConfiguration `json:"importerConfiguration,omitempty"`
+}
+
+type ImporterConfiguration struct {
+	// AgentImage is the image of the klusterlet agent. If it is not set, the default image
+	// will be used with the corresponding version.
+	// +optional
+	AgentImage string `json:"agentImage,omitempty"`
+
+	// HubAPIServer is the apiserver endpoint of the hub cluster.
+	// +optional
+	HubAPIServerURL string `json:"hubAPIServerURL,omitempty"`
 }
 
 type WorkConfiguration struct {
