@@ -261,6 +261,46 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 		Expect(clusterManager.Spec.RegistrationConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
 		Expect(clusterManager.Spec.RegistrationConfiguration.FeatureGates[1].Mode).Should(Equal(operatorv1.FeatureGateModeTypeEnable))
 	})
+
+	It("Create a cluster manager with aws registration and invalid hubClusterArn", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagerName,
+			},
+			Spec: operatorv1.ClusterManagerSpec{
+				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
+					RegistrationDrivers: []operatorv1.RegistrationDriverHub{
+						{
+							AuthType:      "awsirsa",
+							HubClusterArn: "arn:aws:bks:us-west-2:123456789012:cluster/hub-cluster1",
+						},
+					},
+				},
+			},
+		}
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).ToNot(BeNil())
+	})
+
+	It("Create a cluster manager with aws registration and valid hubClusterArn", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusterManagerName,
+			},
+			Spec: operatorv1.ClusterManagerSpec{
+				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
+					RegistrationDrivers: []operatorv1.RegistrationDriverHub{
+						{
+							AuthType:      "awsirsa",
+							HubClusterArn: "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1",
+						},
+					},
+				},
+			},
+		}
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+	})
 })
 
 var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
