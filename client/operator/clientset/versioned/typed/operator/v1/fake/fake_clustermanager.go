@@ -24,20 +24,22 @@ var clustermanagersKind = v1.SchemeGroupVersion.WithKind("ClusterManager")
 
 // Get takes name of the clusterManager, and returns the corresponding clusterManager object, and an error if there is any.
 func (c *FakeClusterManagers) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ClusterManager, err error) {
+	emptyResult := &v1.ClusterManager{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(clustermanagersResource, name), &v1.ClusterManager{})
+		Invokes(testing.NewRootGetActionWithOptions(clustermanagersResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ClusterManager), err
 }
 
 // List takes label and field selectors, and returns the list of ClusterManagers that match those selectors.
 func (c *FakeClusterManagers) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ClusterManagerList, err error) {
+	emptyResult := &v1.ClusterManagerList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(clustermanagersResource, clustermanagersKind, opts), &v1.ClusterManagerList{})
+		Invokes(testing.NewRootListActionWithOptions(clustermanagersResource, clustermanagersKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -56,36 +58,39 @@ func (c *FakeClusterManagers) List(ctx context.Context, opts metav1.ListOptions)
 // Watch returns a watch.Interface that watches the requested clusterManagers.
 func (c *FakeClusterManagers) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(clustermanagersResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(clustermanagersResource, opts))
 }
 
 // Create takes the representation of a clusterManager and creates it.  Returns the server's representation of the clusterManager, and an error, if there is any.
 func (c *FakeClusterManagers) Create(ctx context.Context, clusterManager *v1.ClusterManager, opts metav1.CreateOptions) (result *v1.ClusterManager, err error) {
+	emptyResult := &v1.ClusterManager{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(clustermanagersResource, clusterManager), &v1.ClusterManager{})
+		Invokes(testing.NewRootCreateActionWithOptions(clustermanagersResource, clusterManager, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ClusterManager), err
 }
 
 // Update takes the representation of a clusterManager and updates it. Returns the server's representation of the clusterManager, and an error, if there is any.
 func (c *FakeClusterManagers) Update(ctx context.Context, clusterManager *v1.ClusterManager, opts metav1.UpdateOptions) (result *v1.ClusterManager, err error) {
+	emptyResult := &v1.ClusterManager{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(clustermanagersResource, clusterManager), &v1.ClusterManager{})
+		Invokes(testing.NewRootUpdateActionWithOptions(clustermanagersResource, clusterManager, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ClusterManager), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeClusterManagers) UpdateStatus(ctx context.Context, clusterManager *v1.ClusterManager, opts metav1.UpdateOptions) (*v1.ClusterManager, error) {
+func (c *FakeClusterManagers) UpdateStatus(ctx context.Context, clusterManager *v1.ClusterManager, opts metav1.UpdateOptions) (result *v1.ClusterManager, err error) {
+	emptyResult := &v1.ClusterManager{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(clustermanagersResource, "status", clusterManager), &v1.ClusterManager{})
+		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(clustermanagersResource, "status", clusterManager, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ClusterManager), err
 }
@@ -99,7 +104,7 @@ func (c *FakeClusterManagers) Delete(ctx context.Context, name string, opts meta
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeClusterManagers) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(clustermanagersResource, listOpts)
+	action := testing.NewRootDeleteCollectionActionWithOptions(clustermanagersResource, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.ClusterManagerList{})
 	return err
@@ -107,10 +112,11 @@ func (c *FakeClusterManagers) DeleteCollection(ctx context.Context, opts metav1.
 
 // Patch applies the patch and returns the patched clusterManager.
 func (c *FakeClusterManagers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ClusterManager, err error) {
+	emptyResult := &v1.ClusterManager{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(clustermanagersResource, name, pt, data, subresources...), &v1.ClusterManager{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clustermanagersResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ClusterManager), err
 }

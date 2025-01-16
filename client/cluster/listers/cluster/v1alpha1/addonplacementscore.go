@@ -3,8 +3,8 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1alpha1 "open-cluster-management.io/api/cluster/v1alpha1"
 )
@@ -22,25 +22,17 @@ type AddOnPlacementScoreLister interface {
 
 // addOnPlacementScoreLister implements the AddOnPlacementScoreLister interface.
 type addOnPlacementScoreLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.AddOnPlacementScore]
 }
 
 // NewAddOnPlacementScoreLister returns a new AddOnPlacementScoreLister.
 func NewAddOnPlacementScoreLister(indexer cache.Indexer) AddOnPlacementScoreLister {
-	return &addOnPlacementScoreLister{indexer: indexer}
-}
-
-// List lists all AddOnPlacementScores in the indexer.
-func (s *addOnPlacementScoreLister) List(selector labels.Selector) (ret []*v1alpha1.AddOnPlacementScore, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.AddOnPlacementScore))
-	})
-	return ret, err
+	return &addOnPlacementScoreLister{listers.New[*v1alpha1.AddOnPlacementScore](indexer, v1alpha1.Resource("addonplacementscore"))}
 }
 
 // AddOnPlacementScores returns an object that can list and get AddOnPlacementScores.
 func (s *addOnPlacementScoreLister) AddOnPlacementScores(namespace string) AddOnPlacementScoreNamespaceLister {
-	return addOnPlacementScoreNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return addOnPlacementScoreNamespaceLister{listers.NewNamespaced[*v1alpha1.AddOnPlacementScore](s.ResourceIndexer, namespace)}
 }
 
 // AddOnPlacementScoreNamespaceLister helps list and get AddOnPlacementScores.
@@ -58,26 +50,5 @@ type AddOnPlacementScoreNamespaceLister interface {
 // addOnPlacementScoreNamespaceLister implements the AddOnPlacementScoreNamespaceLister
 // interface.
 type addOnPlacementScoreNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all AddOnPlacementScores in the indexer for a given namespace.
-func (s addOnPlacementScoreNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.AddOnPlacementScore, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.AddOnPlacementScore))
-	})
-	return ret, err
-}
-
-// Get retrieves the AddOnPlacementScore from the indexer for a given namespace and name.
-func (s addOnPlacementScoreNamespaceLister) Get(name string) (*v1alpha1.AddOnPlacementScore, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("addonplacementscore"), name)
-	}
-	return obj.(*v1alpha1.AddOnPlacementScore), nil
+	listers.ResourceIndexer[*v1alpha1.AddOnPlacementScore]
 }

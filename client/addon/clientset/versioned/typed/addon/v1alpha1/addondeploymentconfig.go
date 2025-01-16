@@ -4,12 +4,11 @@ package v1alpha1
 
 import (
 	"context"
-	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
 	scheme "open-cluster-management.io/api/client/addon/clientset/versioned/scheme"
 )
@@ -35,128 +34,18 @@ type AddOnDeploymentConfigInterface interface {
 
 // addOnDeploymentConfigs implements AddOnDeploymentConfigInterface
 type addOnDeploymentConfigs struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*v1alpha1.AddOnDeploymentConfig, *v1alpha1.AddOnDeploymentConfigList]
 }
 
 // newAddOnDeploymentConfigs returns a AddOnDeploymentConfigs
 func newAddOnDeploymentConfigs(c *AddonV1alpha1Client, namespace string) *addOnDeploymentConfigs {
 	return &addOnDeploymentConfigs{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*v1alpha1.AddOnDeploymentConfig, *v1alpha1.AddOnDeploymentConfigList](
+			"addondeploymentconfigs",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1alpha1.AddOnDeploymentConfig { return &v1alpha1.AddOnDeploymentConfig{} },
+			func() *v1alpha1.AddOnDeploymentConfigList { return &v1alpha1.AddOnDeploymentConfigList{} }),
 	}
-}
-
-// Get takes name of the addOnDeploymentConfig, and returns the corresponding addOnDeploymentConfig object, and an error if there is any.
-func (c *addOnDeploymentConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AddOnDeploymentConfig, err error) {
-	result = &v1alpha1.AddOnDeploymentConfig{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("addondeploymentconfigs").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of AddOnDeploymentConfigs that match those selectors.
-func (c *addOnDeploymentConfigs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AddOnDeploymentConfigList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.AddOnDeploymentConfigList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("addondeploymentconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested addOnDeploymentConfigs.
-func (c *addOnDeploymentConfigs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("addondeploymentconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a addOnDeploymentConfig and creates it.  Returns the server's representation of the addOnDeploymentConfig, and an error, if there is any.
-func (c *addOnDeploymentConfigs) Create(ctx context.Context, addOnDeploymentConfig *v1alpha1.AddOnDeploymentConfig, opts v1.CreateOptions) (result *v1alpha1.AddOnDeploymentConfig, err error) {
-	result = &v1alpha1.AddOnDeploymentConfig{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("addondeploymentconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(addOnDeploymentConfig).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a addOnDeploymentConfig and updates it. Returns the server's representation of the addOnDeploymentConfig, and an error, if there is any.
-func (c *addOnDeploymentConfigs) Update(ctx context.Context, addOnDeploymentConfig *v1alpha1.AddOnDeploymentConfig, opts v1.UpdateOptions) (result *v1alpha1.AddOnDeploymentConfig, err error) {
-	result = &v1alpha1.AddOnDeploymentConfig{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("addondeploymentconfigs").
-		Name(addOnDeploymentConfig.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(addOnDeploymentConfig).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the addOnDeploymentConfig and deletes it. Returns an error if one occurs.
-func (c *addOnDeploymentConfigs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("addondeploymentconfigs").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *addOnDeploymentConfigs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("addondeploymentconfigs").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched addOnDeploymentConfig.
-func (c *addOnDeploymentConfigs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AddOnDeploymentConfig, err error) {
-	result = &v1alpha1.AddOnDeploymentConfig{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("addondeploymentconfigs").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }
