@@ -126,7 +126,9 @@ type RegistrationDriverHub struct {
 	AuthType string `json:"authType,omitempty"`
 
 	// This represents the hub cluster ARN
+	// Example - arn:eks:us-west-2:12345678910:cluster/hub-cluster1
 	// +optional
+	// +kubebuilder:validation:Pattern=`^arn:aws:eks:([a-zA-Z0-9-]+):(\d{12}):cluster/([a-zA-Z0-9-]+)$`
 	HubClusterArn string `json:"hubClusterArn,omitempty"`
 }
 
