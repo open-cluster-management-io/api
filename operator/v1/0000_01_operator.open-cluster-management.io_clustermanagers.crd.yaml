@@ -216,32 +216,6 @@ spec:
                 description: RegistrationConfiguration contains the configuration
                   of registration
                 properties:
-                  autoApprovalIdentities:
-                    description: |-
-                      AutoApprovalIdentities represent the list of approved identities which is used to whitelist certain identities to join with the hub cluster
-                      An ApprovedIdentities contains details of the driver type (csr, awsirsa) and a list of identities to whitelist.
-                    items:
-                      properties:
-                        driver:
-                          default: csr
-                          description: Type of authentication used for specific set
-                            of identities to whitelist. Possible values are csr and
-                            awsirsa.
-                          enum:
-                          - csr
-                          - awsirsa
-                          type: string
-                        identities:
-                          description: Identities represent a list of users in which
-                            we will allow to join with hub cluster
-                          items:
-                            type: string
-                          type: array
-                      type: object
-                    type: array
-                    x-kubernetes-list-map-keys:
-                    - driver
-                    x-kubernetes-list-type: map
                   autoApproveUsers:
                     description: |-
                       AutoApproveUser represents a list of users that can auto approve CSR and accept client. If the credential of the
@@ -301,6 +275,13 @@ spec:
                             Example - arn:eks:us-west-2:12345678910:cluster/hub-cluster1
                           pattern: ^arn:aws:eks:([a-zA-Z0-9-]+):(\d{12}):cluster/([a-zA-Z0-9-]+)$
                           type: string
+                        identities:
+                          description: |-
+                            For csr authentication type, Identities represent a list of approved users
+                            For awsirsa authentication type, Identities represent a list of approved arn patterns
+                          items:
+                            type: string
+                          type: array
                       type: object
                     type: array
                     x-kubernetes-list-map-keys:

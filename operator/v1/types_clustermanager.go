@@ -115,13 +115,6 @@ type RegistrationHubConfiguration struct {
 	// +listType=map
 	// +listMapKey=authType
 	RegistrationDrivers []RegistrationDriverHub `json:"registrationDrivers,omitempty"`
-
-	// AutoApprovalIdentities represent the list of approved identities which is used to whitelist certain identities to join with the hub cluster
-	// An ApprovedIdentities contains details of the driver type (csr, awsirsa) and a list of identities to whitelist.
-	// +optional
-	// +listType=map
-	// +listMapKey=driver
-	AutoApprovalIdentities []ApprovedIdentities `json:"autoApprovalIdentities,omitempty"`
 }
 
 type RegistrationDriverHub struct {
@@ -137,17 +130,10 @@ type RegistrationDriverHub struct {
 	// +optional
 	// +kubebuilder:validation:Pattern=`^arn:aws:eks:([a-zA-Z0-9-]+):(\d{12}):cluster/([a-zA-Z0-9-]+)$`
 	HubClusterArn string `json:"hubClusterArn,omitempty"`
-}
 
-type ApprovedIdentities struct {
-	// Type of authentication used for specific set of identities to whitelist. Possible values are csr and awsirsa.
-	// +required
-	// +kubebuilder:default:=csr
-	// +kubebuilder:validation:Enum=csr;awsirsa
-	Driver string `json:"driver,omitempty"`
-
-	// Identities represent a list of users in which we will allow to join with hub cluster
-	// +required
+	// For csr authentication type, Identities represent a list of approved users
+	// For awsirsa authentication type, Identities represent a list of approved arn patterns
+	// +optional
 	Identities []string `json:"identities,omitempty"`
 }
 
