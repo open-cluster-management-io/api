@@ -131,10 +131,10 @@ type RegistrationDriverHub struct {
 	// +kubebuilder:validation:Pattern=`^arn:aws:eks:([a-zA-Z0-9-]+):(\d{12}):cluster/([a-zA-Z0-9-]+)$`
 	HubClusterArn string `json:"hubClusterArn,omitempty"`
 
-	// For csr authentication type, Identities represent a list of approved users
-	// For awsirsa authentication type, Identities represent a list of approved arn patterns
+	// For csr authentication type, AutoApprovedIdentities represent a list of approved users
+	// For awsirsa authentication type, AutoApprovedIdentities represent a list of approved arn patterns
 	// +optional
-	Identities []string `json:"identities,omitempty"`
+	AutoApprovedIdentities []string `json:"autoApprovedIdentities,omitempty"`
 }
 
 type WorkConfiguration struct {
