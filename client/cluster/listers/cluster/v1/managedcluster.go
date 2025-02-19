@@ -3,8 +3,8 @@
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1 "open-cluster-management.io/api/cluster/v1"
 )
@@ -23,30 +23,10 @@ type ManagedClusterLister interface {
 
 // managedClusterLister implements the ManagedClusterLister interface.
 type managedClusterLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.ManagedCluster]
 }
 
 // NewManagedClusterLister returns a new ManagedClusterLister.
 func NewManagedClusterLister(indexer cache.Indexer) ManagedClusterLister {
-	return &managedClusterLister{indexer: indexer}
-}
-
-// List lists all ManagedClusters in the indexer.
-func (s *managedClusterLister) List(selector labels.Selector) (ret []*v1.ManagedCluster, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ManagedCluster))
-	})
-	return ret, err
-}
-
-// Get retrieves the ManagedCluster from the index for a given name.
-func (s *managedClusterLister) Get(name string) (*v1.ManagedCluster, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("managedcluster"), name)
-	}
-	return obj.(*v1.ManagedCluster), nil
+	return &managedClusterLister{listers.New[*v1.ManagedCluster](indexer, v1.Resource("managedcluster"))}
 }

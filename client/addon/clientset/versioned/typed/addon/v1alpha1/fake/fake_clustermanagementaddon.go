@@ -24,20 +24,22 @@ var clustermanagementaddonsKind = v1alpha1.SchemeGroupVersion.WithKind("ClusterM
 
 // Get takes name of the clusterManagementAddOn, and returns the corresponding clusterManagementAddOn object, and an error if there is any.
 func (c *FakeClusterManagementAddOns) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ClusterManagementAddOn, err error) {
+	emptyResult := &v1alpha1.ClusterManagementAddOn{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(clustermanagementaddonsResource, name), &v1alpha1.ClusterManagementAddOn{})
+		Invokes(testing.NewRootGetActionWithOptions(clustermanagementaddonsResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterManagementAddOn), err
 }
 
 // List takes label and field selectors, and returns the list of ClusterManagementAddOns that match those selectors.
 func (c *FakeClusterManagementAddOns) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ClusterManagementAddOnList, err error) {
+	emptyResult := &v1alpha1.ClusterManagementAddOnList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(clustermanagementaddonsResource, clustermanagementaddonsKind, opts), &v1alpha1.ClusterManagementAddOnList{})
+		Invokes(testing.NewRootListActionWithOptions(clustermanagementaddonsResource, clustermanagementaddonsKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -56,36 +58,39 @@ func (c *FakeClusterManagementAddOns) List(ctx context.Context, opts v1.ListOpti
 // Watch returns a watch.Interface that watches the requested clusterManagementAddOns.
 func (c *FakeClusterManagementAddOns) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(clustermanagementaddonsResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(clustermanagementaddonsResource, opts))
 }
 
 // Create takes the representation of a clusterManagementAddOn and creates it.  Returns the server's representation of the clusterManagementAddOn, and an error, if there is any.
 func (c *FakeClusterManagementAddOns) Create(ctx context.Context, clusterManagementAddOn *v1alpha1.ClusterManagementAddOn, opts v1.CreateOptions) (result *v1alpha1.ClusterManagementAddOn, err error) {
+	emptyResult := &v1alpha1.ClusterManagementAddOn{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(clustermanagementaddonsResource, clusterManagementAddOn), &v1alpha1.ClusterManagementAddOn{})
+		Invokes(testing.NewRootCreateActionWithOptions(clustermanagementaddonsResource, clusterManagementAddOn, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterManagementAddOn), err
 }
 
 // Update takes the representation of a clusterManagementAddOn and updates it. Returns the server's representation of the clusterManagementAddOn, and an error, if there is any.
 func (c *FakeClusterManagementAddOns) Update(ctx context.Context, clusterManagementAddOn *v1alpha1.ClusterManagementAddOn, opts v1.UpdateOptions) (result *v1alpha1.ClusterManagementAddOn, err error) {
+	emptyResult := &v1alpha1.ClusterManagementAddOn{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(clustermanagementaddonsResource, clusterManagementAddOn), &v1alpha1.ClusterManagementAddOn{})
+		Invokes(testing.NewRootUpdateActionWithOptions(clustermanagementaddonsResource, clusterManagementAddOn, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterManagementAddOn), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeClusterManagementAddOns) UpdateStatus(ctx context.Context, clusterManagementAddOn *v1alpha1.ClusterManagementAddOn, opts v1.UpdateOptions) (*v1alpha1.ClusterManagementAddOn, error) {
+func (c *FakeClusterManagementAddOns) UpdateStatus(ctx context.Context, clusterManagementAddOn *v1alpha1.ClusterManagementAddOn, opts v1.UpdateOptions) (result *v1alpha1.ClusterManagementAddOn, err error) {
+	emptyResult := &v1alpha1.ClusterManagementAddOn{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(clustermanagementaddonsResource, "status", clusterManagementAddOn), &v1alpha1.ClusterManagementAddOn{})
+		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(clustermanagementaddonsResource, "status", clusterManagementAddOn, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterManagementAddOn), err
 }
@@ -99,7 +104,7 @@ func (c *FakeClusterManagementAddOns) Delete(ctx context.Context, name string, o
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeClusterManagementAddOns) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(clustermanagementaddonsResource, listOpts)
+	action := testing.NewRootDeleteCollectionActionWithOptions(clustermanagementaddonsResource, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ClusterManagementAddOnList{})
 	return err
@@ -107,10 +112,11 @@ func (c *FakeClusterManagementAddOns) DeleteCollection(ctx context.Context, opts
 
 // Patch applies the patch and returns the patched clusterManagementAddOn.
 func (c *FakeClusterManagementAddOns) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterManagementAddOn, err error) {
+	emptyResult := &v1alpha1.ClusterManagementAddOn{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(clustermanagementaddonsResource, name, pt, data, subresources...), &v1alpha1.ClusterManagementAddOn{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clustermanagementaddonsResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterManagementAddOn), err
 }
