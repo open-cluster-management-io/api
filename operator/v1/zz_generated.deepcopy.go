@@ -565,6 +565,11 @@ func (in *RegistrationDriverHub) DeepCopyInto(out *RegistrationDriverHub) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

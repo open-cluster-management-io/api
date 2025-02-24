@@ -125,7 +125,7 @@ type RegistrationDriverHub struct {
 	// +kubebuilder:validation:Enum=csr;awsirsa
 	AuthType string `json:"authType,omitempty"`
 
-	// This represents the hub cluster ARN
+	// This represents the hub cluster ARN. Applicable to only awsirsa authentication type.
 	// Example - arn:eks:us-west-2:12345678910:cluster/hub-cluster1
 	// +optional
 	// +kubebuilder:validation:Pattern=`^arn:aws:eks:([a-zA-Z0-9-]+):(\d{12}):cluster/([a-zA-Z0-9-]+)$`
@@ -135,6 +135,12 @@ type RegistrationDriverHub struct {
 	// For awsirsa authentication type, AutoApprovedIdentities represent a list of approved arn patterns
 	// +optional
 	AutoApprovedIdentities []string `json:"autoApprovedIdentities,omitempty"`
+
+	// List of tags to be added to AWS resources created by hub while processing awsirsa registration request.
+	// Applicable to only awsirsa authentication type.
+	// Example - "product:v1:tenant:app-name=My-App"
+	// +optional
+	Tags []string `json:"tags,omitempty"`
 }
 
 type WorkConfiguration struct {
