@@ -271,8 +271,10 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
 					RegistrationDrivers: []operatorv1.RegistrationDriverHub{
 						{
-							AuthType:      "awsirsa",
-							HubClusterArn: "arn:aws:bks:us-west-2:123456789012:cluster/hub-cluster1",
+							AuthType: "awsirsa",
+							AwsIrsa: &operatorv1.AwsIrsaConfig{
+								HubClusterArn: "arn:aws:bks:us-west-2:123456789012:cluster/hub-cluster1",
+							},
 						},
 					},
 				},
@@ -291,8 +293,10 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
 					RegistrationDrivers: []operatorv1.RegistrationDriverHub{
 						{
-							AuthType:      "awsirsa",
-							HubClusterArn: "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1",
+							AuthType: "awsirsa",
+							AwsIrsa: &operatorv1.AwsIrsaConfig{
+								HubClusterArn: "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1",
+							},
 						},
 					},
 				},
