@@ -94,7 +94,7 @@ const (
 // add it here.
 var DefaultSpokeRegistrationFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
 	ClusterClaim:               {Default: true, PreRelease: featuregate.Beta},
-	ClusterProperty:            {Default: false, PreRelease: featuregate.Beta},
+	ClusterProperty:            {Default: false, PreRelease: featuregate.Alpha},
 	AddonManagement:            {Default: true, PreRelease: featuregate.Beta},
 	V1beta1CSRAPICompatibility: {Default: false, PreRelease: featuregate.Alpha},
 	MultipleHubs:               {Default: false, PreRelease: featuregate.Alpha},
