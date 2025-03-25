@@ -608,10 +608,8 @@ const (
 
 // Condition reasons
 const (
-	// ConditionRuleTrue is set when a rule evaluates to status True
-	ConditionRuleTrue string = "ConditionRuleTrue"
-	// ConditionRuleFalse is set when a rule evaluates to status False (without errors)
-	ConditionRuleFalse string = "ConditionRuleFalse"
+	// ConditionRuleTrue is set when a rule is evaluated without error
+	ConditionRuleEvaluated string = "ConditionRuleEvaluated"
 	// ConditionRuleExpressionError is set when a rule fails due to an invalid expression
 	ConditionRuleExpressionError string = "ConditionRuleExpressionError"
 	// ConditionRuleInternalError is set when rule evaluation results in an error not caused by the expression
