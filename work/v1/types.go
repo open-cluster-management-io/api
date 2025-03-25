@@ -606,6 +606,18 @@ const (
 	ManifestComplete string = "Complete"
 )
 
+// Condition reasons
+const (
+	// ConditionRuleTrue is set when a rule evaluates to status True
+	ConditionRuleTrue string = "ConditionRuleTrue"
+	// ConditionRuleFalse is set when a rule evaluates to status False (without errors)
+	ConditionRuleFalse string = "ConditionRuleFalse"
+	// ConditionRuleExpressionError is set when a rule fails due to an invalid expression
+	ConditionRuleExpressionError string = "ConditionRuleExpressionError"
+	// ConditionRuleInternalError is set when rule evaluation results in an error not caused by the expression
+	ConditionRuleInternalError string = "ConditionRuleInternalError"
+)
+
 const (
 	// ManifestWorkFinalizer is the name of the finalizer added to manifestworks. It is used to ensure
 	// related appliedmanifestwork of a manifestwork are deleted before the manifestwork itself is deleted
