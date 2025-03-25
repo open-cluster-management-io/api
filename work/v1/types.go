@@ -116,7 +116,7 @@ type ManifestConfigOption struct {
 	ConditionRules []ConditionRule `json:"conditionRules,omitempty"`
 }
 
-// +kubebuilder:validation:XValidation:rule="self.type != 'CEL' || self.condition != ”",message="Condition is required for CEL rules"
+// +kubebuilder:validation:XValidation:rule="self.type != 'CEL' || self.condition != \"\"",message="Condition is required for CEL rules"
 type ConditionRule struct {
 	// Condition is the type of condition that is set based on this rule.
 	// Any condition is supported, but certain special conditions can be used to

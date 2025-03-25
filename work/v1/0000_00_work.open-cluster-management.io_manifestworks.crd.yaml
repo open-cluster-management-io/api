@@ -222,7 +222,7 @@ spec:
                         type: object
                         x-kubernetes-validations:
                         - message: Condition is required for CEL rules
-                          rule: self.type != 'CEL' || self.condition != ”
+                          rule: self.type != 'CEL' || self.condition != ""
                       type: array
                     feedbackRules:
                       description: |-
