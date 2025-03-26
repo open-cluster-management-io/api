@@ -30,6 +30,22 @@ spec:
           description: Spec represents the desired deployment configuration of Klusterlet agent.
           type: object
           properties:
+            clusterClaimConfiguration:
+              description: ClusterClaimConfiguration represents the configuration of ClusterClaim Effective only when the `ClusterClaim` feature gate is enabled.
+              type: object
+              required:
+                - maxCustomClusterClaims
+              properties:
+                maxCustomClusterClaims:
+                  description: Maximum number of custom ClusterClaims allowed.
+                  type: integer
+                  format: int32
+                  default: 20
+                reservedClusterClaimSuffixes:
+                  description: Custom suffixes for reserved ClusterClaims.
+                  type: array
+                  items:
+                    type: string
             clusterName:
               description: ClusterName is the name of the managed cluster to be created on hub. The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on OpenShift.
               type: string
