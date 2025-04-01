@@ -16,7 +16,7 @@ GO_BUILD_PACKAGES_EXPANDED :=$(GO_BUILD_PACKAGES)
 # LDFLAGS are not needed for dummy builds (saving time on calling git commands)
 GO_LD_FLAGS:=
 # controller-gen setup
-CONTROLLER_GEN_VERSION :=v0.15.0
+CONTROLLER_GEN_VERSION :=v0.16.5
 CONTROLLER_GEN :=$(PERMANENT_TMP_GOPATH)/bin/controller-gen
 ifneq "" "$(wildcard $(CONTROLLER_GEN))"
 _controller_gen_installed_version = $(shell $(CONTROLLER_GEN) --version | awk '{print $$2}')
@@ -40,7 +40,7 @@ RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator
 
 verify-gocilint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
 	go vet ./...
 	${GOPATH}/bin/golangci-lint run --timeout=3m ./...
 
@@ -56,7 +56,6 @@ update-scripts:
 	hack/update-deepcopy.sh
 	hack/update-swagger-docs.sh
 	hack/update-codegen.sh
-	hack/update-v1beta1-crds.sh
 .PHONY: update-scripts
 update: check-env update-scripts update-codegen-crds
 
