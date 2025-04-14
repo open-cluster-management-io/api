@@ -274,7 +274,6 @@ var map_KlusterletSpec = map[string]string{
 	"hubApiServerHostAlias":     "HubApiServerHostAlias contains the host alias for hub api server. registration-agent and work-agent will use it to communicate with hub api server.",
 	"resourceRequirement":       "ResourceRequirement specify QoS classes of deployments managed by klusterlet. It applies to all the containers in the deployments.",
 	"priorityClassName":         "PriorityClassName is the name of the PriorityClass that will be used by the deployed klusterlet agent. It will be ignored when the PriorityClass/v1 API is not available on the managed cluster.",
-	"clusterClaimConfiguration": "ClusterClaimConfiguration represents the configuration of ClusterClaim Effective only when the `ClusterClaim` feature gate is enabled.",
 }
 
 func (KlusterletSpec) SwaggerDoc() map[string]string {
@@ -318,6 +317,7 @@ var map_RegistrationConfiguration = map[string]string{
 	"kubeAPIBurst":                "KubeAPIBurst indicates the maximum burst of the throttle while talking with apiserver of hub cluster from the spoke cluster. If it is set empty, use the default value: 100",
 	"bootstrapKubeConfigs":        "BootstrapKubeConfigs defines the ordered list of bootstrap kubeconfigs. The order decides which bootstrap kubeconfig to use first when rebootstrap.\n\nWhen the agent loses the connection to the current hub over HubConnectionTimeoutSeconds, or the managedcluster CR is set `hubAcceptsClient=false` on the hub, the controller marks the related bootstrap kubeconfig as \"failed\".\n\nA failed bootstrapkubeconfig won't be used for the duration specified by SkipFailedBootstrapKubeConfigSeconds. But if the user updates the content of a failed bootstrapkubeconfig, the \"failed\" mark will be cleared.",
 	"registrationDriver":          "This provides driver details required to register with hub",
+	"clusterClaimConfiguration":   "ClusterClaimConfiguration represents the configuration of ClusterClaim Effective only when the `ClusterClaim` feature gate is enabled.",
 }
 
 func (RegistrationConfiguration) SwaggerDoc() map[string]string {

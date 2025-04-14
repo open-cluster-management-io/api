@@ -465,11 +465,6 @@ func (in *KlusterletSpec) DeepCopyInto(out *KlusterletSpec) {
 		*out = new(ResourceRequirement)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ClusterClaimConfiguration != nil {
-		in, out := &in.ClusterClaimConfiguration, &out.ClusterClaimConfiguration
-		*out = new(ClusterClaimConfiguration)
-		(*in).DeepCopyInto(*out)
-	}
 	return
 }
 
@@ -600,6 +595,11 @@ func (in *RegistrationConfiguration) DeepCopyInto(out *RegistrationConfiguration
 	}
 	in.BootstrapKubeConfigs.DeepCopyInto(&out.BootstrapKubeConfigs)
 	in.RegistrationDriver.DeepCopyInto(&out.RegistrationDriver)
+	if in.ClusterClaimConfiguration != nil {
+		in, out := &in.ClusterClaimConfiguration, &out.ClusterClaimConfiguration
+		*out = new(ClusterClaimConfiguration)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

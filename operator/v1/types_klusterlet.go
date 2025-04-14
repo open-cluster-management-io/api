@@ -99,24 +99,6 @@ type KlusterletSpec struct {
 	// is not available on the managed cluster.
 	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty"`
-
-	// ClusterClaimConfiguration represents the configuration of ClusterClaim
-	// Effective only when the `ClusterClaim` feature gate is enabled.
-	// +optional
-	ClusterClaimConfiguration *ClusterClaimConfiguration `json:"clusterClaimConfiguration,omitempty"`
-}
-
-// ClusterClaimConfiguration represents the configuration of ClusterClaim
-type ClusterClaimConfiguration struct {
-	// Maximum number of custom ClusterClaims allowed.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default:=20
-	// +required
-	MaxCustomClusterClaims int32 `json:"maxCustomClusterClaims"`
-
-	// Custom suffixes for reserved ClusterClaims.
-	// +optional
-	ReservedClusterClaimSuffixes []string `json:"reservedClusterClaimSuffixes,omitempty"`
 }
 
 // ServerURL represents the apiserver url and ca bundle that is accessible externally
@@ -194,6 +176,24 @@ type RegistrationConfiguration struct {
 	// This provides driver details required to register with hub
 	// +optional
 	RegistrationDriver RegistrationDriver `json:"registrationDriver,omitempty"`
+
+	// ClusterClaimConfiguration represents the configuration of ClusterClaim
+	// Effective only when the `ClusterClaim` feature gate is enabled.
+	// +optional
+	ClusterClaimConfiguration *ClusterClaimConfiguration `json:"clusterClaimConfiguration,omitempty"`
+}
+
+// ClusterClaimConfiguration represents the configuration of ClusterClaim
+type ClusterClaimConfiguration struct {
+	// Maximum number of custom ClusterClaims allowed.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default:=20
+	// +required
+	MaxCustomClusterClaims int32 `json:"maxCustomClusterClaims"`
+
+	// Custom suffixes for reserved ClusterClaims.
+	// +optional
+	ReservedClusterClaimSuffixes []string `json:"reservedClusterClaimSuffixes,omitempty"`
 }
 
 type RegistrationDriver struct {
