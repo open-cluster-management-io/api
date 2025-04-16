@@ -7,6 +7,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
 )
@@ -83,7 +84,7 @@ var _ = ginkgo.Describe("ManagedCluster API test", func() {
 		_, err = hubClusterClient.ClusterV1().ManagedClusters().Update(context.TODO(), cluster, metav1.UpdateOptions{})
 		gomega.Expect(err).To(gomega.HaveOccurred())
 
-		// Effect is not correct
+		// key, value, effect is correct and update
 		cluster.Spec.Taints = []clusterv1.Taint{
 			{
 				Key:    "test.io/test",
@@ -91,8 +92,17 @@ var _ = ginkgo.Describe("ManagedCluster API test", func() {
 				Effect: clusterv1.TaintEffectNoSelect,
 			},
 		}
-
 		_, err = hubClusterClient.ClusterV1().ManagedClusters().Update(context.TODO(), cluster, metav1.UpdateOptions{})
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		// key, value, effect is correct and patch
+		_, err = hubClusterClient.ClusterV1().ManagedClusters().Patch(
+			context.TODO(),
+			cluster.Name,
+			types.MergePatchType,
+			[]byte(`{"spec":{"taints":[{"key":"test.io/test","value":"testnew","effect":"NoSelect"}]}}`),
+			metav1.PatchOptions{},
+		)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
 	})
