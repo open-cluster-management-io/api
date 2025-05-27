@@ -264,7 +264,10 @@ spec:
                       reservedClusterClaimSuffixes:
                         description: Custom suffixes for reserved ClusterClaims.
                         items:
+                          maxLength: 64
+                          minLength: 1
                           type: string
+                        maxItems: 10
                         type: array
                     required:
                     - maxCustomClusterClaims

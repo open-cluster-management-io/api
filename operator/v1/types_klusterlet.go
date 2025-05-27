@@ -193,6 +193,9 @@ type ClusterClaimConfiguration struct {
 
 	// Custom suffixes for reserved ClusterClaims.
 	// +optional
+	// +kubebuilder:validation:MaxItems=10
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=64
 	ReservedClusterClaimSuffixes []string `json:"reservedClusterClaimSuffixes,omitempty"`
 }
 
