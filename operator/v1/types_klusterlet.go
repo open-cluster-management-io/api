@@ -151,13 +151,13 @@ type RegistrationConfiguration struct {
 	// +optional
 	ClusterAnnotations map[string]string `json:"clusterAnnotations,omitempty"`
 
-	// KubeAPIQPS indicates the maximum QPS while talking with apiserver of hub cluster from the spoke cluster.
+	// KubeAPIQPS indicates the maximum QPS while talking with apiserver on the spoke cluster.
 	// If it is set empty, use the default value: 50
 	// +optional
 	// +kubebuilder:default:=50
 	KubeAPIQPS int32 `json:"kubeAPIQPS,omitempty"`
 
-	// KubeAPIBurst indicates the maximum burst of the throttle while talking with apiserver of hub cluster from the spoke cluster.
+	// KubeAPIBurst indicates the maximum burst of the throttle while talking with apiserver on the spoke cluster.
 	// If it is set empty, use the default value: 100
 	// +optional
 	// +kubebuilder:default:=100
@@ -280,13 +280,13 @@ type WorkAgentConfiguration struct {
 	// +optional
 	FeatureGates []FeatureGate `json:"featureGates,omitempty"`
 
-	// KubeAPIQPS indicates the maximum QPS while talking with apiserver of hub cluster from the spoke cluster.
+	// KubeAPIQPS indicates the maximum QPS while talking with apiserver on the spoke cluster.
 	// If it is set empty, use the default value: 50
 	// +optional
 	// +kubebuilder:default:=50
 	KubeAPIQPS int32 `json:"kubeAPIQPS,omitempty"`
 
-	// KubeAPIBurst indicates the maximum burst of the throttle while talking with apiserver of hub cluster from the spoke cluster.
+	// KubeAPIBurst indicates the maximum burst of the throttle while talking with apiserver on the spoke cluster.
 	// If it is set empty, use the default value: 100
 	// +optional
 	// +kubebuilder:default:=100
