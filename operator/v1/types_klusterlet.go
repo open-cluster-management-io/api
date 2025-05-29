@@ -292,6 +292,18 @@ type WorkAgentConfiguration struct {
 	// +kubebuilder:default:=100
 	KubeAPIBurst int32 `json:"kubeAPIBurst,omitempty"`
 
+	// HubKubeAPIQPS indicates the maximum QPS while talking with apiserver on the hub cluster.
+	// If it is set empty, use the default value: 50
+	// +optional
+	// +kubebuilder:default:=50
+	HubKubeAPIQPS int32 `json:"hubKubeAPIQPS,omitempty"`
+
+	// HubKubeAPIBurst indicates the maximum burst of the throttle while talking with apiserver on the hub cluster.
+	// If it is set empty, use the default value: 100
+	// +optional
+	// +kubebuilder:default:=100
+	HubKubeAPIBurst int32 `json:"hubKubeAPIBurst,omitempty"`
+
 	// AppliedManifestWorkEvictionGracePeriod is the eviction grace period the work agent will wait before
 	// evicting the AppliedManifestWorks, whose corresponding ManifestWorks are missing on the hub cluster, from
 	// the managed cluster. If not present, the default value of the work agent will be used.
