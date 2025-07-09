@@ -78,10 +78,10 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 	Context("Set wrong format address", func() {
 		It("should return err", func() {
 			clusterManager.Spec.DeployOption.Hosted = &operatorv1.HostedClusterManagerConfiguration{
-				RegistrationWebhookConfiguration: operatorv1.WebhookConfiguration{
+				RegistrationWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "test:test",
 				},
-				WorkWebhookConfiguration: operatorv1.WebhookConfiguration{
+				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "test:test",
 				},
 			}
@@ -93,10 +93,10 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 	Context("Set IPV4 format addresses", func() {
 		It("should create successfully", func() {
 			clusterManager.Spec.DeployOption.Hosted = &operatorv1.HostedClusterManagerConfiguration{
-				RegistrationWebhookConfiguration: operatorv1.WebhookConfiguration{
+				RegistrationWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "192.168.2.3",
 				},
-				WorkWebhookConfiguration: operatorv1.WebhookConfiguration{
+				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "192.168.2.4",
 				},
 			}
@@ -108,10 +108,10 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 	Context("Set FQDN format addresses", func() {
 		It("should create successfully", func() {
 			clusterManager.Spec.DeployOption.Hosted = &operatorv1.HostedClusterManagerConfiguration{
-				RegistrationWebhookConfiguration: operatorv1.WebhookConfiguration{
+				RegistrationWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "localhost",
 				},
-				WorkWebhookConfiguration: operatorv1.WebhookConfiguration{
+				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo.com",
 				},
 			}
@@ -121,12 +121,12 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 	})
 
 	Context("Set nothing in ports", func() {
-		It("should has 443 as default value", func() {
+		It("should have 443 as default value in hosted mode", func() {
 			clusterManager.Spec.DeployOption.Hosted = &operatorv1.HostedClusterManagerConfiguration{
-				RegistrationWebhookConfiguration: operatorv1.WebhookConfiguration{
+				RegistrationWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "localhost",
 				},
-				WorkWebhookConfiguration: operatorv1.WebhookConfiguration{
+				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo.com",
 				},
 			}
@@ -140,11 +140,11 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 	Context("Set port bigger than 65535", func() {
 		It("should return err", func() {
 			clusterManager.Spec.DeployOption.Hosted = &operatorv1.HostedClusterManagerConfiguration{
-				RegistrationWebhookConfiguration: operatorv1.WebhookConfiguration{
+				RegistrationWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "localhost",
 					Port:    65536,
 				},
-				WorkWebhookConfiguration: operatorv1.WebhookConfiguration{
+				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo.com",
 				},
 			}
@@ -156,11 +156,11 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 	Context("Set customized WebhookConfiguration", func() {
 		It("should have euqually value after create", func() {
 			clusterManager.Spec.DeployOption.Hosted = &operatorv1.HostedClusterManagerConfiguration{
-				RegistrationWebhookConfiguration: operatorv1.WebhookConfiguration{
+				RegistrationWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo1.com",
 					Port:    1443,
 				},
-				WorkWebhookConfiguration: operatorv1.WebhookConfiguration{
+				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo2.com",
 					Port:    2443,
 				},
