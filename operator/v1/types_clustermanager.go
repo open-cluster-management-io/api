@@ -122,7 +122,7 @@ type RegistrationDriverHub struct {
 	// Type of the authentication used by hub to initialize the Hub cluster. Possible values are csr and awsirsa.
 	// +required
 	// +kubebuilder:default:=csr
-	// +kubebuilder:validation:Enum=csr;awsirsa
+	// +kubebuilder:validation:Enum=csr;awsirsa;grpc
 	AuthType string `json:"authType,omitempty"`
 
 	// CSR represents the configuration for csr driver.
@@ -132,7 +132,118 @@ type RegistrationDriverHub struct {
 	// AwsIrsa represents the configuration for awsirsa driver.
 	// +optional
 	AwsIrsa *AwsIrsaConfig `json:"awsirsa,omitempty"`
+
+	// GRPC represents the configuration for gRPC driver.
+	// +optional
+	GRPC *GRPC `json:"grpc,omitempty"`
 }
+
+// GRPCConfig represents the configuration for gRPC.
+type GPRCConfig struct {
+	// ClientCAFile is the path to the CA certificate file used for client authentication.
+	ClientCAFile string `json:"client_ca_file,omitempty"`
+	// ClientCAKeyFile is the path to the CA key file used for client authentication.
+	ClientCAKeyFile string `json:"client_ca_key_file,omitempty"`
+	// ServerCertFile is the path to the server certificate file used for gRPC server.
+	ServerCertFile string `json:"server_cert_file,omitempty"`
+	// ServerKeyFile is the path to the server key file used for gRPC server.
+	ServerKeyFile string `json:"server_key_file,omitempty"`
+	// RootCAFile is the path to the root CA certificate file used for client authentication.
+	RootCAFile string `json:"root_ca_file,omitempty"`
+}
+
+// DatabaseConfig represents the configuration for the database used by gRPC broker.
+type DatabaseConfig struct {
+	// Host is the hostname or IP address of the database server.
+	Host string `json:"host,omitempty"`
+	// Port is the port number on which the database server is listening.
+	Port int `json:"port,omitempty"`
+	// Name is the name of the database to connect to.
+	Name string `json:"name,omitempty"`
+	// Username is the username to use for authentication.
+	Username string `json:"username,omitempty"`
+	// Password is the password to use for authentication.
+	Password string `json:"password,omitempty"`
+	// SSLMode specifies the SSL mode for the database connection.
+	SSLMode string `json:"sslmode,omitempty"`
+	// CACertFile is the path to the CA certificate file used for SSL connections.
+	CACertFile string `json:"ca_cert_file,omitempty"`
+}
+
+// GRPC represents the configuration for gRPC driver.
+type GRPC struct {
+	// GRPCConfigSecretName is the name of the secret that contains the gRPC broker configuration.
+	// if the secret is not provided, the clustermanager will sign the certificates for gRPC broker.
+	// The secret should contain config.yaml, client-ca.crt, client-ca.key, server.crt, server.key, and root-ca.crt.
+	// The config.yaml should contain the following keys:
+	// - client_ca_file: The path to the CA certificate file used for client authentication.
+	// - client_ca_key_file: The path to the CA key file used for client authentication.
+	// - server_cert_file: The path to the server certificate file used for gRPC server.
+	// - server_key_file: The path to the server key file used for gRPC server.
+	// - root_ca_file: The path to the root CA certificate file used for client authentication.
+	// client-ca.crt, client-ca.key, server.crt, server.key, and root-ca.crt should be in PEM format.
+	// +optional
+	GRPCConfigSecretName string `json:"name,omitempty"`
+
+	// DBConfigSecretName is the name of the secret that contains the database configuration for gRPC broker.
+	// The secret should contain config.yaml, ca.crt.
+	// The config.yaml should contain the following keys:
+	// - host: The hostname or IP address of the database server.
+	// - port: The port number on which the database server is listening.
+	// - name: The name of the database to connect to.
+	// - username: The username to use for authentication.
+	// - password: The password to use for authentication.
+	// - sslmode: The SSL mode for the database connection.
+	// - certificate_file: The path to the CA certificate file used for SSL connections.
+	// The ca.crt should be in PEM format.
+	// +optional
+	DBConfigSecretName string `json:"dbConfigSecretName,omitempty"`
+
+	// ImagePullSpec represents the desired image of the gRPC broker installed on hub.
+	// +optional
+	// +kubebuilder:default=quay.io/open-cluster-management/grpc-broker
+	ImagePullSpec string `json:"imagePullSpec,omitempty"`
+
+	// EndpointPublishingType represents the type of endpoint publishing for gRPC.
+	// TODO: support loadbalancer and ingress.
+	// +required
+	// +kubebuilder:default:=nodeport
+	// +kubebuilder:validation:Enum=nodeport;route
+	EndpointPublishingType GRPCEndpointPublishingType `json:"endpointPublishingType,omitempty"`
+
+	// NodePort represents the configuration for nodeport publishing type.
+	// +optional
+	NodePort *NodePortConfig `json:"nodePort,omitempty"`
+
+	// Route represents the configuration for route publishing type.
+	// +optional
+	Route *RouteConfig `json:"route,omitempty"`
+}
+
+// RouteConfig represents the configuration for route publishing type.
+type RouteConfig struct {
+	// BaseDomain is the OpenShift cluster’s base domain.
+	// +required
+	BaseDomain string `json:"baseDomain,omitempty"`
+}
+
+// NodePortConfig represents the configuration for nodeport publishing type.
+type NodePortConfig struct {
+	// Port is the port number on which the gRPC server will listen.
+	// +optional
+	// +kubebuilder:default=30090
+	Port string `json:"port,omitempty"`
+}
+
+// GRPCEndpointPublishingType represents the type of endpoint publishing for gRPC.
+type GRPCEndpointPublishingType string
+
+const (
+	// GRPCEndpointTypeLoadBalancer exposes the gRPC endpoint via a NodePort service.
+	GRPCEndpointTypeNodePort GRPCEndpointPublishingType = "nodeport"
+	// GRPCEndpointTypeRoute exposes the gRPC endpoint via a Route.
+	GRPCEndpointTypeRoute GRPCEndpointPublishingType = "route"
+)
 
 type CSRConfig struct {
 	// AutoApprovedIdentities represent a list of approved users
