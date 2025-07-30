@@ -1,3 +1,4 @@
+\[comment\]: # ( Copyright Contributors to the Open Cluster Management project )
 # ManifestWork API
 
 ManifestWork is defined as a workload that hub desires to be deployed on the managed cluster
@@ -20,4 +21,3 @@ Status transition of ManifestWork API.
 3. Agent on managed cluster checks `status.WorkloadCondition` and updates `status.Condition`.
   - if all manifests is applied, update condition to `WorkloadApplied`.
   - if all manifests exist, add a condition of `WorkloadAvailable`.
-

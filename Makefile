@@ -1,3 +1,4 @@
+# Copyright Contributors to the Open Cluster Management project
 SHELL :=/bin/bash
 
 all: build
@@ -46,16 +47,16 @@ verify-gocilint:
 
 verify-scripts:
 	bash -x hack/verify-deepcopy.sh
-	bash -x hack/verify-swagger-docs.sh
 	bash -x hack/verify-crds.sh
 	bash -x hack/verify-codegen.sh
+	bash -x hack/verify-copyright.sh
 .PHONY: verify-scripts
 verify: check-env verify-scripts verify-codegen-crds verify-gocilint
 
 update-scripts:
 	hack/update-deepcopy.sh
-	hack/update-swagger-docs.sh
 	hack/update-codegen.sh
+	hack/update-copyright.sh
 .PHONY: update-scripts
 update: check-env update-scripts update-codegen-crds
 

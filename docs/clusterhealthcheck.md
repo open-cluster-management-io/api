@@ -1,3 +1,4 @@
+\[comment\]: # ( Copyright Contributors to the Open Cluster Management project )
 # Managed cluster availability check
 
 This document describes a mechanism on how hub cluster check the availability of agent running

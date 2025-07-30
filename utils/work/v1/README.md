@@ -1,3 +1,4 @@
+\[comment\]: # ( Copyright Contributors to the Open Cluster Management project )
 # Introduce 
 
 Introduce 2 libs `workBuilder` and `workApplier` to help user to build the manifest objects into manifestWorks 

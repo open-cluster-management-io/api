@@ -1,3 +1,4 @@
+# Copyright Contributors to the Open Cluster Management project
 #!/bin/bash
 
 # This script is meant to be the entrypoint for OpenShift Bash scripts to import all of the support

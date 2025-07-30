@@ -1,3 +1,4 @@
+# Copyright Contributors to the Open Cluster Management project
 #!/bin/bash
 
 # the path of this repo should be go/src/open-cluster-management.io/api which is set in kube-codegen.
@@ -42,4 +43,3 @@ kube::codegen::gen_client \
   --one-input-api addon \
   --with-watch \
   .
-

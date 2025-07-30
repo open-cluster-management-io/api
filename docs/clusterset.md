@@ -1,3 +1,4 @@
+\[comment\]: # ( Copyright Contributors to the Open Cluster Management project )
 # ManagedClusterSet
 
 ManagedClusterSet defines a group of ManagedClusters that user's workload can run on.
