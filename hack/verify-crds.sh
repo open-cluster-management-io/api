@@ -1,3 +1,4 @@
+# Copyright Contributors to the Open Cluster Management project
 #!/bin/bash
 
 if [ ! -f ./_output/tools/bin/yq ]; then

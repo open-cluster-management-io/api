@@ -1,3 +1,4 @@
+\[comment\]: # ( Copyright Contributors to the Open Cluster Management project )
 # Open Cluster Management API
 
 <a href="https://godoc.org/open-cluster-management.io/api"><img src="https://godoc.org/open-cluster-management.io/api?status.svg"></a> <a href="https://goreportcard.com/report/open-cluster-management.io/api"><img alt="Go Report Card" src="https://goreportcard.com/badge/open-cluster-management.io/api" /></a>

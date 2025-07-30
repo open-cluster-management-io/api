@@ -1,3 +1,4 @@
+\[comment\]: # ( Copyright Contributors to the Open Cluster Management project )
 # api
 
 The canonical location of the Open Cluster Management API definition.

@@ -1,3 +1,4 @@
+\[comment\]: # ( Copyright Contributors to the Open Cluster Management project )
 # Cluster join processes
 
 This is to describe the various process of cluster join

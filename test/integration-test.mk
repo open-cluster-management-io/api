@@ -1,3 +1,4 @@
+# Copyright Contributors to the Open Cluster Management project
 TEST_TMP :=/tmp
 
 export KUBEBUILDER_ASSETS ?=$(TEST_TMP)/kubebuilder/bin
