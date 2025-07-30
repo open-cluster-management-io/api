@@ -150,7 +150,7 @@ type GRPCConfig struct {
 	// +optional
 	EndpointExposure *GRPCEndpointExposure `json:"endpointExposure,omitempty"`
 
-	// AutoApprovedIdentities represent a list of approved arn patterns
+	// AutoApprovedIdentities represent a list of approved users
 	// +optional
 	AutoApprovedIdentities []string `json:"autoApprovedIdentities,omitempty"`
 }
