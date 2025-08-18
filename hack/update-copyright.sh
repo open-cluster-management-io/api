@@ -35,8 +35,6 @@ fi
 
 COMMUNITY_COPY_HEADER_STRING=$(cat $COMMUNITY_COPY_HEADER_FILE | sed 's#^// ##')
 
-echo "Desired copyright header is: $COMMUNITY_COPY_HEADER_STRING"
-
 # NOTE: Only use one newline or javascript and typescript linter/prettier will complain about the extra blank lines
 NEWLINE="\n"
 
