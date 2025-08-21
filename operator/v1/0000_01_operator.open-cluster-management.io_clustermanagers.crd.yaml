@@ -113,22 +113,22 @@ spec:
                                 type: integer
                               hostNetwork:
                                 description: |-
-                                  HostNetwork enables running webhook pods with hostNetwork: true
+                                  HostNetwork enables running webhook pods in host networking mode.
                                   This may be required in some installations, such as EKS with Calico CNI,
                                   to allow the API Server to communicate with the webhook pods.
                                 type: boolean
                               metricsPort:
                                 default: 8080
                                 description: |-
-                                  MetricsPort represents the bind port for a webhook-server's metric endpoint. The default value is 8080
+                                  MetricsPort represents the bind port for a webhook-server's metric endpoint. The default value is 8080.
                                   Metrics may be disabled by setting a value less than or equal to 0.
                                 format: int32
                                 maximum: 65535
                                 type: integer
                               port:
                                 default: 9443
-                                description: BindAddress represents the primary listen
-                                  port of a server. The default value is 9443.
+                                description: Port represents the primary bind port
+                                  of a server. The default value is 9443.
                                 format: int32
                                 maximum: 65535
                                 type: integer
@@ -152,22 +152,22 @@ spec:
                                 type: integer
                               hostNetwork:
                                 description: |-
-                                  HostNetwork enables running webhook pods with hostNetwork: true
+                                  HostNetwork enables running webhook pods in host networking mode.
                                   This may be required in some installations, such as EKS with Calico CNI,
                                   to allow the API Server to communicate with the webhook pods.
                                 type: boolean
                               metricsPort:
                                 default: 8080
                                 description: |-
-                                  MetricsPort represents the bind port for a webhook-server's metric endpoint. The default value is 8080
+                                  MetricsPort represents the bind port for a webhook-server's metric endpoint. The default value is 8080.
                                   Metrics may be disabled by setting a value less than or equal to 0.
                                 format: int32
                                 maximum: 65535
                                 type: integer
                               port:
                                 default: 9443
-                                description: BindAddress represents the primary listen
-                                  port of a server. The default value is 9443.
+                                description: Port represents the primary bind port
+                                  of a server. The default value is 9443.
                                 format: int32
                                 maximum: 65535
                                 type: integer
@@ -203,22 +203,22 @@ spec:
                                 type: integer
                               hostNetwork:
                                 description: |-
-                                  HostNetwork enables running webhook pods with hostNetwork: true
+                                  HostNetwork enables running webhook pods in host networking mode.
                                   This may be required in some installations, such as EKS with Calico CNI,
                                   to allow the API Server to communicate with the webhook pods.
                                 type: boolean
                               metricsPort:
                                 default: 8080
                                 description: |-
-                                  MetricsPort represents the bind port for a webhook-server's metric endpoint. The default value is 8080
+                                  MetricsPort represents the bind port for a webhook-server's metric endpoint. The default value is 8080.
                                   Metrics may be disabled by setting a value less than or equal to 0.
                                 format: int32
                                 maximum: 65535
                                 type: integer
                               port:
                                 default: 9443
-                                description: BindAddress represents the primary listen
-                                  port of a server. The default value is 9443.
+                                description: Port represents the primary bind port
+                                  of a server. The default value is 9443.
                                 format: int32
                                 maximum: 65535
                                 type: integer
@@ -258,22 +258,22 @@ spec:
                                 type: integer
                               hostNetwork:
                                 description: |-
-                                  HostNetwork enables running webhook pods with hostNetwork: true
+                                  HostNetwork enables running webhook pods in host networking mode.
                                   This may be required in some installations, such as EKS with Calico CNI,
                                   to allow the API Server to communicate with the webhook pods.
                                 type: boolean
                               metricsPort:
                                 default: 8080
                                 description: |-
-                                  MetricsPort represents the bind port for a webhook-server's metric endpoint. The default value is 8080
+                                  MetricsPort represents the bind port for a webhook-server's metric endpoint. The default value is 8080.
                                   Metrics may be disabled by setting a value less than or equal to 0.
                                 format: int32
                                 maximum: 65535
                                 type: integer
                               port:
                                 default: 9443
-                                description: BindAddress represents the primary listen
-                                  port of a server. The default value is 9443.
+                                description: Port represents the primary bind port
+                                  of a server. The default value is 9443.
                                 format: int32
                                 maximum: 65535
                                 type: integer
