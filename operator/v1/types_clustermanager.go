@@ -118,6 +118,25 @@ type RegistrationHubConfiguration struct {
 	RegistrationDrivers []RegistrationDriverHub `json:"registrationDrivers,omitempty"`
 }
 
+const (
+	// AwsIrsaAuthType represents the authentication type that uses AWS IRSA
+	AwsIrsaAuthType = "awsirsa"
+	// CSRAuthType represents the authentication type that uses Kubernetes CSR
+	CSRAuthType = "csr"
+	// GRPCAuthType represents the authentication type that uses gRPC.
+	GRPCAuthType = "grpc"
+)
+
+// GRPCAuthSigner is the signer name used when creating CSRs for gRPC authentication.
+const GRPCAuthSigner = "open-cluster-management.io/grpc"
+
+const (
+	// CSRUsernameAnnotation is added to a CSR to identify the user who requested the CSR.
+	// This should only be honored when registration driver is grpc and the csr user name
+	// is service account of grpc server.
+	CSRUsernameAnnotation = "open-cluster-management.io/csr-user"
+)
+
 type RegistrationDriverHub struct {
 
 	// Type of the authentication used by hub to initialize the Hub cluster. Possible values are csr and awsirsa.
