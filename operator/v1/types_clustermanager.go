@@ -73,9 +73,9 @@ type ClusterManagerSpec struct {
 	// +optional
 	AddOnManagerConfiguration *AddOnManagerConfiguration `json:"addOnManagerConfiguration,omitempty"`
 
-	// serverConfigration contains the configuration for http/grpc server.
+	// serverConfiguration contains the configuration for http/grpc server.
 	// +optional
-	ServerConfigration *ServerConfiguration `json:"serverConfigration,omitempty"`
+	ServerConfiguration *ServerConfiguration `json:"serverConfiguration,omitempty"`
 
 	// ResourceRequirement specify QoS classes of deployments managed by clustermanager.
 	// It applies to all the containers in the deployments.
@@ -172,7 +172,7 @@ type ServerConfiguration struct {
 
 	// endpointsExposure represents the configuration for endpoints exposure of the server.
 	// +optional
-	EndpointsExposure []EndpointExposure `json:"endpointsExposure"`
+	EndpointsExposure []EndpointExposure `json:"endpointsExposure,omitempty"`
 }
 
 type EndpointExposure struct {
@@ -188,10 +188,10 @@ type EndpointExposure struct {
 	Protocol string `json:"protocol"`
 
 	// grpc represents the configuration for grpc endpoint.
-	GRPC *Endpoint `json:"grpc"`
+	GRPC *Endpoint `json:"grpc,omitempty"`
 
 	// https represents the configuration for https endpoint.
-	HTTPS *Endpoint `json:"https"`
+	HTTPS *Endpoint `json:"https,omitempty"`
 }
 
 type Endpoint struct {
@@ -212,7 +212,7 @@ type Endpoint struct {
 type HostnameConfig struct {
 	// host is the host name of the endpoint.
 	// +required
-	Host string `json:"host,omitempty"`
+	Host string `json:"host"`
 
 	// caBundle of the endpoint.
 	// +optional
@@ -223,8 +223,8 @@ type HostnameConfig struct {
 type EndpointExposureType string
 
 const (
-	// CEndpointTypeHostname is the endpoint exposure type for hostname.
-	CEndpointTypeHostname EndpointExposureType = "hostname"
+	// EndpointTypeHostname is the endpoint exposure type for hostname.
+	EndpointTypeHostname EndpointExposureType = "hostname"
 )
 
 type CSRConfig struct {

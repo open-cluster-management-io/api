@@ -553,8 +553,8 @@ spec:
                     - ResourceRequirement
                     type: string
                 type: object
-              serverConfigration:
-                description: serverConfigration contains the configuration for http/grpc
+              serverConfiguration:
+                description: serverConfiguration contains the configuration for http/grpc
                   server.
                 properties:
                   endpointsExposure:

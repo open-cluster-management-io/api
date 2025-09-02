@@ -261,8 +261,8 @@ func (in *ClusterManagerSpec) DeepCopyInto(out *ClusterManagerSpec) {
 		*out = new(AddOnManagerConfiguration)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ServerConfigration != nil {
-		in, out := &in.ServerConfigration, &out.ServerConfigration
+	if in.ServerConfiguration != nil {
+		in, out := &in.ServerConfiguration, &out.ServerConfiguration
 		*out = new(ServerConfiguration)
 		(*in).DeepCopyInto(*out)
 	}
