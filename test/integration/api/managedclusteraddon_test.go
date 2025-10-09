@@ -57,7 +57,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 			metav1.GetOptions{},
 		)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
-		gomega.Expect(mca.Spec.InstallNamespace).To(gomega.BeEquivalentTo(testNamespace))
+		gomega.Expect(mca.Spec.InstallNamespace).To(gomega.BeEquivalentTo(testNamespace)) //nolint:staticcheck
 	})
 
 	ginkgo.It("Should create a ManagedClusterAddOn with empty spec", func() {
@@ -81,7 +81,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 			metav1.GetOptions{},
 		)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
-		gomega.Expect(mca.Spec.InstallNamespace).To(gomega.BeEquivalentTo("open-cluster-management-agent-addon"))
+		gomega.Expect(mca.Spec.InstallNamespace).To(gomega.BeEquivalentTo("open-cluster-management-agent-addon")) //nolint:staticcheck
 	})
 
 	ginkgo.It("Should update the ManagedClusterAddOn status without config", func() {
@@ -191,7 +191,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 			metav1.GetOptions{},
 		)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
-		gomega.Expect(mca.Spec.InstallNamespace).To(gomega.BeEquivalentTo(testNamespace))
+		gomega.Expect(mca.Spec.InstallNamespace).To(gomega.BeEquivalentTo(testNamespace)) //nolint:staticcheck
 
 		mca.Status.ConfigReferences = []addonv1alpha1.ConfigReference{
 			{
