@@ -159,4 +159,99 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 		)
 		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
 	})
+
+	ginkgo.It("Should create a AddOnDeploymentConfig with empty agentInstallNamespace", func() {
+		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
+				AgentInstallNamespace: "",
+			},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	})
+
+	ginkgo.It("Should create a AddOnDeploymentConfig with valid agentInstallNamespace", func() {
+		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
+				AgentInstallNamespace: "my-custom-namespace",
+			},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	})
+
+	ginkgo.It("Should not create a AddOnDeploymentConfig with invalid agentInstallNamespace (starts with hyphen)", func() {
+		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
+				AgentInstallNamespace: "-invalid",
+			},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+	})
+
+	ginkgo.It("Should not create a AddOnDeploymentConfig with invalid agentInstallNamespace (contains uppercase)", func() {
+		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
+				AgentInstallNamespace: "Invalid-Namespace",
+			},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+	})
+
+	ginkgo.It("Should not create a AddOnDeploymentConfig with agentInstallNamespace exceeding max length", func() {
+		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
+				AgentInstallNamespace: rand.String(64), // max is 63
+			},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(errors.IsInvalid(err)).To(gomega.BeTrue())
+	})
 })
