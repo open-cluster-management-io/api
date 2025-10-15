@@ -100,6 +100,20 @@ type KlusterletSpec struct {
 	// is not available on the managed cluster.
 	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+
+	// ProxyConfig holds the configuration for enabling klusterlet-proxy functionality,
+	// which allows the hub cluster to access the managed cluster's API server through
+	// a gRPC-based proxy tunnel established by the klusterlet agent.
+	//
+	// When configured, the klusterlet agent establishes a gRPC connection to the hub's
+	// proxy server and proxies incoming HTTP requests to the local managed cluster API server.
+	// This enables hub-to-spoke API access even when the managed cluster is not directly
+	// accessible from the hub (e.g., behind a firewall or NAT).
+	//
+	// This feature requires the ClusterProxy feature gate to be enabled and corresponding
+	// GRPCConfiguration to be set in the ClusterManager on the hub side.
+	// +optional
+	ProxyConfig *ProxyConfig `json:"proxyConfig,omitempty"`
 }
 
 // ServerURL represents the apiserver url and ca bundle that is accessible externally
@@ -329,6 +343,28 @@ type WorkAgentConfiguration struct {
 const (
 	// ClusterAnnotationsKeyPrefix is the prefix of annotations set on ManagedCluster when creating only.
 	ClusterAnnotationsKeyPrefix = "agent.open-cluster-management.io"
+)
+
+// ProxyConfig holds the configuration of klusterlet-proxy.
+type ProxyConfig struct {
+	// GRPCEndpoint represents the gRPC endpoint configuration for the proxy connection.
+	// +required
+	// +kubebuilder:validation:Required
+	GRPCEndpoint *EndpointExposure `json:"grpcEndpoint"`
+
+	// Authentications defines how the agent authenticates with the cluster.
+	// If not specified, defaults to ["userToken"].
+	// +optional
+	// +kubebuilder:default={userToken}
+	Authentications []ProxyAuthenticationType `json:"authentications,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=userToken;impersonation
+type ProxyAuthenticationType string
+
+const (
+	ProxyAuthenticationUserToken     ProxyAuthenticationType = "userToken"
+	ProxyAuthenticationImpersonation ProxyAuthenticationType = "impersonation"
 )
 
 // KlusterletDeployOption describes the deployment options for klusterlet

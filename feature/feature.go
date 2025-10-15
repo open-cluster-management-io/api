@@ -93,6 +93,26 @@ const (
 	// When enabled, the work controller will automatically clean up completed manifest works based on the configured
 	// time-to-live duration to prevent accumulation of old completed resources.
 	CleanUpCompletedManifestWork featuregate.Feature = "CleanUpCompletedManifestWork"
+
+	// ClusterProxy integrates cluster-proxy functionality directly into the klusterlet-agent, enabling
+	// HTTP-based proxying to managed cluster API servers through gRPC tunnels.
+	//
+	// When enabled on the hub (via ClusterManager), it starts a gRPC server that provides an externally accessible
+	// HTTP endpoint to proxy requests to managed cluster API servers. The API path format is:
+	// https://<server-address>:<port>/<cluster-name>
+	//
+	// When enabled on the spoke (via Klusterlet), the agent establishes a gRPC connection to the hub and proxies
+	// requests to its local API server. The agent sends a CSR with signer name "open-cluster-management.io/klusterlet-proxy"
+	// to obtain the gRPC configuration, which is stored in the hub-kubeconfig-secret as "proxy-grpc.yaml".
+	//
+	// This feature requires gRPC configuration in ClusterManager.spec.grpcConfiguration with the ClusterProxy
+	// feature gate enabled. Users can authenticate using either userToken or impersonation methods.
+	//
+	// Use cases include: fetching pod logs, accessing VM consoles (kubevirt), multicluster job submission (MultiKueue),
+	// and multicluster apiserver access (Kubernetes MCP).
+	//
+	// When disabled, the legacy cluster-proxy addon should be used instead for proxy functionality.
+	ClusterProxy featuregate.Feature = "ClusterProxy"
 )
 
 // DefaultSpokeRegistrationFeatureGates consists of all known ocm-registration
@@ -136,4 +156,8 @@ var DefaultHubWorkFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec
 var DefaultSpokeWorkFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
 	ExecutorValidatingCaches: {Default: false, PreRelease: featuregate.Alpha},
 	RawFeedbackJsonString:    {Default: false, PreRelease: featuregate.Alpha},
+}
+
+var DefaultServerConfigFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
+	ClusterProxy: {Default: false, PreRelease: featuregate.Alpha},
 }
