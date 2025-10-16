@@ -6,6 +6,8 @@ import (
 	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 	operatorv1 "open-cluster-management.io/api/operator/v1"
@@ -208,5 +210,181 @@ var _ = Describe("Klusterlet API test with WorkConfiguration", func() {
 		Expect(err).To(BeNil())
 		Expect(klusterlet.Spec.WorkConfiguration.FeatureGates[0].Mode).Should(Equal(operatorv1.FeatureGateModeTypeDisable))
 		Expect(klusterlet.Spec.WorkConfiguration.FeatureGates[1].Mode).Should(Equal(operatorv1.FeatureGateModeTypeEnable))
+	})
+})
+
+var _ = Describe("Klusterlet v1 Enhanced API test", func() {
+	var klusterletName string
+
+	BeforeEach(func() {
+		suffix := rand.String(5)
+		klusterletName = fmt.Sprintf("klusterlet-enhanced-%s", suffix)
+	})
+
+	AfterEach(func() {
+		err := operatorClient.OperatorV1().Klusterlets().Delete(context.TODO(), klusterletName, metav1.DeleteOptions{})
+		if !apierrors.IsForbidden(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+	})
+
+	Context("Klusterlet comprehensive configuration validation", func() {
+		It("should handle complete configuration with all optional fields", func() {
+			klusterlet := &operatorv1.Klusterlet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: klusterletName,
+				},
+				Spec: operatorv1.KlusterletSpec{
+					RegistrationImagePullSpec: "quay.io/test/registration:latest",
+					WorkImagePullSpec:         "quay.io/test/work:latest",
+					ClusterName:               "test-cluster",
+					Namespace:                 "open-cluster-management-agent",
+					ExternalServerURLs: []operatorv1.ServerURL{
+						{
+							URL: "https://hub.example.com:6443",
+						},
+					},
+					NodePlacement: operatorv1.NodePlacement{
+						NodeSelector: map[string]string{
+							"node-role.kubernetes.io/worker": "",
+						},
+						Tolerations: []v1.Toleration{
+							{
+								Key:      "node-role.kubernetes.io/worker",
+								Operator: v1.TolerationOpExists,
+								Effect:   v1.TaintEffectNoSchedule,
+							},
+						},
+					},
+					DeployOption: operatorv1.KlusterletDeployOption{
+						Mode: operatorv1.InstallModeDefault,
+					},
+					RegistrationConfiguration: &operatorv1.RegistrationConfiguration{
+						FeatureGates: []operatorv1.FeatureGate{
+							{
+								Feature: "AddonManagement",
+								Mode:    operatorv1.FeatureGateModeTypeEnable,
+							},
+						},
+					},
+					WorkConfiguration: &operatorv1.WorkAgentConfiguration{
+						FeatureGates: []operatorv1.FeatureGate{
+							{
+								Feature: "ManifestWorkReplicaSet",
+								Mode:    operatorv1.FeatureGateModeTypeEnable,
+							},
+						},
+					},
+				},
+			}
+
+			createdKlusterlet, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(createdKlusterlet.Spec.ClusterName).Should(Equal("test-cluster"))
+			Expect(createdKlusterlet.Spec.Namespace).Should(Equal("open-cluster-management-agent"))
+			Expect(len(createdKlusterlet.Spec.ExternalServerURLs)).Should(Equal(1))
+			Expect(createdKlusterlet.Spec.NodePlacement.NodeSelector["node-role.kubernetes.io/worker"]).Should(Equal(""))
+			Expect(len(createdKlusterlet.Spec.NodePlacement.Tolerations)).Should(Equal(1))
+		})
+
+		It("should validate hosted mode configuration", func() {
+			klusterlet := &operatorv1.Klusterlet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: klusterletName,
+				},
+				Spec: operatorv1.KlusterletSpec{
+					DeployOption: operatorv1.KlusterletDeployOption{
+						Mode: operatorv1.InstallModeHosted,
+					},
+				},
+			}
+
+			createdKlusterlet, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(createdKlusterlet.Spec.DeployOption.Mode).Should(Equal(operatorv1.InstallModeHosted))
+		})
+
+		It("should validate priority class configuration", func() {
+			klusterlet := &operatorv1.Klusterlet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: klusterletName,
+				},
+				Spec: operatorv1.KlusterletSpec{
+					PriorityClassName: "system-cluster-critical",
+				},
+			}
+
+			createdKlusterlet, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(createdKlusterlet.Spec.PriorityClassName).Should(Equal("system-cluster-critical"))
+		})
+	})
+
+	Context("Klusterlet resource requirements", func() {
+		It("should handle resource requirements configuration", func() {
+			klusterlet := &operatorv1.Klusterlet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: klusterletName,
+				},
+				Spec: operatorv1.KlusterletSpec{
+					ResourceRequirement: &operatorv1.ResourceRequirement{
+						Type: operatorv1.ResourceQosClassResourceRequirement,
+					},
+				},
+			}
+
+			createdKlusterlet, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(createdKlusterlet.Spec.ResourceRequirement.Type).Should(Equal(operatorv1.ResourceQosClassResourceRequirement))
+		})
+	})
+
+	Context("Klusterlet status updates", func() {
+		It("should allow status updates", func() {
+			klusterlet := &operatorv1.Klusterlet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: klusterletName,
+				},
+				Spec: operatorv1.KlusterletSpec{},
+			}
+
+			createdKlusterlet, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).ToNot(HaveOccurred())
+
+			// Update status
+			createdKlusterlet.Status = operatorv1.KlusterletStatus{
+				ObservedGeneration: 1,
+				Conditions: []metav1.Condition{
+					{
+						Type:               "Applied",
+						Status:             metav1.ConditionTrue,
+						Reason:             "KlusterletDeployed",
+						LastTransitionTime: metav1.Now(),
+					},
+				},
+				Generations: []operatorv1.GenerationStatus{
+					{
+						Group:          "apps",
+						Version:        "v1",
+						Resource:       "deployments",
+						Namespace:      "open-cluster-management-agent",
+						Name:           "klusterlet-registration-agent",
+						LastGeneration: 1,
+					},
+				},
+				RelatedResources: []operatorv1.RelatedResourceMeta{
+					{
+						Group:     "apps",
+						Version:   "v1",
+						Resource:  "deployments",
+						Namespace: "open-cluster-management-agent",
+						Name:      "klusterlet-registration-agent",
+					},
+				},
+			}
+
+			_, err = operatorClient.OperatorV1().Klusterlets().UpdateStatus(context.TODO(), createdKlusterlet, metav1.UpdateOptions{})
+			Expect(err).ToNot(HaveOccurred())
+		})
 	})
 })
