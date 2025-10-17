@@ -181,6 +181,112 @@ spec:
                   deployed klusterlet agent. It will be ignored when the PriorityClass/v1 API
                   is not available on the managed cluster.
                 type: string
+              proxyConfig:
+                description: |-
+                  ProxyConfig holds the configuration for enabling klusterlet-proxy functionality,
+                  which allows the hub cluster to access the managed cluster's API server through
+                  a gRPC-based proxy tunnel established by the klusterlet agent.
+
+                  When configured, the klusterlet agent establishes a gRPC connection to the hub's
+                  proxy server and proxies incoming HTTP requests to the local managed cluster API server.
+                  This enables hub-to-spoke API access even when the managed cluster is not directly
+                  accessible from the hub (e.g., behind a firewall or NAT).
+
+                  This feature requires the ClusterProxy feature gate to be enabled and corresponding
+                  GRPCConfiguration to be set in the ClusterManager on the hub side.
+                properties:
+                  authentications:
+                    default:
+                    - userToken
+                    description: |-
+                      Authentications defines how the agent authenticates with the cluster.
+                      If not specified, defaults to ["userToken"].
+                    items:
+                      enum:
+                      - userToken
+                      - impersonation
+                      type: string
+                    type: array
+                  grpcEndpoint:
+                    description: GRPCEndpoint represents the gRPC endpoint configuration
+                      for the proxy connection.
+                    properties:
+                      grpc:
+                        description: grpc represents the configuration for grpc endpoint.
+                        properties:
+                          hostname:
+                            description: hostname points to a fixed hostname for serving
+                              agents' handshakes.
+                            properties:
+                              caBundle:
+                                description: caBundle of the endpoint.
+                                format: byte
+                                type: string
+                              host:
+                                description: host is the host name of the endpoint.
+                                type: string
+                            required:
+                            - host
+                            type: object
+                          type:
+                            default: hostname
+                            description: |-
+                              type specifies how the endpoint is exposed.
+                              You may need to apply an object to expose the endpoint, for example: a route.
+                            enum:
+                            - hostname
+                            type: string
+                        required:
+                        - type
+                        type: object
+                      https:
+                        description: https represents the configuration for https
+                          endpoint.
+                        properties:
+                          hostname:
+                            description: hostname points to a fixed hostname for serving
+                              agents' handshakes.
+                            properties:
+                              caBundle:
+                                description: caBundle of the endpoint.
+                                format: byte
+                                type: string
+                              host:
+                                description: host is the host name of the endpoint.
+                                type: string
+                            required:
+                            - host
+                            type: object
+                          type:
+                            default: hostname
+                            description: |-
+                              type specifies how the endpoint is exposed.
+                              You may need to apply an object to expose the endpoint, for example: a route.
+                            enum:
+                            - hostname
+                            type: string
+                        required:
+                        - type
+                        type: object
+                      protocol:
+                        default: grpc
+                        description: protocol is the protocol used for the endpoint,
+                          could be https or grpc.
+                        enum:
+                        - grpc
+                        - https
+                        type: string
+                      usage:
+                        description: |-
+                          usage defines the usage of the endpoint. It could be "agentToHub" indicating the endpoint is used
+                          for communication between agent and hub, or "consumer" indicating the endpoint is used for external consumer.
+                        type: string
+                    required:
+                    - protocol
+                    type: object
+                required:
+                - grpcEndpoint
+                type: object
               registrationConfiguration:
                 description: RegistrationConfiguration contains the configuration
                   of registration
