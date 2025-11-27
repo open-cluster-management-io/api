@@ -1,5 +1,5 @@
 // Copyright Contributors to the Open Cluster Management project
-package v1alpha1
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,7 +12,6 @@ import (
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope="Cluster",shortName={"cma","cmas"}
 // +kubebuilder:printcolumn:name="DISPLAY NAME",type=string,JSONPath=`.spec.addOnMeta.displayName`
-// +kubebuilder:printcolumn:name="CRD NAME",type=string,JSONPath=`.spec.addOnConfiguration.crdName`
 
 // ClusterManagementAddOn represents the registration of an add-on to the cluster manager.
 // This resource allows you to discover which add-ons are available for the cluster manager
@@ -38,24 +37,14 @@ type ClusterManagementAddOnSpec struct {
 	// +optional
 	AddOnMeta AddOnMeta `json:"addOnMeta,omitempty"`
 
-	// Deprecated: Use supportedConfigs filed instead
-	// addOnConfiguration is a reference to configuration information for the add-on.
-	// In scenario where a multiple add-ons share the same add-on CRD, multiple ClusterManagementAddOn
-	// resources need to be created and reference the same AddOnConfiguration.
-	// +optional
-	AddOnConfiguration ConfigCoordinates `json:"addOnConfiguration,omitempty"`
-
-	// Deprecated: Will be removed and replaced with DefaultConfigs in v1beta1.
-	// supportedConfigs is a list of configuration types supported by add-on.
-	// An empty list means the add-on does not require configurations.
-	// The default is an empty list
+	// defaultConfigs is a list of default configuration types supported by add-on.
 	// +optional
 	// +listType=map
 	// +listMapKey=group
 	// +listMapKey=resource
-	SupportedConfigs []ConfigMeta `json:"supportedConfigs,omitempty"`
+	DefaultConfigs []AddOnConfig `json:"defaultConfigs,omitempty"`
 
-	// InstallStrategy represents that related ManagedClusterAddOns should be installed
+	// installStrategy represents that related ManagedClusterAddOns should be installed
 	// on certain clusters.
 	// +optional
 	// +kubebuilder:default={type: Manual}
@@ -71,34 +60,6 @@ type AddOnMeta struct {
 	// description represents the detailed description of the add-on.
 	// +optional
 	Description string `json:"description,omitempty"`
-}
-
-// ConfigMeta represents a collection of metadata information for add-on configuration.
-type ConfigMeta struct {
-	// group and resouce of the add-on configuration.
-	ConfigGroupResource `json:",inline"`
-
-	// defaultConfig represents the namespace and name of the default add-on configuration.
-	// In scenario where all add-ons have a same configuration.
-	// +optional
-	DefaultConfig *ConfigReferent `json:"defaultConfig,omitempty"`
-}
-
-// ConfigCoordinates represents the information for locating the CRD and CR that configures the add-on.
-type ConfigCoordinates struct {
-	// crdName is the name of the CRD used to configure instances of the managed add-on.
-	// This field should be configured if the add-on have a CRD that controls the configuration of the add-on.
-	// +optional
-	CRDName string `json:"crdName,omitempty"`
-
-	// crName is the name of the CR used to configure instances of the managed add-on.
-	// This field should be configured if add-on CR have a consistent name across the all of the ManagedCluster instaces.
-	// +optional
-	CRName string `json:"crName,omitempty"`
-
-	// lastObservedGeneration is the observed generation of the custom resource for the configuration of the addon.
-	// +optional
-	LastObservedGeneration int64 `json:"lastObservedGeneration,omitempty"`
 }
 
 // ConfigGroupResource represents the GroupResource of the add-on configuration
@@ -141,14 +102,14 @@ type ConfigSpecHash struct {
 // InstallStrategy represents that related ManagedClusterAddOns should be installed
 // on certain clusters.
 type InstallStrategy struct {
-	// Type is the type of the install strategy, it can be:
+	// type is the type of the install strategy, it can be:
 	// - Manual: no automatic install
 	// - Placements: install to clusters selected by placements.
 	// +kubebuilder:validation:Enum=Manual;Placements
 	// +kubebuilder:default:=Manual
 	// +optional
 	Type string `json:"type"`
-	// Placements is a list of placement references honored when install strategy type is
+	// placements is a list of placement references honored when install strategy type is
 	// Placements. All clusters selected by these placements will install the addon
 	// If one cluster belongs to multiple placements, it will only apply the strategy defined
 	// later in the order. That is to say, The latter strategy overrides the previous one.
@@ -168,12 +129,12 @@ const (
 )
 
 type PlacementRef struct {
-	// Namespace is the namespace of the placement
+	// namespace is the namespace of the placement
 	// +required
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Namespace string `json:"namespace"`
-	// Name is the name of the placement
+	// name is the name of the placement
 	// +required
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
@@ -182,11 +143,11 @@ type PlacementRef struct {
 
 type PlacementStrategy struct {
 	PlacementRef `json:",inline"`
-	// Configs is the configuration of managedClusterAddon during installation.
+	// configs is the configuration of managedClusterAddon during installation.
 	// User can override the configuration by updating the managedClusterAddon directly.
 	// +optional
 	Configs []AddOnConfig `json:"configs,omitempty"`
-	// The rollout strategy to apply addon configurations change.
+	// rolloutStrategy is the strategy to apply addon configurations change.
 	// The rollout strategy only watches the addon configurations defined in ClusterManagementAddOn.
 	// +kubebuilder:default={type: All}
 	// +optional
@@ -195,10 +156,10 @@ type PlacementStrategy struct {
 
 // ClusterManagementAddOnStatus represents the current status of cluster management add-on.
 type ClusterManagementAddOnStatus struct {
-	// DefaultConfigReferences is a list of current add-on default configuration references.
+	// defaultConfigReferences is a list of current add-on default configuration references.
 	// +optional
-	DefaultConfigReferences []DefaultConfigReference `json:"defaultconfigReferences,omitempty"`
-	// installProgression is a list of current add-on configuration references per placement.
+	DefaultConfigReferences []DefaultConfigReference `json:"defaultConfigReferences,omitempty"`
+	// installProgressions is a list of current add-on configuration references per placement.
 	// +optional
 	InstallProgressions []InstallProgression `json:"installProgressions,omitempty"`
 }
@@ -260,18 +221,3 @@ type ClusterManagementAddOnList struct {
 	// Items is a list of cluster management add-ons.
 	Items []ClusterManagementAddOn `json:"items"`
 }
-
-const (
-	// AddonLifecycleAnnotationKey is an annotation key on ClusterManagementAddon to indicate the installation
-	// and upgrade of addon should be handled by the general addon manager or addon itself. The valid values are
-	// addon-manager and self. If the annotation is not set, addon lifecycle is handled by addon itself.
-	AddonLifecycleAnnotationKey = "addon.open-cluster-management.io/lifecycle"
-	// AddonLifecycleAddonManagerAnnotationValue is the value of annotation AddonLifecycleAnnotationKey indicating
-	// that the addon installation and upgrade is handled by the general addon manager. This should be set only
-	// when featuregate AddonManager on hub is enabled
-	AddonLifecycleAddonManagerAnnotationValue = "addon-manager"
-	// AddonLifecycleSelfManageAnnotationValue is the value of annotation AddonLifecycleAnnotationKey indicating
-	// that the addon installation and upgrade is handled the addon itself. The general addon manager will ignore
-	// addons with this annotation.
-	AddonLifecycleSelfManageAnnotationValue = "self"
-)

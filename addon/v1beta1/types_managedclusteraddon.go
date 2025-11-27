@@ -1,5 +1,5 @@
 // Copyright Contributors to the Open Cluster Management project
-package v1alpha1
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,15 +34,6 @@ type ManagedClusterAddOn struct {
 // ManagedClusterAddOnSpec defines the install configuration of
 // an addon agent on managed cluster.
 type ManagedClusterAddOnSpec struct {
-	// Deprecated: Use AddonDeploymentConfig instead.
-	// installNamespace is the namespace on the managed cluster to install the addon agent.
-	// If it is not set, open-cluster-management-agent-addon namespace is used to install the addon agent.
-	// +optional
-	// +kubebuilder:default=open-cluster-management-agent-addon
-	// +kubebuilder:validation:MaxLength=63
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	InstallNamespace string `json:"installNamespace,omitempty"`
-
 	// configs is a list of add-on configurations.
 	// In scenario where the current add-on has its own configurations.
 	// An empty list means there are no default configurations for add-on.
@@ -51,10 +42,44 @@ type ManagedClusterAddOnSpec struct {
 	Configs []AddOnConfig `json:"configs,omitempty"`
 }
 
-// RegistrationConfig defines the configuration of the addon agent to register to hub. The Klusterlet agent will
-// create a csr for the addon agent with the registrationConfig.
+// RegistrationType represents the type of registration configuration for the addon agent.
+type RegistrationType string
+
+const (
+	// kubeClient represents the registration type for addon agents that need to access
+	// the hub kube-apiserver using kubeClient.
+	KubeClient RegistrationType = "kubeClient"
+
+	// csr represents the registration type for addon agents that need to access non-kube endpoints
+	// on the hub cluster with client certificate authentication.
+	CSR RegistrationType = "csr"
+)
+
+// RegistrationConfig defines the configuration for the addon agent to register to the hub cluster.
 type RegistrationConfig struct {
-	// Deprecated: Will be replaced with type: kubeClient and type: csr in v1beta1.
+	// type specifies the type of registration configuration.
+	// +kubebuilder:validation:Enum=kubeClient;csr
+	// +required
+	Type RegistrationType `json:"type"`
+
+	// kubeClient holds the configuration for kubeClient type registration.
+	// It should be set when type is "kubeClient".
+	// +optional
+	KubeClient *KubeClientConfig `json:"kubeClient,omitempty"`
+
+	// csr holds the configuration for csr type registration.
+	// It should be set when type is "csr".
+	// +optional
+	CSR *CSRConfig `json:"csr,omitempty"`
+}
+
+type KubeClientConfig struct {
+	// subject is the user subject of the addon agent to be registered to the hub.
+	// +optional
+	Subject KubeClientSubject `json:"subject,omitempty"`
+}
+
+type CSRConfig struct {
 	// signerName is the name of signer that addon agent will use to create csr.
 	// +required
 	// +kubebuilder:validation:MaxLength=571
@@ -62,15 +87,7 @@ type RegistrationConfig struct {
 	// +kubebuilder:validation:Pattern=^([a-z0-9][a-z0-9-]*[a-z0-9]\.)+[a-z]+\/[a-z0-9-\.]+$
 	SignerName string `json:"signerName"`
 
-	// Deprecated: Will be replaced with type: kubeClient and type: csr in v1beta1.
 	// subject is the user subject of the addon agent to be registered to the hub.
-	// If it is not set, the addon agent will have the default subject
-	// "subject": {
-	//   "user": "system:open-cluster-management:cluster:{clusterName}:addon:{addonName}:agent:{agentName}",
-	//   "groups: ["system:open-cluster-management:cluster:{clusterName}:addon:{addonName}",
-	//             "system:open-cluster-management:addon:{addonName}", "system:authenticated"]
-	// }
-	//
 	// +optional
 	Subject Subject `json:"subject,omitempty"`
 }
@@ -83,18 +100,33 @@ type AddOnConfig struct {
 	ConfigReferent `json:",inline"`
 }
 
-// Subject is the user subject of the addon agent to be registered to the hub.
-type Subject struct {
+// BaseSubject contains the common fields for addon agent subjects.
+type BaseSubject struct {
 	// user is the user name of the addon agent.
 	User string `json:"user"`
 
 	// groups is the user group of the addon agent.
 	// +optional
 	Groups []string `json:"groups,omitempty"`
+}
 
-	// organizationUnit is the ou of the addon agent
+type KubeClientSubject struct {
+	BaseSubject `json:",inline"`
+}
+
+// subject is the user subject of the addon agent to be registered to the hub.
+// If it is not set, the addon agent will have the default subject
+//
+//	"subject": {
+//	  "user": "system:open-cluster-management:cluster:{clusterName}:addon:{addonName}:agent:{agentName}",
+//	  "groups: ["system:open-cluster-management:cluster:{clusterName}:addon:{addonName}"]
+//	}
+type Subject struct {
+	BaseSubject `json:",inline"`
+
+	// organizationUnits is the ou of the addon agent
 	// +optional
-	OrganizationUnits []string `json:"organizationUnit,omitempty"`
+	OrganizationUnits []string `json:"organizationUnits,omitempty"`
 }
 
 // ManagedClusterAddOnStatus provides information about the status of the operator.
@@ -119,13 +151,7 @@ type ManagedClusterAddOnStatus struct {
 	// +optional
 	AddOnMeta AddOnMeta `json:"addOnMeta,omitempty"`
 
-	// Deprecated: Use configReferences instead.
-	// addOnConfiguration is a reference to configuration information for the add-on.
-	// This resource is used to locate the configuration resource for the add-on.
-	// +optional
-	AddOnConfiguration ConfigCoordinates `json:"addOnConfiguration,omitempty"`
-
-	// SupportedConfigs is a list of configuration types that are allowed to override the add-on configurations defined
+	// supportedConfigs is a list of configuration types that are allowed to override the add-on configurations defined
 	// in ClusterManagementAddOn spec.
 	// The default is an empty list, which means the add-on configurations can not be overridden.
 	// +optional
@@ -187,12 +213,6 @@ type ConfigReference struct {
 	// This field is synced from ClusterManagementAddOn configGroupResource field.
 	ConfigGroupResource `json:",inline"`
 
-	// Deprecated: Use DesiredConfig instead
-	// This field is synced from ClusterManagementAddOn defaultConfig and ManagedClusterAddOn config fields.
-	// If both of them are defined, the ManagedClusterAddOn configs will overwrite the ClusterManagementAddOn
-	// defaultConfigs.
-	ConfigReferent `json:",inline"`
-
 	// lastObservedGeneration is the observed generation of the add-on configuration.
 	LastObservedGeneration int64 `json:"lastObservedGeneration"`
 
@@ -238,7 +258,7 @@ type ManagedClusterAddOnList struct {
 const (
 	// Label and annotation keys set on ManagedClusterAddon.
 
-	// AddonLabelKey is the label key to set addon name. It is to set on the resources on the hub relating
+	// AddonLabelKey is the label key to set addon name. It is to set on the resources (csr, addon template rolebinding, ManifestWork) on the hub relating
 	// to an addon
 	AddonLabelKey = "open-cluster-management.io/addon-name"
 
@@ -249,29 +269,19 @@ const (
 	// AddonNamespaceLabelKey is the label key to set namespace of ManagedClusterAddon.
 	AddonNamespaceLabelKey = "open-cluster-management.io/addon-namespace"
 
-	// Label and annotation keys set on manifests of addon agent.
+	// HostingClusterNameAnnotationKey is the annotation key for indicating the hosting cluster name, it should be set
+	// on ManagedClusterAddon resource only.
+	HostingClusterNameAnnotationKey = "addon.open-cluster-management.io/hosting-cluster-name"
 
-	// AddonPreDeleteHookLabelKey is the label key to identify that a resource manifest is used as pre-delete hook for an addon
-	// and should be created and deleted before the specified ManagedClusterAddon is deleted.
-	// Deprecated, and will be removed in the future release, please use annotation AddonPreDeleteHookAnnotationKey from v0.10.0.
-	AddonPreDeleteHookLabelKey = "open-cluster-management.io/addon-pre-delete"
+	// Label and annotation keys set on manifests of addon agent.
 
 	// AddonPreDeleteHookAnnotationKey is the annotation key to identify that a resource manifest is used as pre-delete hook for an addon
 	// and should be created and deleted before the specified ManagedClusterAddon is deleted.
 	AddonPreDeleteHookAnnotationKey = "addon.open-cluster-management.io/addon-pre-delete"
 
-	// HostingClusterNameAnnotationKey is the annotation key for indicating the hosting cluster name, it should be set
-	// on ManagedClusterAddon resource only.
-	HostingClusterNameAnnotationKey = "addon.open-cluster-management.io/hosting-cluster-name"
-
 	// DeletionOrphanAnnotationKey is an annotation for the manifest of addon indicating that it will not be cleaned up
 	// after the addon is deleted.
 	DeletionOrphanAnnotationKey = "addon.open-cluster-management.io/deletion-orphan"
-
-	// HostedManifestLocationLabelKey is the label key to identify where a resource manifest of addon agent
-	// with this label should be deployed in Hosted mode.
-	// Deprecated, will be removed in the future release, please use annotation HostedManifestLocationAnnotationKey from v0.10.0.
-	HostedManifestLocationLabelKey = "addon.open-cluster-management.io/hosted-manifest-location"
 
 	// HostedManifestLocationAnnotationKey is the annotation key to identify where a resource manifest of addon agent
 	// with this annotation should be deployed in Hosted mode.
@@ -288,19 +298,7 @@ const (
 	// indicates the manifest will not be deployed in Hosted mode.
 	HostedManifestLocationNoneValue = "none"
 
-	// Finalizers on the managedClusterAddon.
-
-	// AddonDeprecatedPreDeleteHookFinalizer is the finalizer for an addon which has deployed hook objects.
-	// Deprecated: please use the AddonPreDeleteHookFinalizer instead.
-	AddonDeprecatedPreDeleteHookFinalizer = "cluster.open-cluster-management.io/addon-pre-delete"
-	// AddonDeprecatedHostingPreDeleteHookFinalizer is the finalizer for an addon which has deployed hook objects
-	// on hosting cluster.
-	// Deprecated: please use the AddonHostingPreDeleteHookFinalizer instead.
-	AddonDeprecatedHostingPreDeleteHookFinalizer = "cluster.open-cluster-management.io/hosting-addon-pre-delete"
-	// AddonDeprecatedHostingManifestFinalizer is the finalizer for an addon which has deployed manifests on the external
-	// hosting cluster in Hosted mode.
-	// Deprecated: please use the AddonHostingPreDeleteHookFinalizer instead.
-	AddonDeprecatedHostingManifestFinalizer = "cluster.open-cluster-management.io/hosting-manifests-cleanup"
+	// Finalizers on the ManagedClusterAddon.
 
 	// AddonPreDeleteHookFinalizer is the finalizer for an addon which has deployed hook objects.
 	AddonPreDeleteHookFinalizer = "addon.open-cluster-management.io/addon-pre-delete"
