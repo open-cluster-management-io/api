@@ -133,6 +133,10 @@ type ManifestWorkReplicaSetSummary struct {
 	Degraded int `json:"degraded"`
 	// Applied is the number of ManifestWorks with condition Applied: true
 	Applied int `json:"applied"`
+	// DesiredTotal is the number of ManifestWorks that will be created by the ManifestWorkReplicaSet.
+	DesiredTotal int `json:"desiredTotal"`
+	// Updated is the number of clusters with updated revision applied.
+	Updated int `json:"updated"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
