@@ -15,6 +15,7 @@ work/v1/*.crd.yaml
 work/v1alpha1/*crd.yaml
 operator/v1/*.crd.yaml
 addon/v1alpha1/*.crd.yaml
+addon/v1beta1/*.crd.yaml
 "
 
 FAILS=false
