@@ -17,6 +17,7 @@ const (
 	ReservedNoDefaultConfigName = "__reserved_no_default__"
 )
 
+// nolint:staticcheck
 func Convert_v1beta1_ClusterManagementAddOnSpec_To_v1alpha1_ClusterManagementAddOnSpec(in *ClusterManagementAddOnSpec, out *v1alpha1.ClusterManagementAddOnSpec, s conversion.Scope) error {
 	if err := autoConvert_v1beta1_ClusterManagementAddOnSpec_To_v1alpha1_ClusterManagementAddOnSpec(in, out, s); err != nil {
 		return err
@@ -41,17 +42,18 @@ func Convert_v1beta1_ClusterManagementAddOnSpec_To_v1alpha1_ClusterManagementAdd
 		}
 		config = append(config, c)
 	}
-	out.SupportedConfigs = config // nolint:staticcheck
+	out.SupportedConfigs = config
 	return nil
 }
 
+// nolint:staticcheck
 func Convert_v1alpha1_ClusterManagementAddOnSpec_To_v1beta1_ClusterManagementAddOnSpec(in *v1alpha1.ClusterManagementAddOnSpec, out *ClusterManagementAddOnSpec, s conversion.Scope) error {
 	if err := autoConvert_v1alpha1_ClusterManagementAddOnSpec_To_v1beta1_ClusterManagementAddOnSpec(in, out, s); err != nil {
 		return err
 	}
 
 	configs := []AddOnConfig{}
-	for _, inConfig := range in.SupportedConfigs { // nolint:staticcheck
+	for _, inConfig := range in.SupportedConfigs {
 		c := AddOnConfig{
 			ConfigGroupResource: ConfigGroupResource{
 				Resource: inConfig.Resource,
@@ -104,13 +106,14 @@ func Convert_v1alpha1_ManagedClusterAddOnStatus_To_v1beta1_ManagedClusterAddOnSt
 	return nil
 }
 
+// nolint:staticcheck
 func Convert_v1beta1_RegistrationConfig_To_v1alpha1_RegistrationConfig(in *RegistrationConfig, out *v1alpha1.RegistrationConfig, s conversion.Scope) error {
 	if in.Type == KubeClient {
-		out.SignerName = certificates.KubeAPIServerClientSignerName // nolint:staticcheck
+		out.SignerName = certificates.KubeAPIServerClientSignerName
 		if in.KubeClient == nil {
 			return fmt.Errorf("nil KubeClient")
 		}
-		out.Subject = v1alpha1.Subject{ // nolint:staticcheck
+		out.Subject = v1alpha1.Subject{
 			User:   in.KubeClient.Subject.User,
 			Groups: in.KubeClient.Subject.Groups,
 		}
@@ -118,8 +121,8 @@ func Convert_v1beta1_RegistrationConfig_To_v1alpha1_RegistrationConfig(in *Regis
 		if in.CSR == nil {
 			return fmt.Errorf("nil CSR")
 		}
-		out.SignerName = in.CSR.SignerName                                                                    // nolint:staticcheck
-		if err := Convert_v1beta1_Subject_To_v1alpha1_Subject(&in.CSR.Subject, &out.Subject, s); err != nil { // nolint:staticcheck
+		out.SignerName = in.CSR.SignerName
+		if err := Convert_v1beta1_Subject_To_v1alpha1_Subject(&in.CSR.Subject, &out.Subject, s); err != nil {
 			return err
 		}
 	}
@@ -127,27 +130,28 @@ func Convert_v1beta1_RegistrationConfig_To_v1alpha1_RegistrationConfig(in *Regis
 	return nil
 }
 
+// nolint:staticcheck
 func Convert_v1alpha1_RegistrationConfig_To_v1beta1_RegistrationConfig(in *v1alpha1.RegistrationConfig, out *RegistrationConfig, s conversion.Scope) error {
-	if in.SignerName == certificates.KubeAPIServerClientSignerName { // nolint:staticcheck
+	if in.SignerName == certificates.KubeAPIServerClientSignerName {
 		out.Type = KubeClient
 		out.KubeClient = &KubeClientConfig{
 			Subject: KubeClientSubject{
 				BaseSubject{
-					User:   in.Subject.User,   // nolint:staticcheck
-					Groups: in.Subject.Groups, // nolint:staticcheck
+					User:   in.Subject.User,
+					Groups: in.Subject.Groups,
 				},
 			},
 		}
 	} else {
 		out.Type = CSR
 		out.CSR = &CSRConfig{
-			SignerName: in.SignerName, // nolint:staticcheck
+			SignerName: in.SignerName,
 			Subject: Subject{
 				BaseSubject: BaseSubject{
-					User:   in.Subject.User,   // nolint:staticcheck
-					Groups: in.Subject.Groups, // nolint:staticcheck
+					User:   in.Subject.User,
+					Groups: in.Subject.Groups,
 				},
-				OrganizationUnits: in.Subject.OrganizationUnits, // nolint:staticcheck
+				OrganizationUnits: in.Subject.OrganizationUnits,
 			},
 		}
 	}
