@@ -21,5 +21,6 @@ import (
 	_ "k8s.io/code-generator/cmd/deepcopy-gen"
 	_ "k8s.io/code-generator/cmd/defaulter-gen"
 	_ "k8s.io/code-generator/cmd/go-to-protobuf/protoc-gen-gogo"
+	_ "k8s.io/code-generator/cmd/register-gen"
 	_ "k8s.io/code-generator/cmd/validation-gen"
 )
