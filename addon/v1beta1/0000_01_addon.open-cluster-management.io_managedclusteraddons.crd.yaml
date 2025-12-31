@@ -681,6 +681,14 @@ spec:
                         kubeClient holds the configuration for kubeClient type registration.
                         It should be set when type is "kubeClient".
                       properties:
+                        driver:
+                          description: |-
+                            Driver is the authentication driver used by managedclusteraddon for kubeClient registration. Possible values are csr and token.
+                            This field is set by the agent to declare which driver it is using.
+                          enum:
+                          - csr
+                          - token
+                          type: string
                         subject:
                           description: subject is the user subject of the addon agent
                             to be registered to the hub.
