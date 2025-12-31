@@ -449,8 +449,8 @@ func TestConvert_v1alpha1_ManagedClusterAddOn_To_v1beta1_ManagedClusterAddOn(t *
 				Status: ManagedClusterAddOnStatus{
 					Registrations: []RegistrationConfig{
 						{
-							Type: CSR,
-							CSR: &CSRConfig{
+							Type: CustomSigner,
+							CustomSigner: &CustomSignerConfig{
 								SignerName: "custom.signer.io/custom",
 								Subject: Subject{
 									BaseSubject: BaseSubject{
@@ -459,6 +459,106 @@ func TestConvert_v1alpha1_ManagedClusterAddOn_To_v1beta1_ManagedClusterAddOn(t *
 									},
 									OrganizationUnits: []string{"test-ou"},
 								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "conversion with KubeClient registration and csr driver",
+			in: &v1alpha1.ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-addon",
+					Namespace: "test-cluster",
+				},
+				Spec: v1alpha1.ManagedClusterAddOnSpec{
+					Configs: []v1alpha1.AddOnConfig{},
+				},
+				Status: v1alpha1.ManagedClusterAddOnStatus{
+					Registrations: []v1alpha1.RegistrationConfig{
+						{
+							SignerName: certificates.KubeAPIServerClientSignerName,
+							Subject: v1alpha1.Subject{
+								User:   "test-user",
+								Groups: []string{"test-group"},
+							},
+							Driver: "csr",
+						},
+					},
+				},
+			},
+			want: &ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-addon",
+					Namespace: "test-cluster",
+				},
+				Spec: ManagedClusterAddOnSpec{
+					Configs: []AddOnConfig{},
+				},
+				Status: ManagedClusterAddOnStatus{
+					Registrations: []RegistrationConfig{
+						{
+							Type: KubeClient,
+							KubeClient: &KubeClientConfig{
+								Subject: KubeClientSubject{
+									BaseSubject: BaseSubject{
+										User:   "test-user",
+										Groups: []string{"test-group"},
+									},
+								},
+								Driver: "csr",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "conversion with KubeClient registration and token driver",
+			in: &v1alpha1.ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-addon",
+					Namespace: "test-cluster",
+				},
+				Spec: v1alpha1.ManagedClusterAddOnSpec{
+					Configs: []v1alpha1.AddOnConfig{},
+				},
+				Status: v1alpha1.ManagedClusterAddOnStatus{
+					Registrations: []v1alpha1.RegistrationConfig{
+						{
+							SignerName: certificates.KubeAPIServerClientSignerName,
+							Subject: v1alpha1.Subject{
+								User:   "test-user",
+								Groups: []string{"test-group"},
+							},
+							Driver: "token",
+						},
+					},
+				},
+			},
+			want: &ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-addon",
+					Namespace: "test-cluster",
+				},
+				Spec: ManagedClusterAddOnSpec{
+					Configs: []AddOnConfig{},
+				},
+				Status: ManagedClusterAddOnStatus{
+					Registrations: []RegistrationConfig{
+						{
+							Type: KubeClient,
+							KubeClient: &KubeClientConfig{
+								Subject: KubeClientSubject{
+									BaseSubject: BaseSubject{
+										User:   "test-user",
+										Groups: []string{"test-group"},
+									},
+								},
+								Driver: "token",
 							},
 						},
 					},
@@ -523,19 +623,24 @@ func TestConvert_v1alpha1_ManagedClusterAddOn_To_v1beta1_ManagedClusterAddOn(t *
 					if got.Status.Registrations[i].Type == KubeClient {
 						if got.Status.Registrations[i].KubeClient == nil {
 							t.Errorf("Registrations[%d].KubeClient is nil", i)
-						} else if got.Status.Registrations[i].KubeClient.Subject.User != tt.want.Status.Registrations[i].KubeClient.Subject.User {
-							t.Errorf("Registrations[%d].KubeClient.Subject.User = %v, want %v", i, got.Status.Registrations[i].KubeClient.Subject.User, tt.want.Status.Registrations[i].KubeClient.Subject.User)
+						} else {
+							if got.Status.Registrations[i].KubeClient.Subject.User != tt.want.Status.Registrations[i].KubeClient.Subject.User {
+								t.Errorf("Registrations[%d].KubeClient.Subject.User = %v, want %v", i, got.Status.Registrations[i].KubeClient.Subject.User, tt.want.Status.Registrations[i].KubeClient.Subject.User)
+							}
+							if got.Status.Registrations[i].KubeClient.Driver != tt.want.Status.Registrations[i].KubeClient.Driver {
+								t.Errorf("Registrations[%d].KubeClient.Driver = %v, want %v", i, got.Status.Registrations[i].KubeClient.Driver, tt.want.Status.Registrations[i].KubeClient.Driver)
+							}
 						}
 					}
-					if got.Status.Registrations[i].Type == CSR {
-						if got.Status.Registrations[i].CSR == nil {
-							t.Errorf("Registrations[%d].CSR is nil", i)
+					if got.Status.Registrations[i].Type == CustomSigner {
+						if got.Status.Registrations[i].CustomSigner == nil {
+							t.Errorf("Registrations[%d].CustomSigner is nil", i)
 						} else {
-							if got.Status.Registrations[i].CSR.SignerName != tt.want.Status.Registrations[i].CSR.SignerName {
-								t.Errorf("Registrations[%d].CSR.SignerName = %v, want %v", i, got.Status.Registrations[i].CSR.SignerName, tt.want.Status.Registrations[i].CSR.SignerName)
+							if got.Status.Registrations[i].CustomSigner.SignerName != tt.want.Status.Registrations[i].CustomSigner.SignerName {
+								t.Errorf("Registrations[%d].CustomSigner.SignerName = %v, want %v", i, got.Status.Registrations[i].CustomSigner.SignerName, tt.want.Status.Registrations[i].CustomSigner.SignerName)
 							}
-							if got.Status.Registrations[i].CSR.Subject.User != tt.want.Status.Registrations[i].CSR.Subject.User {
-								t.Errorf("Registrations[%d].CSR.Subject.User = %v, want %v", i, got.Status.Registrations[i].CSR.Subject.User, tt.want.Status.Registrations[i].CSR.Subject.User)
+							if got.Status.Registrations[i].CustomSigner.Subject.User != tt.want.Status.Registrations[i].CustomSigner.Subject.User {
+								t.Errorf("Registrations[%d].CustomSigner.Subject.User = %v, want %v", i, got.Status.Registrations[i].CustomSigner.Subject.User, tt.want.Status.Registrations[i].CustomSigner.Subject.User)
 							}
 						}
 					}
@@ -638,8 +743,8 @@ func TestConvert_v1beta1_ManagedClusterAddOn_To_v1alpha1_ManagedClusterAddOn(t *
 				Status: ManagedClusterAddOnStatus{
 					Registrations: []RegistrationConfig{
 						{
-							Type: CSR,
-							CSR: &CSRConfig{
+							Type: CustomSigner,
+							CustomSigner: &CustomSignerConfig{
 								SignerName: "custom.signer.io/custom",
 								Subject: Subject{
 									BaseSubject: BaseSubject{
@@ -670,6 +775,106 @@ func TestConvert_v1beta1_ManagedClusterAddOn_To_v1alpha1_ManagedClusterAddOn(t *
 								Groups:            []string{"test-group"},
 								OrganizationUnits: []string{"test-ou"},
 							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "conversion with KubeClient registration and csr driver",
+			in: &ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-addon",
+					Namespace: "test-cluster",
+				},
+				Spec: ManagedClusterAddOnSpec{
+					Configs: []AddOnConfig{},
+				},
+				Status: ManagedClusterAddOnStatus{
+					Registrations: []RegistrationConfig{
+						{
+							Type: KubeClient,
+							KubeClient: &KubeClientConfig{
+								Subject: KubeClientSubject{
+									BaseSubject: BaseSubject{
+										User:   "test-user",
+										Groups: []string{"test-group"},
+									},
+								},
+								Driver: "csr",
+							},
+						},
+					},
+				},
+			},
+			want: &v1alpha1.ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-addon",
+					Namespace: "test-cluster",
+				},
+				Spec: v1alpha1.ManagedClusterAddOnSpec{
+					Configs: []v1alpha1.AddOnConfig{},
+				},
+				Status: v1alpha1.ManagedClusterAddOnStatus{
+					Registrations: []v1alpha1.RegistrationConfig{
+						{
+							SignerName: certificates.KubeAPIServerClientSignerName,
+							Subject: v1alpha1.Subject{
+								User:   "test-user",
+								Groups: []string{"test-group"},
+							},
+							Driver: "csr",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "conversion with KubeClient registration and token driver",
+			in: &ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-addon",
+					Namespace: "test-cluster",
+				},
+				Spec: ManagedClusterAddOnSpec{
+					Configs: []AddOnConfig{},
+				},
+				Status: ManagedClusterAddOnStatus{
+					Registrations: []RegistrationConfig{
+						{
+							Type: KubeClient,
+							KubeClient: &KubeClientConfig{
+								Subject: KubeClientSubject{
+									BaseSubject: BaseSubject{
+										User:   "test-user",
+										Groups: []string{"test-group"},
+									},
+								},
+								Driver: "token",
+							},
+						},
+					},
+				},
+			},
+			want: &v1alpha1.ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-addon",
+					Namespace: "test-cluster",
+				},
+				Spec: v1alpha1.ManagedClusterAddOnSpec{
+					Configs: []v1alpha1.AddOnConfig{},
+				},
+				Status: v1alpha1.ManagedClusterAddOnStatus{
+					Registrations: []v1alpha1.RegistrationConfig{
+						{
+							SignerName: certificates.KubeAPIServerClientSignerName,
+							Subject: v1alpha1.Subject{
+								User:   "test-user",
+								Groups: []string{"test-group"},
+							},
+							Driver: "token",
 						},
 					},
 				},
@@ -732,6 +937,9 @@ func TestConvert_v1beta1_ManagedClusterAddOn_To_v1alpha1_ManagedClusterAddOn(t *
 					}
 					if got.Status.Registrations[i].Subject.User != tt.want.Status.Registrations[i].Subject.User {
 						t.Errorf("Registrations[%d].Subject.User = %v, want %v", i, got.Status.Registrations[i].Subject.User, tt.want.Status.Registrations[i].Subject.User)
+					}
+					if got.Status.Registrations[i].Driver != tt.want.Status.Registrations[i].Driver {
+						t.Errorf("Registrations[%d].Driver = %v, want %v", i, got.Status.Registrations[i].Driver, tt.want.Status.Registrations[i].Driver)
 					}
 					if len(got.Status.Registrations[i].Subject.OrganizationUnits) != len(tt.want.Status.Registrations[i].Subject.OrganizationUnits) {
 						t.Errorf("Registrations[%d].Subject.OrganizationUnits length = %v, want %v", i, len(got.Status.Registrations[i].Subject.OrganizationUnits), len(tt.want.Status.Registrations[i].Subject.OrganizationUnits))
