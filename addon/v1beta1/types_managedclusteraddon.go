@@ -77,6 +77,12 @@ type KubeClientConfig struct {
 	// subject is the user subject of the addon agent to be registered to the hub.
 	// +optional
 	Subject KubeClientSubject `json:"subject,omitempty"`
+
+	// Driver is the authentication driver used by managedclusteraddon for kubeClient registration. Possible values are csr and token.
+	// This field is set by the agent to declare which driver it is using.
+	// +optional
+	// +kubebuilder:validation:Enum=csr;token
+	Driver string `json:"driver,omitempty"`
 }
 
 type CSRConfig struct {
