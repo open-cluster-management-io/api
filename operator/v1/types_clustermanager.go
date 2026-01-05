@@ -499,6 +499,8 @@ type ClusterManagerStatus struct {
 	// Progressing: Components in hub are in a transitioning state.
 	// Degraded: Components in hub do not match the desired configuration and only provide
 	// degraded service.
+	// +listType=map
+	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions"`
 
 	// Generations are used to determine when an item needs to be reconciled or has changed in a way that needs a reaction.
