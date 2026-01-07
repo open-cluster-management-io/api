@@ -905,13 +905,14 @@ func Convert_v1alpha1_PlacementStrategy_To_v1beta1_PlacementStrategy(in *v1alpha
 func autoConvert_v1beta1_RegistrationConfig_To_v1alpha1_RegistrationConfig(in *RegistrationConfig, out *v1alpha1.RegistrationConfig, s conversion.Scope) error {
 	// WARNING: in.Type requires manual conversion: does not exist in peer-type
 	// WARNING: in.KubeClient requires manual conversion: does not exist in peer-type
-	// WARNING: in.CSR requires manual conversion: does not exist in peer-type
+	// WARNING: in.CustomSigner requires manual conversion: does not exist in peer-type
 	return nil
 }
 
 func autoConvert_v1alpha1_RegistrationConfig_To_v1beta1_RegistrationConfig(in *v1alpha1.RegistrationConfig, out *RegistrationConfig, s conversion.Scope) error {
 	// WARNING: in.SignerName requires manual conversion: does not exist in peer-type
 	// WARNING: in.Subject requires manual conversion: does not exist in peer-type
+	// WARNING: in.Driver requires manual conversion: does not exist in peer-type
 	return nil
 }
 
