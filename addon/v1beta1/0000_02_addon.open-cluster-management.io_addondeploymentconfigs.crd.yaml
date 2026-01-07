@@ -1,0 +1,542 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: addondeploymentconfigs.addon.open-cluster-management.io
+spec:
+  group: addon.open-cluster-management.io
+  names:
+    kind: AddOnDeploymentConfig
+    listKind: AddOnDeploymentConfigList
+    plural: addondeploymentconfigs
+    singular: addondeploymentconfig
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          AddOnDeploymentConfig represents a configuration to customize the deployments of an add-on.
+          For example, you can specify the NodePlacement to control the scheduling of the add-on agents.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec represents a desired configuration for an add-on.
+            properties:
+              agentInstallNamespace:
+                default: open-cluster-management-agent-addon
+                description: |-
+                  AgentInstallNamespace is the namespace where the add-on agent should be installed on the managed cluster.
+                  For template-type addons: set to empty string "" to use the namespace defined in the addonTemplate.
+                  For non-template addons: defaults to "open-cluster-management-agent-addon" if not specified.
+                maxLength: 63
+                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$
+                type: string
+              customizedVariables:
+                description: |-
+                  customizedVariables is a list of name-value variables for the current add-on deployment.
+                  The add-on implementation can use these variables to render its add-on deployment.
+                  The default is an empty list.
+                items:
+                  description: CustomizedVariable represents a customized variable
+                    for add-on deployment.
+                  properties:
+                    name:
+                      description: Name of this variable.
+                      maxLength: 255
+                      pattern: ^[a-zA-Z_][_a-zA-Z0-9]*$
+                      type: string
+                    value:
+                      description: Value of this variable.
+                      maxLength: 1024
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
+              nodePlacement:
+                description: |-
+                  nodePlacement enables explicit control over the scheduling of the add-on agents on the
+                  managed cluster.
+                  All add-on agent pods are expected to comply with this node placement.
+                  If the placement is nil, the placement is not specified, it will be omitted.
+                  If the placement is an empty object, the placement will match all nodes and tolerate nothing.
+                properties:
+                  nodeSelector:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      NodeSelector defines which Nodes the Pods are scheduled on.
+                      If the selector is an empty list, it will match all nodes.
+                      The default is an empty list.
+                    type: object
+                  tolerations:
+                    description: |-
+                      Tolerations is attached by pods to tolerate any taint that matches
+                      the triple <key,value,effect> using the matching operator <operator>.
+                      If the tolerations is an empty list, it will tolerate nothing.
+                      The default is an empty list.
+                    items:
+                      description: |-
+                        The pod this Toleration is attached to tolerates any taint that matches
+                        the triple <key,value,effect> using the matching operator <operator>.
+                      properties:
+                        effect:
+                          description: |-
+                            Effect indicates the taint effect to match. Empty means match all taint effects.
+                            When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+                          type: string
+                        key:
+                          description: |-
+                            Key is the taint key that the toleration applies to. Empty means match all taint keys.
+                            If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+                          type: string
+                        operator:
+                          description: |-
+                            Operator represents a key's relationship to the value.
+                            Valid operators are Exists and Equal. Defaults to Equal.
+                            Exists is equivalent to wildcard for value, so that a pod can
+                            tolerate all taints of a particular category.
+                          type: string
+                        tolerationSeconds:
+                          description: |-
+                            TolerationSeconds represents the period of time the toleration (which must be
+                            of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
+                            it is not set, which means tolerate the taint forever (do not evict). Zero and
+                            negative values will be treated as 0 (evict immediately) by the system.
+                          format: int64
+                          type: integer
+                        value:
+                          description: |-
+                            Value is the taint value the toleration matches to.
+                            If the operator is Exists, the value should be empty, otherwise just a regular string.
+                          type: string
+                      type: object
+                    type: array
+                type: object
+              proxyConfig:
+                description: |-
+                  ProxyConfig holds proxy settings for add-on agent on the managed cluster.
+                  Empty means no proxy settings is available.
+                properties:
+                  caBundle:
+                    description: |-
+                      CABundle is a CA certificate bundle to verify the proxy server.
+                      And it's only useful when HTTPSProxy is set and a HTTPS proxy server is specified.
+                    format: byte
+                    type: string
+                  httpProxy:
+                    description: HTTPProxy is the URL of the proxy for HTTP requests
+                    type: string
+                  httpsProxy:
+                    description: HTTPSProxy is the URL of the proxy for HTTPS requests
+                    type: string
+                  noProxy:
+                    description: |-
+                      NoProxy is a comma-separated list of hostnames and/or CIDRs and/or IPs for which the proxy
+                      should not be used.
+                    type: string
+                type: object
+              registries:
+                description: |-
+                  registries describes how to override images used by the addon agent on the managed cluster.
+                  the following example will override image "quay.io/open-cluster-management/addon-agent" to
+                  "quay.io/ocm/addon-agent" when deploying the addon agent
+
+                  registries:
+                    - source: quay.io/open-cluster-management/addon-agent
+                      mirror: quay.io/ocm/addon-agent
+                items:
+                  description: ImageMirror describes how to mirror images from a source
+                  properties:
+                    mirror:
+                      description: Mirror is the mirrored registry of the Source.
+                        Will be ignored if Mirror is empty.
+                      type: string
+                    source:
+                      description: Source is the source registry. All image registries
+                        will be replaced by Mirror if Source is empty.
+                      type: string
+                  required:
+                  - mirror
+                  type: object
+                type: array
+              resourceRequirements:
+                description: |-
+                  ResourceRequirements specify the resources required by add-on agents.
+                  If a container matches multiple ContainerResourceRequirements, the last matched configuration in the
+                  array will take precedence.
+                items:
+                  description: ContainerResourceRequirements defines resources required
+                    by one or a group of containers.
+                  properties:
+                    containerID:
+                      description: |-
+                        ContainerID is a unique identifier for an agent container. It consists of three parts: resource types,
+                        resource name, and container name, separated by ':'. The format follows
+                        '{resource_types}:{resource_name}:{container_name}' where
+                          1). Supported resource types include deployments, daemonsets, statefulsets, replicasets, jobs,
+                            cronjobs and pods;
+                          2). Wildcards (*) can be used in any part to match multiple containers. For example, '*:*:*'
+                            matches all containers of the agent.
+                      pattern: ^(deployments|daemonsets|statefulsets|replicasets|jobs|cronjobs|pods|\*):.+:.+$
+                      type: string
+                    resources:
+                      description: Compute resources required by matched containers.
+                      properties:
+                        claims:
+                          description: |-
+                            Claims lists the names of resources, defined in spec.resourceClaims,
+                            that are used by this container.
+
+                            This field depends on the
+                            DynamicResourceAllocation feature gate.
+
+                            This field is immutable. It can only be set for containers.
+                          items:
+                            description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                            properties:
+                              name:
+                                description: |-
+                                  Name must match the name of one entry in pod.spec.resourceClaims of
+                                  the Pod where this field is used. It makes that resource available
+                                  inside a container.
+                                type: string
+                              request:
+                                description: |-
+                                  Request is the name chosen for a request in the referenced claim.
+                                  If empty, everything from the claim is made available, otherwise
+                                  only the result of this request.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
+                        limits:
+                          additionalProperties:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          description: |-
+                            Limits describes the maximum amount of compute resources allowed.
+                            More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                          type: object
+                        requests:
+                          additionalProperties:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          description: |-
+                            Requests describes the minimum amount of compute resources required.
+                            If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                            otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                            More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                          type: object
+                      type: object
+                  required:
+                  - containerID
+                  - resources
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - containerID
+                x-kubernetes-list-type: map
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          AddOnDeploymentConfig represents a configuration to customize the deployments of an add-on.
+          For example, you can specify the NodePlacement to control the scheduling of the add-on agents.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec represents a desired configuration for an add-on.
+            properties:
+              agentInstallNamespace:
+                default: open-cluster-management-agent-addon
+                description: |-
+                  AgentInstallNamespace is the namespace where the add-on agent should be installed on the managed cluster.
+                  For template-type addons: set to empty string "" to use the namespace defined in the addonTemplate.
+                  For non-template addons: defaults to "open-cluster-management-agent-addon" if not specified.
+                maxLength: 63
+                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$
+                type: string
+              customizedVariables:
+                description: |-
+                  customizedVariables is a list of name-value variables for the current add-on deployment.
+                  The add-on implementation can use these variables to render its add-on deployment.
+                  The default is an empty list.
+                items:
+                  description: CustomizedVariable represents a customized variable
+                    for add-on deployment.
+                  properties:
+                    name:
+                      description: Name of this variable.
+                      maxLength: 255
+                      pattern: ^[a-zA-Z_][_a-zA-Z0-9]*$
+                      type: string
+                    value:
+                      description: Value of this variable.
+                      maxLength: 1024
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
+              nodePlacement:
+                description: |-
+                  nodePlacement enables explicit control over the scheduling of the add-on agents on the
+                  managed cluster.
+                  All add-on agent pods are expected to comply with this node placement.
+                  If the placement is nil, the placement is not specified, it will be omitted.
+                  If the placement is an empty object, the placement will match all nodes and tolerate nothing.
+                properties:
+                  nodeSelector:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      NodeSelector defines which Nodes the Pods are scheduled on.
+                      If the selector is an empty list, it will match all nodes.
+                      The default is an empty list.
+                    type: object
+                  tolerations:
+                    description: |-
+                      Tolerations is attached by pods to tolerate any taint that matches
+                      the triple <key,value,effect> using the matching operator <operator>.
+                      If the tolerations is an empty list, it will tolerate nothing.
+                      The default is an empty list.
+                    items:
+                      description: |-
+                        The pod this Toleration is attached to tolerates any taint that matches
+                        the triple <key,value,effect> using the matching operator <operator>.
+                      properties:
+                        effect:
+                          description: |-
+                            Effect indicates the taint effect to match. Empty means match all taint effects.
+                            When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+                          type: string
+                        key:
+                          description: |-
+                            Key is the taint key that the toleration applies to. Empty means match all taint keys.
+                            If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+                          type: string
+                        operator:
+                          description: |-
+                            Operator represents a key's relationship to the value.
+                            Valid operators are Exists and Equal. Defaults to Equal.
+                            Exists is equivalent to wildcard for value, so that a pod can
+                            tolerate all taints of a particular category.
+                          type: string
+                        tolerationSeconds:
+                          description: |-
+                            TolerationSeconds represents the period of time the toleration (which must be
+                            of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
+                            it is not set, which means tolerate the taint forever (do not evict). Zero and
+                            negative values will be treated as 0 (evict immediately) by the system.
+                          format: int64
+                          type: integer
+                        value:
+                          description: |-
+                            Value is the taint value the toleration matches to.
+                            If the operator is Exists, the value should be empty, otherwise just a regular string.
+                          type: string
+                      type: object
+                    type: array
+                type: object
+              proxyConfig:
+                description: |-
+                  ProxyConfig holds proxy settings for add-on agent on the managed cluster.
+                  Empty means no proxy settings is available.
+                properties:
+                  caBundle:
+                    description: |-
+                      CABundle is a CA certificate bundle to verify the proxy server.
+                      And it's only useful when HTTPSProxy is set and a HTTPS proxy server is specified.
+                    format: byte
+                    type: string
+                  httpProxy:
+                    description: HTTPProxy is the URL of the proxy for HTTP requests
+                    type: string
+                  httpsProxy:
+                    description: HTTPSProxy is the URL of the proxy for HTTPS requests
+                    type: string
+                  noProxy:
+                    description: |-
+                      NoProxy is a comma-separated list of hostnames and/or CIDRs and/or IPs for which the proxy
+                      should not be used.
+                    type: string
+                type: object
+              registries:
+                description: |-
+                  registries describes how to override images used by the addon agent on the managed cluster.
+                  the following example will override image "quay.io/open-cluster-management/addon-agent" to
+                  "quay.io/ocm/addon-agent" when deploying the addon agent
+
+                  registries:
+                    - source: quay.io/open-cluster-management/addon-agent
+                      mirror: quay.io/ocm/addon-agent
+                items:
+                  description: ImageMirror describes how to mirror images from a source
+                  properties:
+                    mirror:
+                      description: Mirror is the mirrored registry of the Source.
+                        Will be ignored if Mirror is empty.
+                      type: string
+                    source:
+                      description: Source is the source registry. All image registries
+                        will be replaced by Mirror if Source is empty.
+                      type: string
+                  required:
+                  - mirror
+                  type: object
+                type: array
+              resourceRequirements:
+                description: |-
+                  ResourceRequirements specify the resources required by add-on agents.
+                  If a container matches multiple ContainerResourceRequirements, the last matched configuration in the
+                  array will take precedence.
+                items:
+                  description: ContainerResourceRequirements defines resources required
+                    by one or a group of containers.
+                  properties:
+                    containerID:
+                      description: |-
+                        ContainerID is a unique identifier for an agent container. It consists of three parts: resource types,
+                        resource name, and container name, separated by ':'. The format follows
+                        '{resource_types}:{resource_name}:{container_name}' where
+                          1). Supported resource types include deployments, daemonsets, statefulsets, replicasets, jobs,
+                            cronjobs and pods;
+                          2). Wildcards (*) can be used in any part to match multiple containers. For example, '*:*:*'
+                            matches all containers of the agent.
+                      pattern: ^(deployments|daemonsets|statefulsets|replicasets|jobs|cronjobs|pods|\*):.+:.+$
+                      type: string
+                    resources:
+                      description: Compute resources required by matched containers.
+                      properties:
+                        claims:
+                          description: |-
+                            Claims lists the names of resources, defined in spec.resourceClaims,
+                            that are used by this container.
+
+                            This field depends on the
+                            DynamicResourceAllocation feature gate.
+
+                            This field is immutable. It can only be set for containers.
+                          items:
+                            description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                            properties:
+                              name:
+                                description: |-
+                                  Name must match the name of one entry in pod.spec.resourceClaims of
+                                  the Pod where this field is used. It makes that resource available
+                                  inside a container.
+                                type: string
+                              request:
+                                description: |-
+                                  Request is the name chosen for a request in the referenced claim.
+                                  If empty, everything from the claim is made available, otherwise
+                                  only the result of this request.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
+                        limits:
+                          additionalProperties:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          description: |-
+                            Limits describes the maximum amount of compute resources allowed.
+                            More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                          type: object
+                        requests:
+                          additionalProperties:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          description: |-
+                            Requests describes the minimum amount of compute resources required.
+                            If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                            otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                            More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                          type: object
+                      type: object
+                  required:
+                  - containerID
+                  - resources
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - containerID
+                x-kubernetes-list-type: map
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: false
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
