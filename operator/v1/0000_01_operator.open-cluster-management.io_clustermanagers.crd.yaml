@@ -406,6 +406,18 @@ spec:
                       - feature
                       type: object
                     type: array
+                  importerConfiguration:
+                    description: ImporterConfiguration represents the configuration
+                      of the cluster importer
+                    properties:
+                      renderers:
+                        description: |-
+                          renderers specifies which import renderers to use.
+                          Valid values are: "render-auto", "render-from-config-secret"
+                        items:
+                          type: string
+                        type: array
+                    type: object
                   registrationDrivers:
                     description: |-
                       RegistrationDrivers represent the list of hub registration drivers that contain information used by hub to initialize the hub cluster

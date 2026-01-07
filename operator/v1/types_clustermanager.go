@@ -120,6 +120,17 @@ type RegistrationHubConfiguration struct {
 	// +listType=map
 	// +listMapKey=authType
 	RegistrationDrivers []RegistrationDriverHub `json:"registrationDrivers,omitempty"`
+
+	// ImporterConfiguration represents the configuration of the cluster importer
+	// +optional
+	ImporterConfiguration *ImporterConfiguration `json:"importerConfiguration,omitempty"`
+}
+
+type ImporterConfiguration struct {
+	// renderers specifies which import renderers to use.
+	// Valid values are: "render-auto", "render-from-config-secret"
+	// +optional
+	Renderers []string `json:"renderers,omitempty"`
 }
 
 const (
