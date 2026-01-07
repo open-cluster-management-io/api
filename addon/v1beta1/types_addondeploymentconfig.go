@@ -10,7 +10,7 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AddOnDeploymentConfig represents a configuration to customize the deployments of an add-on.
-// For example, you can specify the NodePlacement to control the scheduling of the add-on agents.
+// For example, you can specify the nodePlacement to control the scheduling of the add-on agents.
 type AddOnDeploymentConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,12 +48,12 @@ type AddOnDeploymentConfigSpec struct {
 	// +optional
 	Registries []ImageMirror `json:"registries,omitempty"`
 
-	// ProxyConfig holds proxy settings for add-on agent on the managed cluster.
+	// proxyConfig holds proxy settings for add-on agent on the managed cluster.
 	// Empty means no proxy settings is available.
 	// +optional
 	ProxyConfig ProxyConfig `json:"proxyConfig,omitempty"`
 
-	// AgentInstallNamespace is the namespace where the add-on agent should be installed on the managed cluster.
+	// agentInstallNamespace is the namespace where the add-on agent should be installed on the managed cluster.
 	// For template-type addons: set to empty string "" to use the namespace defined in the addonTemplate.
 	// For non-template addons: defaults to "open-cluster-management-agent-addon" if not specified.
 	// +optional
@@ -62,7 +62,7 @@ type AddOnDeploymentConfigSpec struct {
 	// +kubebuilder:validation:Pattern=^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$
 	AgentInstallNamespace string `json:"agentInstallNamespace,omitempty"`
 
-	// ResourceRequirements specify the resources required by add-on agents.
+	// resourceRequirements specify the resources required by add-on agents.
 	// If a container matches multiple ContainerResourceRequirements, the last matched configuration in the
 	// array will take precedence.
 	// +optional
@@ -73,7 +73,7 @@ type AddOnDeploymentConfigSpec struct {
 
 // ContainerResourceRequirements defines resources required by one or a group of containers.
 type ContainerResourceRequirements struct {
-	// ContainerID is a unique identifier for an agent container. It consists of three parts: resource types,
+	// containerID is a unique identifier for an agent container. It consists of three parts: resource types,
 	// resource name, and container name, separated by ':'. The format follows
 	// '{resource_types}:{resource_name}:{container_name}' where
 	//   1). Supported resource types include deployments, daemonsets, statefulsets, replicasets, jobs,
@@ -93,27 +93,27 @@ type ContainerResourceRequirements struct {
 
 // CustomizedVariable represents a customized variable for add-on deployment.
 type CustomizedVariable struct {
-	// Name of this variable.
+	// name of this variable.
 	// +required
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MaxLength=255
 	// +kubebuilder:validation:Pattern=^[a-zA-Z_][_a-zA-Z0-9]*$
 	Name string `json:"name"`
 
-	// Value of this variable.
+	// value of this variable.
 	// +kubebuilder:validation:MaxLength=1024
 	Value string `json:"value"`
 }
 
 // NodePlacement describes node scheduling configuration for the pods.
 type NodePlacement struct {
-	// NodeSelector defines which Nodes the Pods are scheduled on.
+	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// If the selector is an empty list, it will match all nodes.
 	// The default is an empty list.
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
-	// Tolerations is attached by pods to tolerate any taint that matches
+	// tolerations is attached by pods to tolerate any taint that matches
 	// the triple <key,value,effect> using the matching operator <operator>.
 	// If the tolerations is an empty list, it will tolerate nothing.
 	// The default is an empty list.
@@ -123,32 +123,32 @@ type NodePlacement struct {
 
 // ImageMirror describes how to mirror images from a source
 type ImageMirror struct {
-	// Mirror is the mirrored registry of the Source. Will be ignored if Mirror is empty.
+	// mirror is the mirrored registry of the Source. Will be ignored if mirror is empty.
 	// +kubebuilder:validation:Required
 	// +required
 	Mirror string `json:"mirror"`
 
-	// Source is the source registry. All image registries will be replaced by Mirror if Source is empty.
+	// source is the source registry. All image registries will be replaced by Mirror if Source is empty.
 	// +optional
 	Source string `json:"source"`
 }
 
 // ProxyConfig describes the proxy settings for the add-on agent
 type ProxyConfig struct {
-	// HTTPProxy is the URL of the proxy for HTTP requests
+	// httpProxy is the URL of the proxy for HTTP requests
 	// +optional
 	HTTPProxy string `json:"httpProxy,omitempty"`
 
-	// HTTPSProxy is the URL of the proxy for HTTPS requests
+	// httpsProxy is the URL of the proxy for HTTPS requests
 	// +optional
 	HTTPSProxy string `json:"httpsProxy,omitempty"`
 
-	// CABundle is a CA certificate bundle to verify the proxy server.
-	// And it's only useful when HTTPSProxy is set and a HTTPS proxy server is specified.
+	// caBundle is a CA certificate bundle to verify the proxy server.
+	// And it's only useful when httpsProxy is set and a HTTPS proxy server is specified.
 	// +optional
 	CABundle []byte `json:"caBundle,omitempty"`
 
-	// NoProxy is a comma-separated list of hostnames and/or CIDRs and/or IPs for which the proxy
+	// noProxy is a comma-separated list of hostnames and/or CIDRs and/or IPs for which the proxy
 	// should not be used.
 	// +optional
 	NoProxy string `json:"noProxy,omitempty"`
@@ -163,6 +163,6 @@ type AddOnDeploymentConfigList struct {
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	// Items is a list of add-on deployment config.
+	// items is a list of add-on deployment config.
 	Items []AddOnDeploymentConfig `json:"items"`
 }
