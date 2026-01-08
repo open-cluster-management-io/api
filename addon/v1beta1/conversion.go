@@ -3,6 +3,7 @@ package v1beta1
 
 import (
 	"fmt"
+
 	certificates "k8s.io/api/certificates/v1"
 	"k8s.io/apimachinery/pkg/conversion"
 	"open-cluster-management.io/api/addon/v1alpha1"
