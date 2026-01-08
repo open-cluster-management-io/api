@@ -278,7 +278,7 @@ spec:
       openAPIV3Schema:
         description: |-
           AddOnDeploymentConfig represents a configuration to customize the deployments of an add-on.
-          For example, you can specify the NodePlacement to control the scheduling of the add-on agents.
+          For example, you can specify the nodePlacement to control the scheduling of the add-on agents.
         properties:
           apiVersion:
             description: |-
@@ -303,7 +303,7 @@ spec:
               agentInstallNamespace:
                 default: open-cluster-management-agent-addon
                 description: |-
-                  AgentInstallNamespace is the namespace where the add-on agent should be installed on the managed cluster.
+                  agentInstallNamespace is the namespace where the add-on agent should be installed on the managed cluster.
                   For template-type addons: set to empty string "" to use the namespace defined in the addonTemplate.
                   For non-template addons: defaults to "open-cluster-management-agent-addon" if not specified.
                 maxLength: 63
@@ -319,12 +319,12 @@ spec:
                     for add-on deployment.
                   properties:
                     name:
-                      description: Name of this variable.
+                      description: name of this variable.
                       maxLength: 255
                       pattern: ^[a-zA-Z_][_a-zA-Z0-9]*$
                       type: string
                     value:
-                      description: Value of this variable.
+                      description: value of this variable.
                       maxLength: 1024
                       type: string
                   required:
@@ -346,13 +346,13 @@ spec:
                     additionalProperties:
                       type: string
                     description: |-
-                      NodeSelector defines which Nodes the Pods are scheduled on.
+                      nodeSelector defines which Nodes the Pods are scheduled on.
                       If the selector is an empty list, it will match all nodes.
                       The default is an empty list.
                     type: object
                   tolerations:
                     description: |-
-                      Tolerations is attached by pods to tolerate any taint that matches
+                      tolerations is attached by pods to tolerate any taint that matches
                       the triple <key,value,effect> using the matching operator <operator>.
                       If the tolerations is an empty list, it will tolerate nothing.
                       The default is an empty list.
@@ -396,24 +396,24 @@ spec:
                 type: object
               proxyConfig:
                 description: |-
-                  ProxyConfig holds proxy settings for add-on agent on the managed cluster.
+                  proxyConfig holds proxy settings for add-on agent on the managed cluster.
                   Empty means no proxy settings is available.
                 properties:
                   caBundle:
                     description: |-
-                      CABundle is a CA certificate bundle to verify the proxy server.
-                      And it's only useful when HTTPSProxy is set and a HTTPS proxy server is specified.
+                      caBundle is a CA certificate bundle to verify the proxy server.
+                      And it's only useful when httpsProxy is set and a HTTPS proxy server is specified.
                     format: byte
                     type: string
                   httpProxy:
-                    description: HTTPProxy is the URL of the proxy for HTTP requests
+                    description: httpProxy is the URL of the proxy for HTTP requests
                     type: string
                   httpsProxy:
-                    description: HTTPSProxy is the URL of the proxy for HTTPS requests
+                    description: httpsProxy is the URL of the proxy for HTTPS requests
                     type: string
                   noProxy:
                     description: |-
-                      NoProxy is a comma-separated list of hostnames and/or CIDRs and/or IPs for which the proxy
+                      noProxy is a comma-separated list of hostnames and/or CIDRs and/or IPs for which the proxy
                       should not be used.
                     type: string
                 type: object
@@ -430,11 +430,11 @@ spec:
                   description: ImageMirror describes how to mirror images from a source
                   properties:
                     mirror:
-                      description: Mirror is the mirrored registry of the Source.
-                        Will be ignored if Mirror is empty.
+                      description: mirror is the mirrored registry of the Source.
+                        Will be ignored if mirror is empty.
                       type: string
                     source:
-                      description: Source is the source registry. All image registries
+                      description: source is the source registry. All image registries
                         will be replaced by Mirror if Source is empty.
                       type: string
                   required:
@@ -443,7 +443,7 @@ spec:
                 type: array
               resourceRequirements:
                 description: |-
-                  ResourceRequirements specify the resources required by add-on agents.
+                  resourceRequirements specify the resources required by add-on agents.
                   If a container matches multiple ContainerResourceRequirements, the last matched configuration in the
                   array will take precedence.
                 items:
@@ -452,7 +452,7 @@ spec:
                   properties:
                     containerID:
                       description: |-
-                        ContainerID is a unique identifier for an agent container. It consists of three parts: resource types,
+                        containerID is a unique identifier for an agent container. It consists of three parts: resource types,
                         resource name, and container name, separated by ':'. The format follows
                         '{resource_types}:{resource_name}:{container_name}' where
                           1). Supported resource types include deployments, daemonsets, statefulsets, replicasets, jobs,
