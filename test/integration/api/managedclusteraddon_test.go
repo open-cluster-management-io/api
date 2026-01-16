@@ -121,6 +121,88 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	})
 
+	ginkgo.It("Should update the ManagedClusterAddOn status with driver field v1alpha1", func() {
+		managedClusterAddOn := &addonv1alpha1.ManagedClusterAddOn{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: managedClusterAddOnName,
+			},
+			Spec: addonv1alpha1.ManagedClusterAddOnSpec{},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Create(
+			context.TODO(),
+			managedClusterAddOn,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		mca, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Get(
+			context.TODO(),
+			managedClusterAddOnName,
+			metav1.GetOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		mca.Status.Registrations = []addonv1alpha1.RegistrationConfig{
+			{
+				SignerName: "kubernetes.io/kube-apiserver-client",
+				Subject: addonv1alpha1.Subject{
+					User:   "test-user",
+					Groups: []string{"test-group"},
+				},
+				Driver: "csr",
+			},
+		}
+
+		_, err = hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+			context.TODO(),
+			mca,
+			metav1.UpdateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	})
+
+	ginkgo.It("Should fail to update the ManagedClusterAddOn status with invalid driver v1alpha1", func() {
+		managedClusterAddOn := &addonv1alpha1.ManagedClusterAddOn{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: managedClusterAddOnName,
+			},
+			Spec: addonv1alpha1.ManagedClusterAddOnSpec{},
+		}
+
+		_, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Create(
+			context.TODO(),
+			managedClusterAddOn,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		mca, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Get(
+			context.TODO(),
+			managedClusterAddOnName,
+			metav1.GetOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		mca.Status.Registrations = []addonv1alpha1.RegistrationConfig{
+			{
+				SignerName: "kubernetes.io/kube-apiserver-client",
+				Subject: addonv1alpha1.Subject{
+					User:   "test-user",
+					Groups: []string{"test-group"},
+				},
+				Driver: "invalid-driver",
+			},
+		}
+
+		_, err = hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+			context.TODO(),
+			mca,
+			metav1.UpdateOptions{},
+		)
+		gomega.Expect(err).To(gomega.HaveOccurred())
+	})
+
 	ginkgo.It("Update failed with wrong signer name in the ManagedClusterAddOn", func() {
 		managedClusterAddOn := &addonv1alpha1.ManagedClusterAddOn{
 			ObjectMeta: metav1.ObjectMeta{
@@ -411,8 +493,8 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 			mca.Status.Namespace = testNamespace
 			mca.Status.Registrations = []addonv1beta1.RegistrationConfig{
 				{
-					Type: addonv1beta1.CSR,
-					CSR: &addonv1beta1.CSRConfig{
+					Type: addonv1beta1.CustomSigner,
+					CustomSigner: &addonv1beta1.CustomSignerConfig{
 						SignerName: "open-cluster-management.io/addontest",
 					},
 				},
@@ -471,6 +553,144 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 			gomega.Expect(err).ToNot(gomega.HaveOccurred())
 		})
 
+		ginkgo.It("Should update the ManagedClusterAddOn status with KubeClient registration and csr driver v1beta1", func() {
+			managedClusterAddOn := &addonv1beta1.ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: managedClusterAddOnName,
+				},
+				Spec: addonv1beta1.ManagedClusterAddOnSpec{},
+			}
+
+			_, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Create(
+				context.TODO(),
+				managedClusterAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+			mca, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Get(
+				context.TODO(),
+				managedClusterAddOnName,
+				metav1.GetOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+			mca.Status.Namespace = testNamespace
+			mca.Status.Registrations = []addonv1beta1.RegistrationConfig{
+				{
+					Type: addonv1beta1.KubeClient,
+					KubeClient: &addonv1beta1.KubeClientConfig{
+						Subject: addonv1beta1.KubeClientSubject{
+							BaseSubject: addonv1beta1.BaseSubject{
+								User:   "test-user",
+								Groups: []string{"test-group"},
+							},
+						},
+						Driver: "csr",
+					},
+				},
+			}
+
+			_, err = hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+				context.TODO(),
+				mca,
+				metav1.UpdateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("Should update the ManagedClusterAddOn status with KubeClient registration and token driver v1beta1", func() {
+			managedClusterAddOn := &addonv1beta1.ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: managedClusterAddOnName,
+				},
+				Spec: addonv1beta1.ManagedClusterAddOnSpec{},
+			}
+
+			_, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Create(
+				context.TODO(),
+				managedClusterAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+			mca, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Get(
+				context.TODO(),
+				managedClusterAddOnName,
+				metav1.GetOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+			mca.Status.Namespace = testNamespace
+			mca.Status.Registrations = []addonv1beta1.RegistrationConfig{
+				{
+					Type: addonv1beta1.KubeClient,
+					KubeClient: &addonv1beta1.KubeClientConfig{
+						Subject: addonv1beta1.KubeClientSubject{
+							BaseSubject: addonv1beta1.BaseSubject{
+								User:   "test-user",
+								Groups: []string{"test-group"},
+							},
+						},
+						Driver: "token",
+					},
+				},
+			}
+
+			_, err = hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+				context.TODO(),
+				mca,
+				metav1.UpdateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("Should fail to update the ManagedClusterAddOn status with invalid driver v1beta1", func() {
+			managedClusterAddOn := &addonv1beta1.ManagedClusterAddOn{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: managedClusterAddOnName,
+				},
+				Spec: addonv1beta1.ManagedClusterAddOnSpec{},
+			}
+
+			_, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Create(
+				context.TODO(),
+				managedClusterAddOn,
+				metav1.CreateOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+			mca, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Get(
+				context.TODO(),
+				managedClusterAddOnName,
+				metav1.GetOptions{},
+			)
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+			mca.Status.Namespace = testNamespace
+			mca.Status.Registrations = []addonv1beta1.RegistrationConfig{
+				{
+					Type: addonv1beta1.KubeClient,
+					KubeClient: &addonv1beta1.KubeClientConfig{
+						Subject: addonv1beta1.KubeClientSubject{
+							BaseSubject: addonv1beta1.BaseSubject{
+								User:   "test-user",
+								Groups: []string{"test-group"},
+							},
+						},
+						Driver: "invalid-driver",
+					},
+				},
+			}
+
+			_, err = hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+				context.TODO(),
+				mca,
+				metav1.UpdateOptions{},
+			)
+			gomega.Expect(err).To(gomega.HaveOccurred())
+		})
+
 		ginkgo.It("Update failed with wrong signer name in the ManagedClusterAddOn v1beta1", func() {
 			managedClusterAddOn := &addonv1beta1.ManagedClusterAddOn{
 				ObjectMeta: metav1.ObjectMeta{
@@ -495,8 +715,8 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 
 			mca.Status.Registrations = []addonv1beta1.RegistrationConfig{
 				{
-					Type: addonv1beta1.CSR,
-					CSR: &addonv1beta1.CSRConfig{
+					Type: addonv1beta1.CustomSigner,
+					CustomSigner: &addonv1beta1.CustomSignerConfig{
 						SignerName: "addontest",
 					},
 				},
