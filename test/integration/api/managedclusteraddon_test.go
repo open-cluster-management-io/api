@@ -150,9 +150,9 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 					User:   "test-user",
 					Groups: []string{"test-group"},
 				},
-				Driver: "csr",
 			},
 		}
+		mca.Status.KubeClientDriver = "csr"
 
 		_, err = hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).UpdateStatus(
 			context.TODO(),
@@ -191,9 +191,9 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 					User:   "test-user",
 					Groups: []string{"test-group"},
 				},
-				Driver: "invalid-driver",
 			},
 		}
+		mca.Status.KubeClientDriver = "invalid-driver"
 
 		_, err = hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).UpdateStatus(
 			context.TODO(),
