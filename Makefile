@@ -17,7 +17,7 @@ GO_BUILD_PACKAGES_EXPANDED :=$(GO_BUILD_PACKAGES)
 # LDFLAGS are not needed for dummy builds (saving time on calling git commands)
 GO_LD_FLAGS:=
 # controller-gen setup
-CONTROLLER_GEN_VERSION :=v0.16.5
+CONTROLLER_GEN_VERSION :=v0.20.1
 CONTROLLER_GEN :=$(PERMANENT_TMP_GOPATH)/bin/controller-gen
 ifneq "" "$(wildcard $(CONTROLLER_GEN))"
 _controller_gen_installed_version = $(shell $(CONTROLLER_GEN) --version | awk '{print $$2}')
