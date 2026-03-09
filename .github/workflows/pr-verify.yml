@@ -6,18 +6,19 @@ on:
   # This means changes won't kick in to this file until merged onto the
   # main branch.
   pull_request_target:
-    types: [opened, edited, reopened, synchronize]
+    types: [opened, edited, synchronize, reopened]
 
 jobs:
   verify:
-    name: verify PR contents
-    permissions:
-      checks: write
-      pull-requests: read
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
-      - name: Verifier action
-        id: verifier
-        uses: kubernetes-sigs/kubebuilder-release-tools@v0.3.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # tag=v6.0.2
+
+      - name: Check if PR title is valid
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          ./hack/verify-pr-title.sh "${PR_TITLE}"
