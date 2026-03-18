@@ -87,9 +87,6 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "test:test",
 				},
-				AddonWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
-					Address: "test:test",
-				},
 			}
 			_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
 			Expect(err).To(HaveOccurred())
@@ -104,9 +101,6 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 				},
 				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "192.168.2.4",
-				},
-				AddonWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
-					Address: "192.168.2.5",
 				},
 			}
 			_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
@@ -123,9 +117,6 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo.com",
 				},
-				AddonWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
-					Address: "addon.foo.com",
-				},
 			}
 			_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
 			Expect(err).To(BeNil())
@@ -140,9 +131,6 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 				},
 				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo.com",
-				},
-				AddonWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
-					Address: "addon.foo.com",
 				},
 			}
 			clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
@@ -162,9 +150,6 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo.com",
 				},
-				AddonWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
-					Address: "addon.foo.com",
-				},
 			}
 			_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
 			Expect(err).To(HaveOccurred())
@@ -181,10 +166,6 @@ var _ = Describe("Create Cluster Manager Hosted mode", func() {
 				WorkWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
 					Address: "foo2.com",
 					Port:    2443,
-				},
-				AddonWebhookConfiguration: operatorv1.HostedWebhookConfiguration{
-					Address: "foo3.com",
-					Port:    3443,
 				},
 			}
 
