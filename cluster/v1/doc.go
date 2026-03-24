@@ -3,6 +3,7 @@
 
 // +k8s:deepcopy-gen=package,register
 // +k8s:openapi-gen=true
+// +k8s:openapi-model-package=io.open-cluster-management.api.cluster.v1
 // +kubebuilder:validation:Optional
 // +groupName=cluster.open-cluster-management.io
 package v1
