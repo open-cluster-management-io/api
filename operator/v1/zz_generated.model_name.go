@@ -177,6 +177,11 @@ func (in NodePlacement) OpenAPIModelName() string {
 }
 
 // OpenAPIModelName returns the OpenAPI model name for this type.
+func (in PlacementConfiguration) OpenAPIModelName() string {
+	return "io.open-cluster-management.api.operator.v1.PlacementConfiguration"
+}
+
+// OpenAPIModelName returns the OpenAPI model name for this type.
 func (in RegistrationConfiguration) OpenAPIModelName() string {
 	return "io.open-cluster-management.api.operator.v1.RegistrationConfiguration"
 }
