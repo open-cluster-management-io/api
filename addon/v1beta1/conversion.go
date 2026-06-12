@@ -119,12 +119,14 @@ func Convert_v1alpha1_ManagedClusterAddOnStatus_To_v1beta1_ManagedClusterAddOnSt
 	}
 
 	// Set the kubeClientDriver from status level to the kubeClient registration config
-	if in.KubeClientDriver != "" {
-		for i := range out.Registrations {
-			if out.Registrations[i].Type == KubeClient {
-				if out.Registrations[i].KubeClient == nil {
-					out.Registrations[i].KubeClient = &KubeClientConfig{}
-				}
+	for i := range out.Registrations {
+		if out.Registrations[i].Type == KubeClient {
+			if out.Registrations[i].KubeClient == nil {
+				out.Registrations[i].KubeClient = &KubeClientConfig{}
+			}
+			if in.KubeClientDriver == "" {
+				out.Registrations[i].KubeClient.Driver = "csr"
+			} else {
 				out.Registrations[i].KubeClient.Driver = in.KubeClientDriver
 			}
 		}

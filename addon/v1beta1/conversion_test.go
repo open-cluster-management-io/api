@@ -408,6 +408,7 @@ func TestConvert_v1alpha1_ManagedClusterAddOn_To_v1beta1_ManagedClusterAddOn(t *
 										Groups: []string{"test-group"},
 									},
 								},
+								Driver: "csr",
 							},
 						},
 					},
@@ -717,6 +718,133 @@ func TestConvert_v1alpha1_ManagedClusterAddOn_To_v1beta1_ManagedClusterAddOn(t *
 								t.Errorf("Registrations[%d].CustomSigner.Subject.User = %v, want %v", i, got.Status.Registrations[i].CustomSigner.Subject.User, tt.want.Status.Registrations[i].CustomSigner.Subject.User)
 							}
 						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestConvert_v1alpha1_ManagedClusterAddOnStatus_To_v1beta1_ManagedClusterAddOnStatus(t *testing.T) {
+	tests := []struct {
+		name    string
+		in      *v1alpha1.ManagedClusterAddOnStatus
+		want    *ManagedClusterAddOnStatus
+		wantErr bool
+	}{
+		{
+			name: "empty KubeClientDriver defaults to csr",
+			in: &v1alpha1.ManagedClusterAddOnStatus{
+				KubeClientDriver: "",
+				Registrations: []v1alpha1.RegistrationConfig{
+					{
+						SignerName: certificates.KubeAPIServerClientSignerName,
+						Subject: v1alpha1.Subject{
+							User: "test-user",
+						},
+					},
+				},
+			},
+			want: &ManagedClusterAddOnStatus{
+				Registrations: []RegistrationConfig{
+					{
+						Type: KubeClient,
+						KubeClient: &KubeClientConfig{
+							Driver: "csr",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "non-empty KubeClientDriver is used as-is",
+			in: &v1alpha1.ManagedClusterAddOnStatus{
+				KubeClientDriver: "token",
+				Registrations: []v1alpha1.RegistrationConfig{
+					{
+						SignerName: certificates.KubeAPIServerClientSignerName,
+						Subject: v1alpha1.Subject{
+							User: "test-user",
+						},
+					},
+				},
+			},
+			want: &ManagedClusterAddOnStatus{
+				Registrations: []RegistrationConfig{
+					{
+						Type: KubeClient,
+						KubeClient: &KubeClientConfig{
+							Driver: "token",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "non-KubeClient registrations are not affected",
+			in: &v1alpha1.ManagedClusterAddOnStatus{
+				KubeClientDriver: "token",
+				Registrations: []v1alpha1.RegistrationConfig{
+					{
+						SignerName: "custom.signer.io/custom",
+						Subject: v1alpha1.Subject{
+							User: "test-user",
+						},
+					},
+				},
+			},
+			want: &ManagedClusterAddOnStatus{
+				Registrations: []RegistrationConfig{
+					{
+						Type: CustomSigner,
+						CustomSigner: &CustomSignerConfig{
+							SignerName: "custom.signer.io/custom",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "no registrations with empty KubeClientDriver produces no output",
+			in: &v1alpha1.ManagedClusterAddOnStatus{
+				KubeClientDriver: "",
+			},
+			want: &ManagedClusterAddOnStatus{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := &ManagedClusterAddOnStatus{}
+			err := Convert_v1alpha1_ManagedClusterAddOnStatus_To_v1beta1_ManagedClusterAddOnStatus(tt.in, got, conversion.Scope(nil))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+			if len(got.Registrations) != len(tt.want.Registrations) {
+				t.Fatalf("Registrations length = %v, want %v", len(got.Registrations), len(tt.want.Registrations))
+			}
+			for i := range got.Registrations {
+				if got.Registrations[i].Type != tt.want.Registrations[i].Type {
+					t.Errorf("Registrations[%d].Type = %v, want %v", i, got.Registrations[i].Type, tt.want.Registrations[i].Type)
+				}
+				if got.Registrations[i].Type == KubeClient {
+					if got.Registrations[i].KubeClient == nil {
+						t.Errorf("Registrations[%d].KubeClient is nil", i)
+					} else if got.Registrations[i].KubeClient.Driver != tt.want.Registrations[i].KubeClient.Driver {
+						t.Errorf("Registrations[%d].KubeClient.Driver = %q, want %q", i,
+							got.Registrations[i].KubeClient.Driver, tt.want.Registrations[i].KubeClient.Driver)
+					}
+				}
+				if got.Registrations[i].Type == CustomSigner {
+					if got.Registrations[i].CustomSigner == nil {
+						t.Errorf("Registrations[%d].CustomSigner is nil", i)
+					} else if got.Registrations[i].CustomSigner.SignerName != tt.want.Registrations[i].CustomSigner.SignerName {
+						t.Errorf("Registrations[%d].CustomSigner.SignerName = %v, want %v", i,
+							got.Registrations[i].CustomSigner.SignerName, tt.want.Registrations[i].CustomSigner.SignerName)
 					}
 				}
 			}
