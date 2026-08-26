@@ -716,6 +716,7 @@ spec:
                   hosting-cluster-name to be set. Disabled by default.
                 properties:
                   mode:
+                    default: Disable
                     description: |-
                       mode turns automatic hosting-cluster resolution on or off for ManagedClusterAddOns of this
                       type. Disabled by default.

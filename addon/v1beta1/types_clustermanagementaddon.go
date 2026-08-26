@@ -62,6 +62,7 @@ type HostedModeAutoDiscoveryConfig struct {
 	// mode turns automatic hosting-cluster resolution on or off for ManagedClusterAddOns of this
 	// type. Disabled by default.
 	// +optional
+	// +kubebuilder:default=Disable
 	Mode HostedModeAutoDiscoveryModeType `json:"mode,omitempty"`
 }
 

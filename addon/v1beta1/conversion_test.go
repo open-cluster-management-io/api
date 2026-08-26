@@ -335,6 +335,51 @@ func TestConvert_v1beta1_ClusterManagementAddOn_To_v1alpha1_ClusterManagementAdd
 	}
 }
 
+func TestHostedModeAutoDiscoveryConversionRoundTrip(t *testing.T) {
+	in := &ClusterManagementAddOn{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-addon",
+			Annotations: map[string]string{
+				"example.com/owner": "test-team",
+			},
+		},
+		Spec: ClusterManagementAddOnSpec{
+			HostedModeAutoDiscovery: &HostedModeAutoDiscoveryConfig{
+				Mode: HostedModeAutoDiscoveryModeDisable,
+			},
+		},
+	}
+
+	stored := &v1alpha1.ClusterManagementAddOn{}
+	if err := Convert_v1beta1_ClusterManagementAddOn_To_v1alpha1_ClusterManagementAddOn(
+		in, stored, conversion.Scope(nil),
+	); err != nil {
+		t.Fatalf("converting to v1alpha1: %v", err)
+	}
+	if got := stored.Annotations[hostedModeAutoDiscoveryAnnotation]; got != string(HostedModeAutoDiscoveryModeDisable) {
+		t.Fatalf("stored hosted mode auto-discovery annotation = %q, want %q", got, HostedModeAutoDiscoveryModeDisable)
+	}
+
+	got := &ClusterManagementAddOn{}
+	if err := Convert_v1alpha1_ClusterManagementAddOn_To_v1beta1_ClusterManagementAddOn(
+		stored, got, conversion.Scope(nil),
+	); err != nil {
+		t.Fatalf("converting back to v1beta1: %v", err)
+	}
+	if got.Spec.HostedModeAutoDiscovery == nil {
+		t.Fatal("hosted mode auto-discovery config was lost during conversion")
+	}
+	if got.Spec.HostedModeAutoDiscovery.Mode != HostedModeAutoDiscoveryModeDisable {
+		t.Errorf("hosted mode auto-discovery mode = %q, want %q", got.Spec.HostedModeAutoDiscovery.Mode, HostedModeAutoDiscoveryModeDisable)
+	}
+	if _, ok := got.Annotations[hostedModeAutoDiscoveryAnnotation]; ok {
+		t.Errorf("internal annotation %q was exposed after conversion", hostedModeAutoDiscoveryAnnotation)
+	}
+	if got.Annotations["example.com/owner"] != "test-team" {
+		t.Error("user annotation was lost during conversion")
+	}
+}
+
 func TestConvert_v1alpha1_ManagedClusterAddOn_To_v1beta1_ManagedClusterAddOn(t *testing.T) {
 	tests := []struct {
 		name    string
