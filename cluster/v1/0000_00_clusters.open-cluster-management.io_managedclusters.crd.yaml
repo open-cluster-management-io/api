@@ -111,7 +111,7 @@ spec:
                       type: string
                       x-kubernetes-validations:
                       - message: url must be a valid https URL
-                        rule: isURL(self) && url(self).getScheme() == 'https' && url(self).getHost()
+                        rule: isURL(self) && url(self).getScheme() == 'https' && url(self).getHostname()
                           != ''
                   required:
                   - url

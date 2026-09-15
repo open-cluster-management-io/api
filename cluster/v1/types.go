@@ -85,7 +85,7 @@ type ClientConfig struct {
 	// URL is the URL of apiserver endpoint of the managed cluster.
 	// +required
 	// +kubebuilder:validation:MaxLength=2048
-	// +kubebuilder:validation:XValidation:rule="isURL(self) && url(self).getScheme() == 'https' && url(self).getHost() != ''",message="url must be a valid https URL"
+	// +kubebuilder:validation:XValidation:rule="isURL(self) && url(self).getScheme() == 'https' && url(self).getHostname() != ''",message="url must be a valid https URL"
 	URL string `json:"url"`
 
 	// CABundle is the ca bundle to connect to apiserver of the managed cluster.
