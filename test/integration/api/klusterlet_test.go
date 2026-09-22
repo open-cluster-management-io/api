@@ -72,6 +72,53 @@ var _ = Describe("Create Klusterlet API", func() {
 			Expect(err).To(BeNil())
 		})
 	})
+
+	Context("Create with aws auth and a valid arn in a non-commercial partition", func() {
+		It("should create successfully for aws-us-gov", func() {
+			klusterlet.Spec.RegistrationConfiguration = awsIrsaRegistrationConfig(
+				"arn:aws-us-gov:eks:us-gov-west-1:123456789012:cluster/managed-cluster1",
+				"arn:aws-us-gov:eks:us-gov-west-1:123456789012:cluster/hub-cluster1")
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(BeNil())
+		})
+
+		It("should create successfully for aws-iso-b", func() {
+			klusterlet.Spec.RegistrationConfiguration = awsIrsaRegistrationConfig(
+				"arn:aws-iso-b:eks:us-isob-east-1:123456789012:cluster/managed-cluster1",
+				"arn:aws-iso-b:eks:us-isob-east-1:123456789012:cluster/hub-cluster1")
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(BeNil())
+		})
+
+		// The schema validates each arn on its own; it has no cross-field rule tying the two
+		// partitions together. IAM trust relationships do not actually cross partitions, so this
+		// pins the validation boundary, not a supported topology.
+		It("should not constrain the hub and the managed cluster to the same partition", func() {
+			klusterlet.Spec.RegistrationConfiguration = awsIrsaRegistrationConfig(
+				"arn:aws-cn:eks:cn-north-1:123456789012:cluster/managed-cluster1",
+				"arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(BeNil())
+		})
+	})
+
+	Context("Create with aws auth and an arn outside the aws partitions", func() {
+		It("should reject a partition that is not an aws partition", func() {
+			klusterlet.Spec.RegistrationConfiguration = awsIrsaRegistrationConfig(
+				"arn:notaws:eks:us-west-2:123456789012:cluster/managed-cluster1",
+				"arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+		})
+
+		It("should reject a trailing hyphen in the partition", func() {
+			klusterlet.Spec.RegistrationConfiguration = awsIrsaRegistrationConfig(
+				"arn:aws-:eks:us-west-2:123456789012:cluster/managed-cluster1",
+				"arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+		})
+	})
 })
 
 var _ = Describe("valid HubApiServerHostAlias", func() {
@@ -388,3 +435,17 @@ var _ = Describe("Klusterlet v1 Enhanced API test", func() {
 		})
 	})
 })
+
+// awsIrsaRegistrationConfig builds an awsirsa registration config for the given cluster arns,
+// so the partition cases above differ only by the arns under test.
+func awsIrsaRegistrationConfig(managedClusterArn, hubClusterArn string) *operatorv1.RegistrationConfiguration {
+	return &operatorv1.RegistrationConfiguration{
+		RegistrationDriver: operatorv1.RegistrationDriver{
+			AuthType: "awsirsa",
+			AwsIrsa: &operatorv1.AwsIrsa{
+				ManagedClusterArn: managedClusterArn,
+				HubClusterArn:     hubClusterArn,
+			},
+		},
+	}
+}

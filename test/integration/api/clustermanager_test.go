@@ -309,6 +309,36 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
 		Expect(err).To(BeNil())
 	})
+
+	It("Create a cluster manager with aws registration and a valid aws-us-gov hubClusterArn", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws-us-gov:eks:us-gov-west-1:123456789012:cluster/hub-cluster1")
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+	})
+
+	It("Create a cluster manager with aws registration and a valid aws-iso-b hubClusterArn", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws-iso-b:eks:us-isob-east-1:123456789012:cluster/hub-cluster1")
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+	})
+
+	It("Create a cluster manager with aws registration and a valid aws-cn hubClusterArn", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws-cn:eks:cn-north-1:123456789012:cluster/hub-cluster1")
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+	})
+
+	It("Create a cluster manager with aws registration and a hubClusterArn outside the aws partitions", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:notaws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(apierrors.IsInvalid(err)).To(BeTrue())
+	})
+
+	It("Create a cluster manager with aws registration and a trailing hyphen in the partition", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws-:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(apierrors.IsInvalid(err)).To(BeTrue())
+	})
 })
 
 var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
@@ -590,3 +620,25 @@ var _ = Describe("ClusterManager v1 Enhanced API test", func() {
 		})
 	})
 })
+
+// awsIrsaClusterManager builds a cluster manager with a single awsirsa registration driver,
+// so the partition cases above differ only by the hub cluster arn under test.
+func awsIrsaClusterManager(name, hubClusterArn string) *operatorv1.ClusterManager {
+	return &operatorv1.ClusterManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: operatorv1.ClusterManagerSpec{
+			RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
+				RegistrationDrivers: []operatorv1.RegistrationDriverHub{
+					{
+						AuthType: "awsirsa",
+						AwsIrsa: &operatorv1.AwsIrsaConfig{
+							HubClusterArn: hubClusterArn,
+						},
+					},
+				},
+			},
+		},
+	}
+}
