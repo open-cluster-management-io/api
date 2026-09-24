@@ -67,6 +67,7 @@ type Manifest struct {
 type ManifestsTemplate struct {
 	// manifests represents a list of kubernetes resources to be deployed on a managed cluster.
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="size(self) > 0",message="manifests should not be empty"
 	Manifests []Manifest `json:"manifests,omitempty"`
 }
 

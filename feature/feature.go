@@ -111,6 +111,10 @@ const (
 	// When enabled, a debug-server container will be added to the placement pod, providing
 	// /debug/placements/* endpoints for placement scheduling simulation and debugging.
 	PlacementDebugServer featuregate.Feature = "PlacementDebugServer"
+
+	// CELValidation replaces the legacy Go Validating Webhooks with native Kubernetes
+	// CEL validation rules and ValidatingAdmissionPolicy bindings.
+	CELValidation featuregate.Feature = "CELValidation"
 )
 
 // DefaultSpokeRegistrationFeatureGates consists of all known ocm-registration
@@ -134,6 +138,7 @@ var DefaultHubRegistrationFeatureGates = map[featuregate.Feature]featuregate.Fea
 	ResourceCleanup:            {Default: true, PreRelease: featuregate.Beta},
 	ClusterProfile:             {Default: false, PreRelease: featuregate.Alpha},
 	ClusterImporter:            {Default: false, PreRelease: featuregate.Alpha},
+	CELValidation:              {Default: false, PreRelease: featuregate.Alpha},
 }
 
 var DefaultHubAddonManagerFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
@@ -154,6 +159,7 @@ var DefaultHubWorkFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec
 	ManifestWorkReplicaSet:       {Default: false, PreRelease: featuregate.Alpha},
 	CloudEventsDrivers:           {Default: false, PreRelease: featuregate.Alpha},
 	CleanUpCompletedManifestWork: {Default: false, PreRelease: featuregate.Alpha},
+	CELValidation:                {Default: false, PreRelease: featuregate.Alpha},
 }
 
 // DefaultSpokeWorkFeatureGates consists of all known ocm work feature keys for work agent.
