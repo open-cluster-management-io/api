@@ -3,6 +3,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -117,6 +118,272 @@ var _ = Describe("Create Klusterlet API", func() {
 				"arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
 			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
 			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+		})
+	})
+})
+
+var _ = Describe("Create Klusterlet API with azure registration", func() {
+	const (
+		azureID  = "11111111-1111-1111-1111-111111111111"
+		clientID = "22222222-2222-2222-2222-222222222222"
+		tenantID = "33333333-3333-3333-3333-333333333333"
+	)
+	var klusterlet *operatorv1.Klusterlet
+	BeforeEach(func() {
+		klusterlet = &operatorv1.Klusterlet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("cm-%s", rand.String(5)),
+			},
+		}
+	})
+
+	create := func(azure *operatorv1.AzureAuth) error {
+		klusterlet.Spec.RegistrationConfiguration = azureRegistrationConfig(azure)
+		_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		return err
+	}
+
+	It("should reject authType azure without the azure configuration", func() {
+		Expect(apierrors.IsInvalid(create(nil))).To(BeTrue())
+	})
+
+	It("should reject a missing credential", func() {
+		Expect(apierrors.IsInvalid(create(&operatorv1.AzureAuth{
+			ManagedClusterAzureID: azureID,
+		}))).To(BeTrue())
+	})
+
+	It("should reject an unknown credential", func() {
+		Expect(apierrors.IsInvalid(create(&operatorv1.AzureAuth{
+			Credential:            "default-azure-credential",
+			ManagedClusterAzureID: azureID,
+		}))).To(BeTrue())
+	})
+
+	It("should reject a missing managedClusterAzureID", func() {
+		Expect(apierrors.IsInvalid(create(&operatorv1.AzureAuth{
+			Credential: operatorv1.AzureManagedIdentityCredential,
+		}))).To(BeTrue())
+	})
+
+	It("should create managed-identity-credential without clientID, for a system-assigned identity", func() {
+		Expect(create(&operatorv1.AzureAuth{
+			Credential:            operatorv1.AzureManagedIdentityCredential,
+			ManagedClusterAzureID: azureID,
+		})).To(Succeed())
+	})
+
+	It("should create managed-identity-credential with clientID, for a user-assigned identity", func() {
+		Expect(create(&operatorv1.AzureAuth{
+			Credential:            operatorv1.AzureManagedIdentityCredential,
+			ManagedClusterAzureID: azureID,
+			ClientID:              clientID,
+		})).To(Succeed())
+	})
+
+	It("should create workload-identity-credential with clientID", func() {
+		Expect(create(&operatorv1.AzureAuth{
+			Credential:            operatorv1.AzureWorkloadIdentityCredential,
+			ManagedClusterAzureID: azureID,
+			ClientID:              clientID,
+			FederatedTokenFile:    "/var/run/secrets/azure/tokens/azure-identity-token",
+		})).To(Succeed())
+	})
+
+	It("should reject workload-identity-credential without clientID", func() {
+		Expect(apierrors.IsInvalid(create(&operatorv1.AzureAuth{
+			Credential:            operatorv1.AzureWorkloadIdentityCredential,
+			ManagedClusterAzureID: azureID,
+		}))).To(BeTrue())
+	})
+
+	It("should create the environment-credential types with clientID and tenantID", func() {
+		for _, credential := range []operatorv1.AzureCredentialType{
+			operatorv1.AzureEnvironmentCredentialSecret, operatorv1.AzureEnvironmentCredentialCertificate,
+		} {
+			klusterlet.Name = fmt.Sprintf("cm-%s", rand.String(5))
+			Expect(create(&operatorv1.AzureAuth{
+				Credential:            credential,
+				ManagedClusterAzureID: azureID,
+				ClientID:              clientID,
+				TenantID:              tenantID,
+			})).To(Succeed(), string(credential))
+		}
+	})
+
+	It("should reject the environment-credential types without clientID or tenantID", func() {
+		for _, credential := range []operatorv1.AzureCredentialType{
+			operatorv1.AzureEnvironmentCredentialSecret, operatorv1.AzureEnvironmentCredentialCertificate,
+		} {
+			Expect(apierrors.IsInvalid(create(&operatorv1.AzureAuth{
+				Credential:            credential,
+				ManagedClusterAzureID: azureID,
+				ClientID:              clientID,
+			}))).To(BeTrue(), string(credential)+" without tenantID")
+			Expect(apierrors.IsInvalid(create(&operatorv1.AzureAuth{
+				Credential:            credential,
+				ManagedClusterAzureID: azureID,
+				TenantID:              tenantID,
+			}))).To(BeTrue(), string(credential)+" without clientID")
+		}
+	})
+
+	It("should reject federatedTokenFile with a credential other than workload-identity-credential", func() {
+		for _, credential := range []operatorv1.AzureCredentialType{
+			operatorv1.AzureManagedIdentityCredential,
+			operatorv1.AzureEnvironmentCredentialSecret,
+			operatorv1.AzureEnvironmentCredentialCertificate,
+		} {
+			err := create(&operatorv1.AzureAuth{
+				Credential:            credential,
+				ManagedClusterAzureID: azureID,
+				ClientID:              clientID,
+				TenantID:              tenantID,
+				FederatedTokenFile:    "/var/run/secrets/azure/tokens/azure-identity-token",
+			})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue(), string(credential))
+			Expect(err.Error()).To(ContainSubstring("federatedTokenFile applies only to workload-identity-credential"), string(credential))
+		}
+	})
+
+	It("should persist every azure field", func() {
+		azure := &operatorv1.AzureAuth{
+			Credential:            operatorv1.AzureWorkloadIdentityCredential,
+			ManagedClusterAzureID: azureID,
+			ClientID:              clientID,
+			TenantID:              tenantID,
+			FederatedTokenFile:    "/var/run/secrets/azure/tokens/azure-identity-token",
+			TokenAudience:         "api://hub-apiserver/.default",
+		}
+		Expect(create(azure)).To(Succeed())
+
+		got, err := operatorClient.OperatorV1().Klusterlets().Get(context.TODO(), klusterlet.Name, metav1.GetOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(got.Spec.RegistrationConfiguration.RegistrationDriver.AuthType).To(Equal(operatorv1.AzureAuthType))
+		Expect(got.Spec.RegistrationConfiguration.RegistrationDriver.Azure).To(Equal(azure))
+	})
+
+	Context("Update", func() {
+		// update applies mutate to the stored Klusterlet's azure configuration.
+		update := func(mutate func(azure *operatorv1.AzureAuth)) error {
+			got, err := operatorClient.OperatorV1().Klusterlets().Get(context.TODO(), klusterlet.Name, metav1.GetOptions{})
+			Expect(err).ToNot(HaveOccurred())
+			mutate(got.Spec.RegistrationConfiguration.RegistrationDriver.Azure)
+			_, err = operatorClient.OperatorV1().Klusterlets().Update(context.TODO(), got, metav1.UpdateOptions{})
+			return err
+		}
+
+		It("should reject switching to workload-identity-credential without clientID", func() {
+			Expect(create(&operatorv1.AzureAuth{
+				Credential:            operatorv1.AzureManagedIdentityCredential,
+				ManagedClusterAzureID: azureID,
+			})).To(Succeed())
+
+			err := update(func(azure *operatorv1.AzureAuth) {
+				azure.Credential = operatorv1.AzureWorkloadIdentityCredential
+			})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+			Expect(err.Error()).To(ContainSubstring("clientID is required for workload-identity-credential"))
+		})
+
+		It("should reject removing tenantID from an environment credential", func() {
+			Expect(create(&operatorv1.AzureAuth{
+				Credential:            operatorv1.AzureEnvironmentCredentialSecret,
+				ManagedClusterAzureID: azureID,
+				ClientID:              clientID,
+				TenantID:              tenantID,
+			})).To(Succeed())
+
+			err := update(func(azure *operatorv1.AzureAuth) {
+				azure.TenantID = ""
+			})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+			Expect(err.Error()).To(ContainSubstring("clientID and tenantID are required"))
+		})
+
+		It("should accept switching to workload-identity-credential with clientID", func() {
+			Expect(create(&operatorv1.AzureAuth{
+				Credential:            operatorv1.AzureManagedIdentityCredential,
+				ManagedClusterAzureID: azureID,
+			})).To(Succeed())
+
+			Expect(update(func(azure *operatorv1.AzureAuth) {
+				azure.Credential = operatorv1.AzureWorkloadIdentityCredential
+				azure.ClientID = clientID
+			})).To(Succeed())
+		})
+	})
+
+	// The typed client drops empty optional fields (omitempty) and always sends required
+	// fields, so explicitly-empty and absent values - what a YAML or Helm user can send -
+	// are only reachable with a raw request.
+	Context("Raw requests", func() {
+		createRaw := func(azure map[string]interface{}) error {
+			body, err := json.Marshal(map[string]interface{}{
+				"apiVersion": "operator.open-cluster-management.io/v1",
+				"kind":       "Klusterlet",
+				"metadata":   map[string]interface{}{"name": klusterlet.Name},
+				"spec": map[string]interface{}{
+					"registrationConfiguration": map[string]interface{}{
+						"registrationDriver": map[string]interface{}{
+							"authType": operatorv1.AzureAuthType,
+							"azure":    azure,
+						},
+					},
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			return operatorClient.OperatorV1().RESTClient().Post().
+				Resource("klusterlets").Body(body).Do(context.TODO()).Error()
+		}
+
+		It("should create a valid klusterlet, so the rejections below are not an artifact of the raw request", func() {
+			Expect(createRaw(map[string]interface{}{
+				"credential":            string(operatorv1.AzureWorkloadIdentityCredential),
+				"managedClusterAzureID": azureID,
+				"clientID":              clientID,
+			})).To(Succeed())
+		})
+
+		It("should reject an explicitly empty clientID for workload-identity-credential", func() {
+			err := createRaw(map[string]interface{}{
+				"credential":            string(operatorv1.AzureWorkloadIdentityCredential),
+				"managedClusterAzureID": azureID,
+				"clientID":              "",
+			})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+			Expect(err.Error()).To(ContainSubstring("clientID is required for workload-identity-credential"))
+		})
+
+		It("should reject an explicitly empty clientID or tenantID for the environment credentials", func() {
+			for _, credential := range []operatorv1.AzureCredentialType{
+				operatorv1.AzureEnvironmentCredentialSecret, operatorv1.AzureEnvironmentCredentialCertificate,
+			} {
+				for field, azure := range map[string]map[string]interface{}{
+					"clientID": {"credential": string(credential), "managedClusterAzureID": azureID, "clientID": "", "tenantID": tenantID},
+					"tenantID": {"credential": string(credential), "managedClusterAzureID": azureID, "clientID": clientID, "tenantID": ""},
+				} {
+					err := createRaw(azure)
+					Expect(apierrors.IsInvalid(err)).To(BeTrue(), string(credential)+" with empty "+field)
+					Expect(err.Error()).To(ContainSubstring("clientID and tenantID are required"), string(credential)+" with empty "+field)
+				}
+			}
+		})
+
+		It("should reject an absent credential", func() {
+			err := createRaw(map[string]interface{}{
+				"managedClusterAzureID": azureID,
+			})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+			Expect(err.Error()).To(ContainSubstring("credential: Required value"))
+		})
+
+		It("should reject an absent managedClusterAzureID", func() {
+			err := createRaw(map[string]interface{}{
+				"credential": string(operatorv1.AzureManagedIdentityCredential),
+			})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+			Expect(err.Error()).To(ContainSubstring("managedClusterAzureID: Required value"))
 		})
 	})
 })
@@ -446,6 +713,15 @@ func awsIrsaRegistrationConfig(managedClusterArn, hubClusterArn string) *operato
 				ManagedClusterArn: managedClusterArn,
 				HubClusterArn:     hubClusterArn,
 			},
+		},
+	}
+}
+
+func azureRegistrationConfig(azure *operatorv1.AzureAuth) *operatorv1.RegistrationConfiguration {
+	return &operatorv1.RegistrationConfiguration{
+		RegistrationDriver: operatorv1.RegistrationDriver{
+			AuthType: operatorv1.AzureAuthType,
+			Azure:    azure,
 		},
 	}
 }
