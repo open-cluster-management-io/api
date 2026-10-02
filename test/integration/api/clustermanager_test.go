@@ -341,6 +341,50 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 	})
 })
 
+var _ = Describe("ClusterManager API test with azure registration", func() {
+	It("should create with auto-approval patterns and an OIDC issuer URL", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("cm-%s", rand.String(5)),
+			},
+			Spec: operatorv1.ClusterManagerSpec{
+				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
+					RegistrationDrivers: []operatorv1.RegistrationDriverHub{
+						{
+							AuthType: operatorv1.AzureAuthType,
+							Azure: &operatorv1.AzureConfig{
+								AutoApprovedIdentityPatterns: []string{"^11111111-.*$"},
+								OIDCIssuerURL:                "https://login.microsoftonline.com/33333333-3333-3333-3333-333333333333/v2.0",
+							},
+						},
+					},
+				},
+			},
+		}
+		created, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(created.Spec.RegistrationConfiguration.RegistrationDrivers[0].Azure).To(
+			Equal(clusterManager.Spec.RegistrationConfiguration.RegistrationDrivers[0].Azure))
+	})
+
+	It("should create with authType azure and no azure configuration", func() {
+		clusterManager := &operatorv1.ClusterManager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("cm-%s", rand.String(5)),
+			},
+			Spec: operatorv1.ClusterManagerSpec{
+				RegistrationConfiguration: &operatorv1.RegistrationHubConfiguration{
+					RegistrationDrivers: []operatorv1.RegistrationDriverHub{
+						{AuthType: operatorv1.AzureAuthType},
+					},
+				},
+			},
+		}
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+	})
+})
+
 var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
 	var clusterManagerName string
 
