@@ -443,6 +443,9 @@ spec:
                           x-kubernetes-embedded-resource: true
                           x-kubernetes-preserve-unknown-fields: true
                         type: array
+                        x-kubernetes-validations:
+                        - message: manifests should not be empty
+                          rule: size(self) > 0
                     type: object
                 type: object
               placementRefs:
