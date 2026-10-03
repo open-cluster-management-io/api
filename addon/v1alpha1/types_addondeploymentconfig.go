@@ -69,6 +69,33 @@ type AddOnDeploymentConfigSpec struct {
 	// +listType=map
 	// +listMapKey=containerID
 	ResourceRequirements []ContainerResourceRequirements `json:"resourceRequirements,omitempty"`
+
+	// ReplicaConfigs specify the desired replica counts for add-on agent workloads.
+	// If a workload matches multiple entries, the last matched configuration takes precedence.
+	// Supported resource types: deployments, statefulsets. Wildcard (*) is supported in any segment.
+	// Examples:
+	//   - workloadID: "deployments:cert-manager-webhook"  # specific deployment
+	//   - workloadID: "deployments:*"                     # all deployments
+	// +optional
+	// +listType=atomic
+	ReplicaConfigs []ReplicaConfig `json:"replicaConfigs,omitempty"`
+}
+
+// ReplicaConfig defines the desired replica count for a matched workload.
+type ReplicaConfig struct {
+	// WorkloadID identifies the target workload. Format: {resourceType}:{resourceName}.
+	// Supported resource types: deployments, statefulsets.
+	// Wildcards (*) are allowed in each segment.
+	// +required
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=`^(deployments|statefulsets|\*):.+$`
+	WorkloadID string `json:"workloadID"`
+
+	// Replicas is the desired number of replicas.
+	// +required
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=0
+	Replicas int32 `json:"replicas"`
 }
 
 // ContainerResourceRequirements defines resources required by one or a group of containers.
