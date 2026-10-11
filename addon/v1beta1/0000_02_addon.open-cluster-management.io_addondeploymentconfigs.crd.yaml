@@ -181,6 +181,36 @@ spec:
                   - mirror
                   type: object
                 type: array
+              replicaConfigs:
+                description: |-
+                  ReplicaConfigs specify the desired replica counts for add-on agent workloads.
+                  If a workload matches multiple entries, the last matched configuration takes precedence.
+                  Supported resource types: deployments, statefulsets. Wildcard (*) is supported in any segment.
+                  Examples:
+                    - workloadID: "deployments:cert-manager-webhook"  # specific deployment
+                    - workloadID: "deployments:*"                     # all deployments
+                items:
+                  description: ReplicaConfig defines the desired replica count for
+                    a matched workload.
+                  properties:
+                    replicas:
+                      description: Replicas is the desired number of replicas.
+                      format: int32
+                      minimum: 0
+                      type: integer
+                    workloadID:
+                      description: |-
+                        WorkloadID identifies the target workload. Format: {resourceType}:{resourceName}.
+                        Supported resource types: deployments, statefulsets.
+                        Wildcards (*) are allowed in each segment.
+                      pattern: ^(deployments|statefulsets|\*):.+$
+                      type: string
+                  required:
+                  - replicas
+                  - workloadID
+                  type: object
+                type: array
+                x-kubernetes-list-type: atomic
               resourceRequirements:
                 description: |-
                   ResourceRequirements specify the resources required by add-on agents.
@@ -443,6 +473,36 @@ spec:
                   - mirror
                   type: object
                 type: array
+              replicaConfigs:
+                description: |-
+                  replicaConfigs specify the desired replica counts for add-on agent workloads.
+                  If a workload matches multiple entries, the last matched configuration takes precedence.
+                  Supported resource types: deployments, statefulsets. Wildcard (*) is supported in any segment.
+                  Examples:
+                    - workloadID: "deployments:cert-manager-webhook"  # specific deployment
+                    - workloadID: "deployments:*"                     # all deployments
+                items:
+                  description: ReplicaConfig defines the desired replica count for
+                    a matched workload.
+                  properties:
+                    replicas:
+                      description: replicas is the desired number of replicas.
+                      format: int32
+                      minimum: 0
+                      type: integer
+                    workloadID:
+                      description: |-
+                        workloadID identifies the target workload. Format: {resourceType}:{resourceName}.
+                        Supported resource types: deployments, statefulsets.
+                        Wildcards (*) are allowed in each segment.
+                      pattern: ^(deployments|statefulsets|\*):.+$
+                      type: string
+                  required:
+                  - replicas
+                  - workloadID
+                  type: object
+                type: array
+                x-kubernetes-list-type: atomic
               resourceRequirements:
                 description: |-
                   resourceRequirements specify the resources required by add-on agents.

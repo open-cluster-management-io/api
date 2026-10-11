@@ -232,6 +232,11 @@ func (in RegistrationSpec) OpenAPIModelName() string {
 }
 
 // OpenAPIModelName returns the OpenAPI model name for this type.
+func (in ReplicaConfig) OpenAPIModelName() string {
+	return "io.open-cluster-management.api.addon.v1beta1.ReplicaConfig"
+}
+
+// OpenAPIModelName returns the OpenAPI model name for this type.
 func (in SigningCARef) OpenAPIModelName() string {
 	return "io.open-cluster-management.api.addon.v1beta1.SigningCARef"
 }
