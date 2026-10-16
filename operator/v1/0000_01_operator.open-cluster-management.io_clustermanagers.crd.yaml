@@ -519,6 +519,16 @@ spec:
                               items:
                                 type: string
                               type: array
+                            credentialSource:
+                              default: IRSA
+                              description: |-
+                                credentialSource selects how AWS credentials are obtained. IRSA annotates the service
+                                accounts with eks.amazonaws.com/role-arn; PodIdentity leaves them unannotated so an
+                                EKS Pod Identity association is used instead.
+                              enum:
+                              - IRSA
+                              - PodIdentity
+                              type: string
                             hubClusterArn:
                               description: |-
                                 This represents the hub cluster ARN

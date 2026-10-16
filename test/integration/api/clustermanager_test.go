@@ -363,6 +363,28 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
 		Expect(apierrors.IsInvalid(err)).To(BeTrue())
 	})
+
+	It("Create a cluster manager with aws registration and no credentialSource defaults to IRSA", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		created, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+		Expect(created.Spec.RegistrationConfiguration.RegistrationDrivers[0].AwsIrsa.CredentialSource).To(Equal(operatorv1.AwsCredentialSourceIRSA))
+	})
+
+	It("Create a cluster manager with aws registration and PodIdentity credentialSource", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		clusterManager.Spec.RegistrationConfiguration.RegistrationDrivers[0].AwsIrsa.CredentialSource = operatorv1.AwsCredentialSourcePodIdentity
+		created, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+		Expect(created.Spec.RegistrationConfiguration.RegistrationDrivers[0].AwsIrsa.CredentialSource).To(Equal(operatorv1.AwsCredentialSourcePodIdentity))
+	})
+
+	It("Create a cluster manager with aws registration and an unknown credentialSource", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		clusterManager.Spec.RegistrationConfiguration.RegistrationDrivers[0].AwsIrsa.CredentialSource = "Bogus"
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(apierrors.IsInvalid(err)).To(BeTrue())
+	})
 })
 
 var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
