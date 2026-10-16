@@ -146,6 +146,18 @@ const (
 	GRPCAuthType = "grpc"
 )
 
+// AwsCredentialSource selects how the awsirsa registration driver obtains AWS credentials.
+// +kubebuilder:validation:Enum=IRSA;PodIdentity
+type AwsCredentialSource string
+
+const (
+	// AwsCredentialSourceIRSA annotates the service accounts with eks.amazonaws.com/role-arn.
+	AwsCredentialSourceIRSA AwsCredentialSource = "IRSA"
+	// AwsCredentialSourcePodIdentity leaves the service accounts unannotated so an EKS Pod
+	// Identity association is used instead.
+	AwsCredentialSourcePodIdentity AwsCredentialSource = "PodIdentity"
+)
+
 // GRPCAuthSigner is the signer name used when creating CSRs for gRPC authentication.
 const GRPCAuthSigner = "open-cluster-management.io/grpc"
 
@@ -299,6 +311,13 @@ type AwsIrsaConfig struct {
 	// Example - "product:v1:tenant:app-name=My-App"
 	// +optional
 	Tags []string `json:"tags,omitempty"`
+
+	// credentialSource selects how AWS credentials are obtained. IRSA annotates the service
+	// accounts with eks.amazonaws.com/role-arn; PodIdentity leaves them unannotated so an
+	// EKS Pod Identity association is used instead.
+	// +optional
+	// +kubebuilder:default:=IRSA
+	CredentialSource AwsCredentialSource `json:"credentialSource,omitempty"`
 }
 
 // GRPC represents the configuration for gRPC registration driver.
