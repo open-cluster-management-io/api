@@ -339,6 +339,30 @@ var _ = Describe("ClusterManager API test with RegistrationConfiguration", func(
 		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
 		Expect(apierrors.IsInvalid(err)).To(BeTrue())
 	})
+
+	It("Create a cluster manager with aws registration and default resourceManagement", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+		Expect(clusterManager.Spec.RegistrationConfiguration.RegistrationDrivers[0].AwsIrsa.ResourceManagement).
+			Should(Equal(operatorv1.AwsResourceManagementManaged))
+	})
+
+	It("Create a cluster manager with aws registration and UseExisting resourceManagement", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		clusterManager.Spec.RegistrationConfiguration.RegistrationDrivers[0].AwsIrsa.ResourceManagement = operatorv1.AwsResourceManagementUseExisting
+		clusterManager, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(err).To(BeNil())
+		Expect(clusterManager.Spec.RegistrationConfiguration.RegistrationDrivers[0].AwsIrsa.ResourceManagement).
+			Should(Equal(operatorv1.AwsResourceManagementUseExisting))
+	})
+
+	It("Create a cluster manager with aws registration and an invalid resourceManagement", func() {
+		clusterManager := awsIrsaClusterManager(clusterManagerName, "arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		clusterManager.Spec.RegistrationConfiguration.RegistrationDrivers[0].AwsIrsa.ResourceManagement = "Invalid"
+		_, err := operatorClient.OperatorV1().ClusterManagers().Create(context.TODO(), clusterManager, metav1.CreateOptions{})
+		Expect(apierrors.IsInvalid(err)).To(BeTrue())
+	})
 })
 
 var _ = Describe("ClusterManager API test with WorkConfiguration", func() {
