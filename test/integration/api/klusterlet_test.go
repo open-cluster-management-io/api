@@ -119,6 +119,33 @@ var _ = Describe("Create Klusterlet API", func() {
 			Expect(apierrors.IsInvalid(err)).To(BeTrue())
 		})
 	})
+
+	Context("Create with aws auth and a credential source", func() {
+		BeforeEach(func() {
+			klusterlet.Spec.RegistrationConfiguration = awsIrsaRegistrationConfig(
+				"arn:aws:eks:us-west-2:123456789012:cluster/managed-cluster1",
+				"arn:aws:eks:us-west-2:123456789012:cluster/hub-cluster1")
+		})
+
+		It("should default to IRSA", func() {
+			created, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(BeNil())
+			Expect(created.Spec.RegistrationConfiguration.RegistrationDriver.AwsIrsa.CredentialSource).To(Equal(operatorv1.AwsCredentialSourceIRSA))
+		})
+
+		It("should accept PodIdentity", func() {
+			klusterlet.Spec.RegistrationConfiguration.RegistrationDriver.AwsIrsa.CredentialSource = operatorv1.AwsCredentialSourcePodIdentity
+			created, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(err).To(BeNil())
+			Expect(created.Spec.RegistrationConfiguration.RegistrationDriver.AwsIrsa.CredentialSource).To(Equal(operatorv1.AwsCredentialSourcePodIdentity))
+		})
+
+		It("should reject an unknown value", func() {
+			klusterlet.Spec.RegistrationConfiguration.RegistrationDriver.AwsIrsa.CredentialSource = "Bogus"
+			_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+		})
+	})
 })
 
 var _ = Describe("valid HubApiServerHostAlias", func() {
