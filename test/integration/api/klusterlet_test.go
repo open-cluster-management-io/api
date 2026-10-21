@@ -287,6 +287,57 @@ var _ = Describe("Klusterlet API test with WorkConfiguration", func() {
 	})
 })
 
+var _ = Describe("Klusterlet API test with AgentConfiguration", func() {
+	var klusterlet *operatorv1.Klusterlet
+
+	BeforeEach(func() {
+		klusterlet = &operatorv1.Klusterlet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("klusterlet-agentconfig-%s", rand.String(5)),
+			},
+		}
+	})
+
+	AfterEach(func() {
+		err := operatorClient.OperatorV1().Klusterlets().Delete(context.TODO(), klusterlet.Name, metav1.DeleteOptions{})
+		if !apierrors.IsNotFound(err) {
+			Expect(err).ToNot(HaveOccurred())
+		}
+	})
+
+	withBindConfiguration := func(bind *operatorv1.AgentBindConfiguration) {
+		klusterlet.Spec.AgentConfiguration = &operatorv1.AgentConfiguration{BindConfiguration: bind}
+	}
+
+	It("should default the health probe port and keep a zero metrics port", func() {
+		withBindConfiguration(&operatorv1.AgentBindConfiguration{})
+		created, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(created.Spec.AgentConfiguration.BindConfiguration.HealthProbePort).Should(Equal(int32(8443)))
+		Expect(created.Spec.AgentConfiguration.BindConfiguration.MetricsPort).Should(Equal(int32(0)))
+		Expect(created.Spec.AgentConfiguration.BindConfiguration.HostNetwork).Should(BeFalse())
+	})
+
+	It("should accept custom ports with host network", func() {
+		withBindConfiguration(&operatorv1.AgentBindConfiguration{
+			HealthProbePort: 9443,
+			MetricsPort:     9090,
+			HostNetwork:     true,
+		})
+		created, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(created.Spec.AgentConfiguration.BindConfiguration.HealthProbePort).Should(Equal(int32(9443)))
+		Expect(created.Spec.AgentConfiguration.BindConfiguration.MetricsPort).Should(Equal(int32(9090)))
+		Expect(created.Spec.AgentConfiguration.BindConfiguration.HostNetwork).Should(BeTrue())
+	})
+
+	It("should reject a privileged health probe port", func() {
+		withBindConfiguration(&operatorv1.AgentBindConfiguration{HealthProbePort: 80})
+		_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).To(HaveOccurred())
+	})
+})
+
 var _ = Describe("Klusterlet v1 Enhanced API test", func() {
 	var klusterletName string
 
