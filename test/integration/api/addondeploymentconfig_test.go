@@ -377,6 +377,56 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig v1beta1 API test", func() {
 		gomega.Expect(retrievedV1beta1.Spec.AgentInstallNamespace).To(gomega.Equal("alpha-namespace"))
 	})
 
+	ginkgo.It("Should preserve node placement affinity when read as v1alpha1", func() {
+		affinity := &corev1.Affinity{
+			NodeAffinity: &corev1.NodeAffinity{
+				PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
+					{
+						Weight: 80,
+						Preference: corev1.NodeSelectorTerm{
+							MatchExpressions: []corev1.NodeSelectorRequirement{
+								{
+									Key:      "node-role.kubernetes.io/infra",
+									Operator: corev1.NodeSelectorOpExists,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		addOnDeploymentConfig := &addonv1beta1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+			Spec: addonv1beta1.AddOnDeploymentConfigSpec{
+				NodePlacement: &addonv1beta1.NodePlacement{
+					Affinity: affinity,
+				},
+			},
+		}
+
+		_, err := hubAddonClient.AddonV1beta1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+		// v1alpha1 is the stored version and there is no conversion webhook, so affinity is
+		// pruned on write unless the v1alpha1 schema declares it too.
+		retrievedV1alpha1, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Get(
+			context.TODO(),
+			addOnDeploymentConfigName,
+			metav1.GetOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(retrievedV1alpha1.Spec.NodePlacement).ToNot(gomega.BeNil())
+		gomega.Expect(retrievedV1alpha1.Spec.NodePlacement.Affinity).To(gomega.Equal(affinity))
+	})
+
 	ginkgo.It("Should validate v1beta1 constraints (invalid variable name)", func() {
 		addOnDeploymentConfig := &addonv1beta1.AddOnDeploymentConfig{
 			ObjectMeta: metav1.ObjectMeta{
