@@ -2,9 +2,11 @@
 package v1beta1
 
 import (
+	"reflect"
 	"testing"
 
 	certificates "k8s.io/api/certificates/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/conversion"
 	"open-cluster-management.io/api/addon/v1alpha1"
@@ -1136,5 +1138,66 @@ func TestConvert_v1beta1_ManagedClusterAddOn_To_v1alpha1_ManagedClusterAddOn(t *
 				}
 			}
 		})
+	}
+}
+
+// TestNodePlacementConversionRoundTrip guards against node placement being dropped on the way
+// through v1alpha1, which is the stored version of addondeploymentconfigs and has no conversion
+// webhook: a field that only exists in v1beta1 is silently pruned on write.
+func TestNodePlacementConversionRoundTrip(t *testing.T) {
+	in := &AddOnDeploymentConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "infra-prefer-config",
+			Namespace: "cluster1",
+		},
+		Spec: AddOnDeploymentConfigSpec{
+			NodePlacement: &NodePlacement{
+				NodeSelector: map[string]string{"kubernetes.io/os": "linux"},
+				Tolerations: []corev1.Toleration{
+					{
+						Key:      "node-role.kubernetes.io/infra",
+						Operator: corev1.TolerationOpExists,
+						Effect:   corev1.TaintEffectNoSchedule,
+					},
+				},
+				Affinity: &corev1.Affinity{
+					NodeAffinity: &corev1.NodeAffinity{
+						PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
+							{
+								Weight: 80,
+								Preference: corev1.NodeSelectorTerm{
+									MatchExpressions: []corev1.NodeSelectorRequirement{
+										{
+											Key:      "node-role.kubernetes.io/infra",
+											Operator: corev1.NodeSelectorOpExists,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	stored := &v1alpha1.AddOnDeploymentConfig{}
+	if err := Convert_v1beta1_AddOnDeploymentConfig_To_v1alpha1_AddOnDeploymentConfig(
+		in, stored, conversion.Scope(nil),
+	); err != nil {
+		t.Fatalf("converting to v1alpha1: %v", err)
+	}
+	if stored.Spec.NodePlacement.Affinity == nil {
+		t.Fatal("affinity was lost converting to v1alpha1")
+	}
+
+	got := &AddOnDeploymentConfig{}
+	if err := Convert_v1alpha1_AddOnDeploymentConfig_To_v1beta1_AddOnDeploymentConfig(
+		stored, got, conversion.Scope(nil),
+	); err != nil {
+		t.Fatalf("converting back to v1beta1: %v", err)
+	}
+	if !reflect.DeepEqual(got.Spec.NodePlacement, in.Spec.NodePlacement) {
+		t.Errorf("node placement after round trip = %+v, want %+v", got.Spec.NodePlacement, in.Spec.NodePlacement)
 	}
 }
