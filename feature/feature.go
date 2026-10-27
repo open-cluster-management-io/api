@@ -107,7 +107,7 @@ const (
 
 	// SIGPlacementDecision will start a new controller in the placement controller to sync
 	// PlacementDecision to the SIG Multicluster ClusterInventory PlacementDecision.
-	// API definition: https://github.com/kubernetes-sigs/cluster-inventory-api/blob/main/apis/v1alpha1/placementdecision_types.go
+	// API definition: https://github.com/kubernetes-sigs/cluster-inventory-api/blob/v0.2.0/apis/v1alpha2/placementdecision_types.go
 	// KEP: https://github.com/kubernetes/enhancements/tree/master/keps/sig-multicluster/5313-placement-decision-api
 	SIGPlacementDecision featuregate.Feature = "SIGPlacementDecision"
 
