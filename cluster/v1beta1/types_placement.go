@@ -298,6 +298,7 @@ type ScoreCoordinate struct {
 	// 2) Steady: ensure the existing decision is stabilized.
 	// 3) ResourceAllocatableCPU & ResourceAllocatableMemory: sort clusters based on the allocatable.
 	// 4) Spread: spread the workload evenly to topologies.
+	// 5) Random: select clusters randomly.
 	// +optional
 	BuiltIn string `json:"builtIn,omitempty"`
 
