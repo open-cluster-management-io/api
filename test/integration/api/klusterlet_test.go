@@ -336,6 +336,49 @@ var _ = Describe("Klusterlet API test with AgentConfiguration", func() {
 		_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
 		Expect(err).To(HaveOccurred())
 	})
+
+	It("should accept a separate bind configuration per agent", func() {
+		klusterlet.Spec.AgentConfiguration = &operatorv1.AgentConfiguration{
+			RegistrationAgentConfiguration: &operatorv1.AgentComponentConfiguration{
+				BindConfiguration: &operatorv1.AgentBindConfiguration{HealthProbePort: 9443, HostNetwork: true},
+			},
+			WorkAgentConfiguration: &operatorv1.AgentComponentConfiguration{
+				BindConfiguration: &operatorv1.AgentBindConfiguration{HealthProbePort: 9444, HostNetwork: true},
+			},
+		}
+		created, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(created.Spec.AgentConfiguration.BindConfiguration).Should(BeNil())
+
+		registration := created.Spec.AgentConfiguration.RegistrationAgentConfiguration.BindConfiguration
+		Expect(registration.HealthProbePort).Should(Equal(int32(9443)))
+		Expect(registration.HostNetwork).Should(BeTrue())
+
+		work := created.Spec.AgentConfiguration.WorkAgentConfiguration.BindConfiguration
+		Expect(work.HealthProbePort).Should(Equal(int32(9444)))
+		Expect(work.HostNetwork).Should(BeTrue())
+	})
+
+	It("should default the health probe port of a per-agent bind configuration", func() {
+		klusterlet.Spec.AgentConfiguration = &operatorv1.AgentConfiguration{
+			WorkAgentConfiguration: &operatorv1.AgentComponentConfiguration{
+				BindConfiguration: &operatorv1.AgentBindConfiguration{},
+			},
+		}
+		created, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(created.Spec.AgentConfiguration.WorkAgentConfiguration.BindConfiguration.HealthProbePort).Should(Equal(int32(8443)))
+	})
+
+	It("should reject a privileged health probe port in a per-agent bind configuration", func() {
+		klusterlet.Spec.AgentConfiguration = &operatorv1.AgentConfiguration{
+			RegistrationAgentConfiguration: &operatorv1.AgentComponentConfiguration{
+				BindConfiguration: &operatorv1.AgentBindConfiguration{HealthProbePort: 80},
+			},
+		}
+		_, err := operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), klusterlet, metav1.CreateOptions{})
+		Expect(err).To(HaveOccurred())
+	})
 })
 
 var _ = Describe("Klusterlet v1 Enhanced API test", func() {
