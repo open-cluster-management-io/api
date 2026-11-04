@@ -148,6 +148,100 @@ var _ = ginkgo.Describe("ManagedCluster v1 Enhanced API test", func() {
 			gomega.Expect(createdCluster.Spec.ManagedClusterClientConfigs[0].URL).Should(gomega.Equal("https://example.com:6443"))
 		})
 
+		ginkgo.It("should reject HTTPS URL without host", func() {
+			managedCluster := &clusterv1.ManagedCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterName,
+				},
+				Spec: clusterv1.ManagedClusterSpec{
+					HubAcceptsClient: true,
+					ManagedClusterClientConfigs: []clusterv1.ClientConfig{
+						{
+							URL: "https://",
+						},
+					},
+				},
+			}
+
+			_, err := hubClusterClient.ClusterV1().ManagedClusters().Create(context.TODO(), managedCluster, metav1.CreateOptions{})
+			gomega.Expect(err).To(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("should reject HTTPS URL with only port as host", func() {
+			managedCluster := &clusterv1.ManagedCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterName,
+				},
+				Spec: clusterv1.ManagedClusterSpec{
+					HubAcceptsClient: true,
+					ManagedClusterClientConfigs: []clusterv1.ClientConfig{
+						{
+							URL: "https://:6443",
+						},
+					},
+				},
+			}
+
+			_, err := hubClusterClient.ClusterV1().ManagedClusters().Create(context.TODO(), managedCluster, metav1.CreateOptions{})
+			gomega.Expect(err).To(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("should reject invalid metadata.name", func() {
+			managedCluster := &clusterv1.ManagedCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "invalid_name!",
+				},
+				Spec: clusterv1.ManagedClusterSpec{
+					HubAcceptsClient: true,
+				},
+			}
+
+			_, err := hubClusterClient.ClusterV1().ManagedClusters().Create(context.TODO(), managedCluster, metav1.CreateOptions{})
+			gomega.Expect(err).To(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("should accept exactly 32 ManagedClusterClientConfigs", func() {
+			configs := make([]clusterv1.ClientConfig, 32)
+			for i := 0; i < 32; i++ {
+				configs[i] = clusterv1.ClientConfig{
+					URL: "https://example.com:6443",
+				}
+			}
+			managedCluster := &clusterv1.ManagedCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterName,
+				},
+				Spec: clusterv1.ManagedClusterSpec{
+					HubAcceptsClient:            true,
+					ManagedClusterClientConfigs: configs,
+				},
+			}
+
+			_, err := hubClusterClient.ClusterV1().ManagedClusters().Create(context.TODO(), managedCluster, metav1.CreateOptions{})
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("should reject 33 ManagedClusterClientConfigs", func() {
+			configs := make([]clusterv1.ClientConfig, 33)
+			for i := 0; i < 33; i++ {
+				configs[i] = clusterv1.ClientConfig{
+					URL: "https://example.com:6443",
+				}
+			}
+			managedCluster := &clusterv1.ManagedCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: clusterName,
+				},
+				Spec: clusterv1.ManagedClusterSpec{
+					HubAcceptsClient:            true,
+					ManagedClusterClientConfigs: configs,
+				},
+			}
+
+			_, err := hubClusterClient.ClusterV1().ManagedClusters().Create(context.TODO(), managedCluster, metav1.CreateOptions{})
+			gomega.Expect(err).To(gomega.HaveOccurred())
+		})
+
 		ginkgo.It("should accept valid HTTPS URL", func() {
 			managedCluster := &clusterv1.ManagedCluster{
 				ObjectMeta: metav1.ObjectMeta{
