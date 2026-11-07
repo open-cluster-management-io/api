@@ -187,6 +187,16 @@ func (in LoadBalancerConfig) OpenAPIModelName() string {
 }
 
 // OpenAPIModelName returns the OpenAPI model name for this type.
+func (in LoadBalancerServiceConfig) OpenAPIModelName() string {
+	return "io.open-cluster-management.api.operator.v1.LoadBalancerServiceConfig"
+}
+
+// OpenAPIModelName returns the OpenAPI model name for this type.
+func (in LoadBalancerServiceMetadata) OpenAPIModelName() string {
+	return "io.open-cluster-management.api.operator.v1.LoadBalancerServiceMetadata"
+}
+
+// OpenAPIModelName returns the OpenAPI model name for this type.
 func (in LocalSecretsConfig) OpenAPIModelName() string {
 	return "io.open-cluster-management.api.operator.v1.LocalSecretsConfig"
 }
