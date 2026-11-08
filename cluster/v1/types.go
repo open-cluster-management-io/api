@@ -31,6 +31,8 @@ import (
 //
 // After the hub cluster creates the cluster namespace, the klusterlet agent on the ManagedCluster pushes
 // the credential to the hub cluster to use against the kube-apiserver of the ManagedCluster.
+// +kubebuilder:validation:XValidation:rule="self.metadata.name.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')",message="metadata.name format is not correct"
+// +kubebuilder:validation:XValidation:rule="size(self.metadata.name) <= 63",message="metadata.name must be no more than 63 characters"
 type ManagedCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -49,6 +51,7 @@ type ManagedClusterSpec struct {
 	// ManagedClusterClientConfigs represents a list of the apiserver address of the managed cluster.
 	// If it is empty, the managed cluster has no accessible address for the hub to connect with it.
 	// +optional
+	// +kubebuilder:validation:MaxItems=32
 	ManagedClusterClientConfigs []ClientConfig `json:"managedClusterClientConfigs,omitempty"`
 
 	// hubAcceptsClient represents that hub accepts the joining of Klusterlet agent on
@@ -81,6 +84,8 @@ type ManagedClusterSpec struct {
 type ClientConfig struct {
 	// URL is the URL of apiserver endpoint of the managed cluster.
 	// +required
+	// +kubebuilder:validation:MaxLength=2048
+	// +kubebuilder:validation:XValidation:rule="isURL(self) && url(self).getScheme() == 'https' && url(self).getHostname() != ''",message="url must be a valid https URL"
 	URL string `json:"url"`
 
 	// CABundle is the ca bundle to connect to apiserver of the managed cluster.

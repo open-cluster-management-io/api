@@ -117,6 +117,10 @@ spec:
                 type: array
             type: object
         type: object
+        x-kubernetes-validations:
+        - message: The ManagedClusterSetBinding must have the same name as the target
+            ManagedClusterSet
+          rule: self.metadata.name == self.spec.clusterSet
     served: true
     storage: true
     subresources:
