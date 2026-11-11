@@ -3,6 +3,7 @@ package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // +genclient
@@ -186,6 +187,7 @@ type HubApiServerHostAlias struct {
 	Hostname string `json:"hostname"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!has(self.registrationDriver) || !has(self.registrationDriver.authType) || self.registrationDriver.authType != 'spiffe' || (has(self.addOnKubeClientRegistrationDriver) && has(self.addOnKubeClientRegistrationDriver.authType) && self.addOnKubeClientRegistrationDriver.authType == 'spiffe')",message="addOnKubeClientRegistrationDriver.authType must be spiffe when registrationDriver.authType is spiffe"
 type RegistrationConfiguration struct {
 	// clientCertExpirationSeconds represents the seconds of a client certificate to expire. If it is not set or 0, the default
 	// duration seconds will be set by the hub cluster. If the value is larger than the max signing duration seconds set on
@@ -264,16 +266,47 @@ type ClusterClaimConfiguration struct {
 	ReservedClusterClaimSuffixes []string `json:"reservedClusterClaimSuffixes,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="!has(self.authType) || self.authType != 'spiffe' || has(self.spiffe)",message="spiffe is required when authType is spiffe"
 type RegistrationDriver struct {
-	// Type of the authentication used by managedcluster to register as well as pull work from hub. Possible values are csr and awsirsa.
+	// Type of the authentication used by managedcluster to register as well as pull work from hub.
+	// Possible values are csr, awsirsa, grpc and spiffe.
 	// +required
 	// +kubebuilder:default:=csr
-	// +kubebuilder:validation:Enum=csr;awsirsa;grpc
+	// +kubebuilder:validation:Enum=csr;awsirsa;grpc;spiffe
 	AuthType string `json:"authType,omitempty"`
 
 	// Contain the details required for registering with hub cluster (ie: an EKS cluster) using AWS IAM roles for service account.
 	// This is required only when the authType is awsirsa.
 	AwsIrsa *AwsIrsa `json:"awsIrsa,omitempty"`
+
+	// spiffe contains what the agents need to reach the hub with their SPIRE-issued SVIDs.
+	// It is required when authType is spiffe, and nothing in it is secret.
+	// Effective only when the SPIFFERegistration feature gate is enabled.
+	// +optional
+	SPIFFE *KlusterletSPIFFEConfig `json:"spiffe,omitempty"`
+}
+
+// KlusterletSPIFFEConfig configures the spiffe registration driver on the managed cluster.
+type KlusterletSPIFFEConfig struct {
+	// hubEndpoint is host:port of the hub gRPC server's grpc-spiffe listener.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=512
+	HubEndpoint string `json:"hubEndpoint"`
+
+	// hubSPIFFEID is the only SPIFFE ID the agents accept from the hub, for example
+	// spiffe://ocm-hub.example.org/ocm/hub/grpc-server. The agents' own SPIFFE IDs are in its
+	// trust domain.
+	// +required
+	// +kubebuilder:validation:MaxLength=512
+	// +kubebuilder:validation:Pattern=`^spiffe://[a-z0-9._-]+(/[A-Za-z0-9._-]+)+$`
+	HubSPIFFEID string `json:"hubSPIFFEID"`
+
+	// workloadAPISocket is the address of the local SPIRE agent's Workload API, as mounted
+	// into the agent pods by the SPIFFE CSI driver.
+	// +optional
+	// +kubebuilder:default:="unix:///spiffe-workload-api/spire-agent.sock"
+	WorkloadAPISocket string `json:"workloadAPISocket,omitempty"`
 }
 
 type AwsIrsa struct {
@@ -303,11 +336,12 @@ type AwsIrsa struct {
 
 type AddOnRegistrationDriver struct {
 	// AuthType is the authentication driver used for add-on registration.
-	// Possible values are csr and token.
+	// Possible values are csr, token and spiffe. With spiffe, each add-on agent authenticates
+	// with its own SPIRE-issued SVID and no add-on credential is created.
 	// Currently, this field only affects kubeClient type add-on registration. The csr type add-on registration always uses csr driver.
 	// In the future, this may be extended to customize authentication for csr type add-on registration as well.
 	// +optional
-	// +kubebuilder:validation:Enum=csr;token
+	// +kubebuilder:validation:Enum=csr;token;spiffe
 	AuthType string `json:"authType,omitempty"`
 
 	// Token contains the configuration for token-based registration.
@@ -498,6 +532,73 @@ type KlusterletStatus struct {
 	// RelatedResources are used to track the resources that are related to this Klusterlet.
 	// +optional
 	RelatedResources []RelatedResourceMeta `json:"relatedResources,omitempty"`
+
+	// spiffe records the state the klusterlet operator has made trusted when the
+	// registration driver is spiffe. It holds only names, UIDs and generations.
+	// +optional
+	SPIFFE *KlusterletSPIFFEStatus `json:"spiffe,omitempty"`
+}
+
+const (
+	// ConditionSPIFFEAdmissionReady is True once the klusterlet operator has finished its first
+	// recovery of the agent and add-on namespaces and recorded the admission policies it trusts.
+	// The platform should create the cluster's SPIRE registration entries only after that.
+	ConditionSPIFFEAdmissionReady = "SPIFFEAdmissionReady"
+)
+
+// KlusterletSPIFFEStatus is the trusted state of a Klusterlet that uses the spiffe driver.
+type KlusterletSPIFFEStatus struct {
+	// admissionPolicies are the ValidatingAdmissionPolicies and their bindings the operator
+	// ran recovery for. When a live policy or binding no longer matches its entry, the
+	// operator runs recovery again before any agent runs.
+	// +optional
+	// +listType=map
+	// +listMapKey=policyName
+	// +kubebuilder:validation:MaxItems=16
+	AdmissionPolicies []SPIFFEAdmissionPolicyStatus `json:"admissionPolicies,omitempty"`
+
+	// addOnNamespace is the add-on namespace the operator created itself, recorded by name and
+	// UID so recovery only cleans that exact namespace.
+	// +optional
+	AddOnNamespace *SPIFFENamespaceRef `json:"addOnNamespace,omitempty"`
+}
+
+// SPIFFEAdmissionPolicyStatus records one ValidatingAdmissionPolicy and its binding.
+type SPIFFEAdmissionPolicyStatus struct {
+	// policyName is the name of the ValidatingAdmissionPolicy and of its binding.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=253
+	PolicyName string `json:"policyName"`
+
+	// policyUID is the UID of the policy.
+	// +required
+	PolicyUID types.UID `json:"policyUID"`
+
+	// policyGeneration is the generation of the policy.
+	// +required
+	PolicyGeneration int64 `json:"policyGeneration"`
+
+	// bindingUID is the UID of the policy binding.
+	// +required
+	BindingUID types.UID `json:"bindingUID"`
+
+	// bindingGeneration is the generation of the policy binding.
+	// +required
+	BindingGeneration int64 `json:"bindingGeneration"`
+}
+
+// SPIFFENamespaceRef identifies a namespace by name and UID.
+type SPIFFENamespaceRef struct {
+	// name is the name of the namespace.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	Name string `json:"name"`
+
+	// uid is the UID of the namespace.
+	// +required
+	UID types.UID `json:"uid"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -1,0 +1,249 @@
+// Copyright Contributors to the Open Cluster Management project
+package api
+
+import (
+	"context"
+	"fmt"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
+
+	addonv1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
+	addonv1beta1 "open-cluster-management.io/api/addon/v1beta1"
+	operatorv1 "open-cluster-management.io/api/operator/v1"
+)
+
+const (
+	testHubEndpoint = "ocm-grpc.hub.internal:443"
+	testHubSPIFFEID = "spiffe://ocm-hub.example.org/ocm/hub/grpc-server"
+)
+
+var _ = Describe("Klusterlet API test with the spiffe registration driver", func() {
+	var klusterletName string
+
+	BeforeEach(func() {
+		klusterletName = fmt.Sprintf("klusterlet-%s", rand.String(5))
+	})
+
+	newKlusterlet := func(rc *operatorv1.RegistrationConfiguration) *operatorv1.Klusterlet {
+		return &operatorv1.Klusterlet{
+			ObjectMeta: metav1.ObjectMeta{Name: klusterletName},
+			Spec: operatorv1.KlusterletSpec{
+				ClusterName:               "cluster1",
+				RegistrationConfiguration: rc,
+			},
+		}
+	}
+
+	spiffeDriver := func() operatorv1.RegistrationDriver {
+		return operatorv1.RegistrationDriver{
+			AuthType: operatorv1.SPIFFEAuthType,
+			SPIFFE: &operatorv1.KlusterletSPIFFEConfig{
+				HubEndpoint: testHubEndpoint,
+				HubSPIFFEID: testHubSPIFFEID,
+			},
+		}
+	}
+
+	spiffeAddOnDriver := func() *operatorv1.AddOnRegistrationDriver {
+		return &operatorv1.AddOnRegistrationDriver{AuthType: operatorv1.SPIFFEAuthType}
+	}
+
+	create := func(k *operatorv1.Klusterlet) (*operatorv1.Klusterlet, error) {
+		return operatorClient.OperatorV1().Klusterlets().Create(context.TODO(), k, metav1.CreateOptions{})
+	}
+
+	It("accepts spiffe with the spiffe add-on driver and fills the defaults", func() {
+		k, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                spiffeDriver(),
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).ToNot(HaveOccurred())
+
+		s := k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE
+		Expect(s.HubEndpoint).Should(Equal(testHubEndpoint))
+		Expect(s.HubSPIFFEID).Should(Equal(testHubSPIFFEID))
+		Expect(s.WorkloadAPISocket).Should(Equal("unix:///spiffe-workload-api/spire-agent.sock"))
+		Expect(k.Spec.RegistrationConfiguration.AddOnKubeClientRegistrationDriver.AuthType).Should(Equal("spiffe"))
+	})
+
+	It("refuses authType spiffe without the spiffe settings", func() {
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                operatorv1.RegistrationDriver{AuthType: operatorv1.SPIFFEAuthType},
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spiffe is required when authType is spiffe"))
+	})
+
+	It("refuses spiffe with the csr add-on driver", func() {
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                spiffeDriver(),
+			AddOnKubeClientRegistrationDriver: &operatorv1.AddOnRegistrationDriver{AuthType: "csr"},
+		}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring(
+			"addOnKubeClientRegistrationDriver.authType must be spiffe when registrationDriver.authType is spiffe"))
+	})
+
+	It("refuses spiffe without an add-on driver", func() {
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver: spiffeDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("addOnKubeClientRegistrationDriver.authType must be spiffe"))
+	})
+
+	It("refuses a hub ID that is not a SPIFFE ID", func() {
+		d := spiffeDriver()
+		d.SPIFFE.HubSPIFFEID = "https://ocm-hub.example.org/ocm/hub/grpc-server"
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                d,
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("refuses an empty hub endpoint", func() {
+		d := spiffeDriver()
+		d.SPIFFE.HubEndpoint = ""
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                d,
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("accepts the spiffe add-on driver with another registration driver", func() {
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                operatorv1.RegistrationDriver{AuthType: operatorv1.CSRAuthType},
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("still accepts a Klusterlet without a registration configuration", func() {
+		_, err := create(newKlusterlet(nil))
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("stores and returns the spiffe status", func() {
+		k, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                spiffeDriver(),
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).ToNot(HaveOccurred())
+
+		k.Status.Conditions = []metav1.Condition{{
+			Type:               operatorv1.ConditionSPIFFEAdmissionReady,
+			Status:             metav1.ConditionTrue,
+			Reason:             "Recorded",
+			Message:            "admission state recorded",
+			LastTransitionTime: metav1.Now(),
+		}}
+		k.Status.SPIFFE = &operatorv1.KlusterletSPIFFEStatus{
+			AdmissionPolicies: []operatorv1.SPIFFEAdmissionPolicyStatus{
+				{
+					PolicyName:        "ocm-spiffe-agents-klusterlet",
+					PolicyUID:         "6f1c2d0e-0b5e-4c4f-9a57-3d1f0c8e2a11",
+					PolicyGeneration:  3,
+					BindingUID:        "9a2e7b44-5c1d-4e0a-8f3b-2c6d9e1f7a05",
+					BindingGeneration: 1,
+				},
+				{
+					PolicyName:        "ocm-spiffe-addons-klusterlet",
+					PolicyUID:         "1b2c3d4e-0000-4c4f-9a57-3d1f0c8e2a11",
+					PolicyGeneration:  1,
+					BindingUID:        "5e6f7a8b-0000-4e0a-8f3b-2c6d9e1f7a05",
+					BindingGeneration: 1,
+				},
+			},
+			AddOnNamespace: &operatorv1.SPIFFENamespaceRef{
+				Name: "open-cluster-management-agent-addon",
+				UID:  "3b8d5f21-7e4a-4c19-b6d2-8a0f1e9c4d73",
+			},
+		}
+		_, err = operatorClient.OperatorV1().Klusterlets().UpdateStatus(context.TODO(), k, metav1.UpdateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+
+		got, err := operatorClient.OperatorV1().Klusterlets().Get(context.TODO(), klusterletName, metav1.GetOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(got.Status.SPIFFE).Should(Equal(k.Status.SPIFFE))
+	})
+
+	It("refuses two status entries for the same policy", func() {
+		k, err := create(newKlusterlet(nil))
+		Expect(err).ToNot(HaveOccurred())
+
+		entry := operatorv1.SPIFFEAdmissionPolicyStatus{
+			PolicyName: "ocm-spiffe-agents-klusterlet", PolicyUID: "a", PolicyGeneration: 1,
+			BindingUID: "b", BindingGeneration: 1,
+		}
+		k.Status.Conditions = []metav1.Condition{}
+		k.Status.SPIFFE = &operatorv1.KlusterletSPIFFEStatus{
+			AdmissionPolicies: []operatorv1.SPIFFEAdmissionPolicyStatus{entry, entry},
+		}
+		_, err = operatorClient.OperatorV1().Klusterlets().UpdateStatus(context.TODO(), k, metav1.UpdateOptions{})
+		Expect(err).To(HaveOccurred())
+	})
+})
+
+var _ = Describe("ManagedClusterAddOn API test with the spiffe driver", func() {
+	var name string
+
+	BeforeEach(func() {
+		name = fmt.Sprintf("mca-%s", rand.String(5))
+	})
+
+	It("accepts driver spiffe in v1beta1", func() {
+		_, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Create(context.TODO(),
+			&addonv1beta1.ManagedClusterAddOn{ObjectMeta: metav1.ObjectMeta{Name: name}}, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+
+		mca, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Get(context.TODO(), name, metav1.GetOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		mca.Status.Namespace = testNamespace
+		mca.Status.Registrations = []addonv1beta1.RegistrationConfig{{
+			Type:       addonv1beta1.KubeClient,
+			KubeClient: &addonv1beta1.KubeClientConfig{Driver: "spiffe"},
+		}}
+		// Only acceptance is checked: envtest has no conversion webhook, so v1beta1-only
+		// registration details don't survive the round trip through the stored version.
+		_, err = hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+			context.TODO(), mca, metav1.UpdateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("refuses an unknown driver in v1beta1", func() {
+		_, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Create(context.TODO(),
+			&addonv1beta1.ManagedClusterAddOn{ObjectMeta: metav1.ObjectMeta{Name: name}}, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+
+		mca, err := hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).Get(context.TODO(), name, metav1.GetOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		mca.Status.Namespace = testNamespace
+		mca.Status.Registrations = []addonv1beta1.RegistrationConfig{{
+			Type:       addonv1beta1.KubeClient,
+			KubeClient: &addonv1beta1.KubeClientConfig{Driver: "spire"},
+		}}
+		_, err = hubAddonClient.AddonV1beta1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+			context.TODO(), mca, metav1.UpdateOptions{})
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("accepts kubeClientDriver spiffe in v1alpha1", func() {
+		_, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Create(context.TODO(),
+			&addonv1alpha1.ManagedClusterAddOn{ObjectMeta: metav1.ObjectMeta{Name: name}}, metav1.CreateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+
+		mca, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).Get(context.TODO(), name, metav1.GetOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		mca.Status.KubeClientDriver = "spiffe"
+		updated, err := hubAddonClient.AddonV1alpha1().ManagedClusterAddOns(testNamespace).UpdateStatus(
+			context.TODO(), mca, metav1.UpdateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(updated.Status.KubeClientDriver).Should(Equal("spiffe"))
+	})
+})

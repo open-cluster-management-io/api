@@ -321,12 +321,14 @@ spec:
                       authType:
                         description: |-
                           AuthType is the authentication driver used for add-on registration.
-                          Possible values are csr and token.
+                          Possible values are csr, token and spiffe. With spiffe, each add-on agent authenticates
+                          with its own SPIRE-issued SVID and no add-on credential is created.
                           Currently, this field only affects kubeClient type add-on registration. The csr type add-on registration always uses csr driver.
                           In the future, this may be extended to customize authentication for csr type add-on registration as well.
                         enum:
                         - csr
                         - token
+                        - spiffe
                         type: string
                       token:
                         description: Token contains the configuration for token-based
@@ -486,13 +488,14 @@ spec:
                     properties:
                       authType:
                         default: csr
-                        description: Type of the authentication used by managedcluster
-                          to register as well as pull work from hub. Possible values
-                          are csr and awsirsa.
+                        description: |-
+                          Type of the authentication used by managedcluster to register as well as pull work from hub.
+                          Possible values are csr, awsirsa, grpc and spiffe.
                         enum:
                         - csr
                         - awsirsa
                         - grpc
+                        - spiffe
                         type: string
                       awsIrsa:
                         description: |-
@@ -530,10 +533,51 @@ spec:
                         - hubClusterArn
                         - managedClusterArn
                         type: object
+                      spiffe:
+                        description: |-
+                          spiffe contains what the agents need to reach the hub with their SPIRE-issued SVIDs.
+                          It is required when authType is spiffe, and nothing in it is secret.
+                          Effective only when the SPIFFERegistration feature gate is enabled.
+                        properties:
+                          hubEndpoint:
+                            description: hubEndpoint is host:port of the hub gRPC
+                              server's grpc-spiffe listener.
+                            maxLength: 512
+                            minLength: 1
+                            type: string
+                          hubSPIFFEID:
+                            description: |-
+                              hubSPIFFEID is the only SPIFFE ID the agents accept from the hub, for example
+                              spiffe://ocm-hub.example.org/ocm/hub/grpc-server. The agents' own SPIFFE IDs are in its
+                              trust domain.
+                            maxLength: 512
+                            pattern: ^spiffe://[a-z0-9._-]+(/[A-Za-z0-9._-]+)+$
+                            type: string
+                          workloadAPISocket:
+                            default: unix:///spiffe-workload-api/spire-agent.sock
+                            description: |-
+                              workloadAPISocket is the address of the local SPIRE agent's Workload API, as mounted
+                              into the agent pods by the SPIFFE CSI driver.
+                            type: string
+                        required:
+                        - hubEndpoint
+                        - hubSPIFFEID
+                        type: object
                     required:
                     - authType
                     type: object
+                    x-kubernetes-validations:
+                    - message: spiffe is required when authType is spiffe
+                      rule: '!has(self.authType) || self.authType != ''spiffe'' ||
+                        has(self.spiffe)'
                 type: object
+                x-kubernetes-validations:
+                - message: addOnKubeClientRegistrationDriver.authType must be spiffe
+                    when registrationDriver.authType is spiffe
+                  rule: '!has(self.registrationDriver) || !has(self.registrationDriver.authType)
+                    || self.registrationDriver.authType != ''spiffe'' || (has(self.addOnKubeClientRegistrationDriver)
+                    && has(self.addOnKubeClientRegistrationDriver.authType) && self.addOnKubeClientRegistrationDriver.authType
+                    == ''spiffe'')'
               registrationImagePullSpec:
                 description: |-
                   RegistrationImagePullSpec represents the desired image configuration of registration agent.
@@ -840,6 +884,71 @@ spec:
                   - version
                   type: object
                 type: array
+              spiffe:
+                description: |-
+                  spiffe records the state the klusterlet operator has made trusted when the
+                  registration driver is spiffe. It holds only names, UIDs and generations.
+                properties:
+                  addOnNamespace:
+                    description: |-
+                      addOnNamespace is the add-on namespace the operator created itself, recorded by name and
+                      UID so recovery only cleans that exact namespace.
+                    properties:
+                      name:
+                        description: name is the name of the namespace.
+                        maxLength: 63
+                        minLength: 1
+                        type: string
+                      uid:
+                        description: uid is the UID of the namespace.
+                        type: string
+                    required:
+                    - name
+                    - uid
+                    type: object
+                  admissionPolicies:
+                    description: |-
+                      admissionPolicies are the ValidatingAdmissionPolicies and their bindings the operator
+                      ran recovery for. When a live policy or binding no longer matches its entry, the
+                      operator runs recovery again before any agent runs.
+                    items:
+                      description: SPIFFEAdmissionPolicyStatus records one ValidatingAdmissionPolicy
+                        and its binding.
+                      properties:
+                        bindingGeneration:
+                          description: bindingGeneration is the generation of the
+                            policy binding.
+                          format: int64
+                          type: integer
+                        bindingUID:
+                          description: bindingUID is the UID of the policy binding.
+                          type: string
+                        policyGeneration:
+                          description: policyGeneration is the generation of the policy.
+                          format: int64
+                          type: integer
+                        policyName:
+                          description: policyName is the name of the ValidatingAdmissionPolicy
+                            and of its binding.
+                          maxLength: 253
+                          minLength: 1
+                          type: string
+                        policyUID:
+                          description: policyUID is the UID of the policy.
+                          type: string
+                      required:
+                      - bindingGeneration
+                      - bindingUID
+                      - policyGeneration
+                      - policyName
+                      - policyUID
+                      type: object
+                    maxItems: 16
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - policyName
+                    x-kubernetes-list-type: map
+                type: object
             type: object
         type: object
     served: true
