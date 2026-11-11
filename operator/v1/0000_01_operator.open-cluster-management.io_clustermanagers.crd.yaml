@@ -581,17 +581,34 @@ spec:
                             spiffe represents the configuration for the spiffe driver. It is required when
                             authType is spiffe. Effective only when the SPIFFERegistration feature gate is enabled.
                           properties:
+                            agentTrustDomains:
+                              description: |-
+                                agentTrustDomains are the trust domains the hub accepts Klusterlet and add-on agents
+                                from. An agent whose SVID comes from any other trust domain is refused. Each managed
+                                cluster is pinned to one of them with the open-cluster-management.io/spiffe-trust-domain
+                                annotation. The hub's SPIRE must federate with every trust domain listed here other than
+                                its own. If it is empty, only trustDomain is accepted.
+                              items:
+                                maxLength: 255
+                                minLength: 1
+                                pattern: ^[a-z0-9._-]+$
+                                type: string
+                              maxItems: 64
+                              type: array
+                              x-kubernetes-list-type: set
                             maxClockSkew:
                               default: 5m
                               description: |-
-                                maxClockSkew is the allowed clock difference between SPIRE and the hub. It is used by
+                                maxClockSkew is the allowed clock difference between the hub and the SPIRE servers of
+                                every trust domain. It is used by
                                 the SVID validity check and added to the delete guard's wait.
                               pattern: ^([0-9]+(s|m|h))+$
                               type: string
                             maxSVIDLifetime:
                               default: 24h
                               description: |-
-                                maxSVIDLifetime must be at least the longest SVID TTL SPIRE issues to OCM agents.
+                                maxSVIDLifetime must be at least the longest SVID TTL SPIRE issues to OCM agents, in any
+                                of agentTrustDomains.
                                 When a ManagedCluster is deleted, the hub keeps it terminating for this long plus
                                 maxClockSkew, so no SVID issued before the deletion can recreate it.
                               pattern: ^([0-9]+(s|m|h))+$

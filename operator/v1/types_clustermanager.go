@@ -216,6 +216,19 @@ type SPIFFERegistrationConfig struct {
 	// +kubebuilder:validation:Pattern=`^[a-z0-9._-]+$`
 	TrustDomain string `json:"trustDomain"`
 
+	// agentTrustDomains are the trust domains the hub accepts Klusterlet and add-on agents
+	// from. An agent whose SVID comes from any other trust domain is refused. Each managed
+	// cluster is pinned to one of them with the open-cluster-management.io/spiffe-trust-domain
+	// annotation. The hub's SPIRE must federate with every trust domain listed here other than
+	// its own. If it is empty, only trustDomain is accepted.
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:MaxItems=64
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=255
+	// +kubebuilder:validation:items:Pattern=`^[a-z0-9._-]+$`
+	AgentTrustDomains []string `json:"agentTrustDomains,omitempty"`
+
 	// serverSPIFFEID is the SPIFFE ID the hub gRPC server presents to agents. It must be in
 	// trustDomain; the cluster-manager operator reports a Degraded condition otherwise.
 	// If it is not set, spiffe://<trustDomain>/ocm/hub/grpc-server is used.
@@ -230,7 +243,8 @@ type SPIFFERegistrationConfig struct {
 	// +kubebuilder:default:="unix:///spiffe-workload-api/spire-agent.sock"
 	WorkloadAPISocket string `json:"workloadAPISocket,omitempty"`
 
-	// maxSVIDLifetime must be at least the longest SVID TTL SPIRE issues to OCM agents.
+	// maxSVIDLifetime must be at least the longest SVID TTL SPIRE issues to OCM agents, in any
+	// of agentTrustDomains.
 	// When a ManagedCluster is deleted, the hub keeps it terminating for this long plus
 	// maxClockSkew, so no SVID issued before the deletion can recreate it.
 	// +optional
@@ -239,7 +253,8 @@ type SPIFFERegistrationConfig struct {
 	// +kubebuilder:validation:Pattern="^([0-9]+(s|m|h))+$"
 	MaxSVIDLifetime *metav1.Duration `json:"maxSVIDLifetime,omitempty"`
 
-	// maxClockSkew is the allowed clock difference between SPIRE and the hub. It is used by
+	// maxClockSkew is the allowed clock difference between the hub and the SPIRE servers of
+	// every trust domain. It is used by
 	// the SVID validity check and added to the delete guard's wait.
 	// +optional
 	// +kubebuilder:default:="5m"

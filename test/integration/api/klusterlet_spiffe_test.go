@@ -69,6 +69,28 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 		Expect(k.Spec.RegistrationConfiguration.AddOnKubeClientRegistrationDriver.AuthType).Should(Equal("spiffe"))
 	})
 
+	It("accepts agents in a trust domain other than the hub's", func() {
+		d := spiffeDriver()
+		d.SPIFFE.TrustDomain = "east.example.org"
+		k, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                d,
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE.TrustDomain).Should(Equal("east.example.org"))
+		Expect(k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE.HubSPIFFEID).Should(Equal(testHubSPIFFEID))
+	})
+
+	It("refuses an invalid agent trust domain", func() {
+		d := spiffeDriver()
+		d.SPIFFE.TrustDomain = "East_Example"
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                d,
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("refuses authType spiffe without the spiffe settings", func() {
 		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
 			RegistrationDriver:                operatorv1.RegistrationDriver{AuthType: operatorv1.SPIFFEAuthType},

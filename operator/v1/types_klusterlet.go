@@ -295,12 +295,19 @@ type KlusterletSPIFFEConfig struct {
 	HubEndpoint string `json:"hubEndpoint"`
 
 	// hubSPIFFEID is the only SPIFFE ID the agents accept from the hub, for example
-	// spiffe://ocm-hub.example.org/ocm/hub/grpc-server. The agents' own SPIFFE IDs are in its
-	// trust domain.
+	// spiffe://ocm-hub.example.org/ocm/hub/grpc-server. It is in the hub's trust domain.
 	// +required
 	// +kubebuilder:validation:MaxLength=512
 	// +kubebuilder:validation:Pattern=`^spiffe://[a-z0-9._-]+(/[A-Za-z0-9._-]+)+$`
 	HubSPIFFEID string `json:"hubSPIFFEID"`
+
+	// trustDomain is the agents' own SPIFFE trust domain, for example east.example.org. The
+	// agents build their expected SPIFFE IDs in it, and the hub must list it in the
+	// ClusterManager's agentTrustDomains. If it is not set, the trust domain of hubSPIFFEID is used.
+	// +optional
+	// +kubebuilder:validation:MaxLength=255
+	// +kubebuilder:validation:Pattern=`^[a-z0-9._-]+$`
+	TrustDomain string `json:"trustDomain,omitempty"`
 
 	// workloadAPISocket is the address of the local SPIRE agent's Workload API, as mounted
 	// into the agent pods by the SPIFFE CSI driver.

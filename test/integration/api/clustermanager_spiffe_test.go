@@ -73,6 +73,50 @@ var _ = Describe("ClusterManager API test with the spiffe registration driver", 
 		Expect(s.MaxClockSkew.Duration).Should(Equal(time.Minute))
 	})
 
+	It("accepts agents from several trust domains", func() {
+		cm, err := create(newClusterManager(operatorv1.RegistrationDriverHub{
+			AuthType: operatorv1.SPIFFEAuthType,
+			SPIFFE: &operatorv1.SPIFFERegistrationConfig{
+				TrustDomain:       "ocm-hub.example.org",
+				AgentTrustDomains: []string{"ocm-hub.example.org", "east.example.org", "west.example.org"},
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE.AgentTrustDomains).Should(
+			Equal([]string{"ocm-hub.example.org", "east.example.org", "west.example.org"}))
+	})
+
+	It("leaves agentTrustDomains empty when not set; the operator uses trustDomain", func() {
+		cm, err := create(newClusterManager(operatorv1.RegistrationDriverHub{
+			AuthType: operatorv1.SPIFFEAuthType,
+			SPIFFE:   &operatorv1.SPIFFERegistrationConfig{TrustDomain: "ocm-hub.example.org"},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE.AgentTrustDomains).Should(BeEmpty())
+	})
+
+	It("refuses an invalid agent trust domain", func() {
+		_, err := create(newClusterManager(operatorv1.RegistrationDriverHub{
+			AuthType: operatorv1.SPIFFEAuthType,
+			SPIFFE: &operatorv1.SPIFFERegistrationConfig{
+				TrustDomain:       "ocm-hub.example.org",
+				AgentTrustDomains: []string{"east.example.org", "West_Example"},
+			},
+		}))
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("refuses a repeated agent trust domain", func() {
+		_, err := create(newClusterManager(operatorv1.RegistrationDriverHub{
+			AuthType: operatorv1.SPIFFEAuthType,
+			SPIFFE: &operatorv1.SPIFFERegistrationConfig{
+				TrustDomain:       "ocm-hub.example.org",
+				AgentTrustDomains: []string{"east.example.org", "east.example.org"},
+			},
+		}))
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("refuses authType spiffe without the spiffe settings", func() {
 		_, err := create(newClusterManager(operatorv1.RegistrationDriverHub{AuthType: operatorv1.SPIFFEAuthType}))
 		Expect(err).To(HaveOccurred())
