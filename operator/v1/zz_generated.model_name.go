@@ -247,6 +247,11 @@ func (in RouteConfig) OpenAPIModelName() string {
 }
 
 // OpenAPIModelName returns the OpenAPI model name for this type.
+func (in SPIFFERegistrationConfig) OpenAPIModelName() string {
+	return "io.open-cluster-management.api.operator.v1.SPIFFERegistrationConfig"
+}
+
+// OpenAPIModelName returns the OpenAPI model name for this type.
 func (in ServerConfiguration) OpenAPIModelName() string {
 	return "io.open-cluster-management.api.operator.v1.ServerConfiguration"
 }

@@ -144,6 +144,15 @@ const (
 	CSRAuthType = "csr"
 	// GRPCAuthType represents the authentication type that uses gRPC.
 	GRPCAuthType = "grpc"
+	// SPIFFEAuthType represents the authentication type that uses SPIRE-issued SPIFFE
+	// X.509-SVIDs over gRPC. OCM issues no certificate or token in this mode.
+	SPIFFEAuthType = "spiffe"
+)
+
+const (
+	// GRPCSPIFFEProtocol is the endpoint exposure protocol of the separate gRPC listener used
+	// by the spiffe registration driver.
+	GRPCSPIFFEProtocol = "grpc-spiffe"
 )
 
 // AwsCredentialSource selects how the awsirsa registration driver obtains AWS credentials.
@@ -168,13 +177,14 @@ const (
 	CSRUsernameAnnotation = "open-cluster-management.io/csr-user"
 )
 
+// +kubebuilder:validation:XValidation:rule="self.authType != 'spiffe' || has(self.spiffe)",message="spiffe is required when authType is spiffe"
 type RegistrationDriverHub struct {
 
 	// authType is the type of the authentication used by hub to initialize the Hub cluster.
-	// Possible values are csr, awsirsa and grpc.
+	// Possible values are csr, awsirsa, grpc and spiffe.
 	// +required
 	// +kubebuilder:default:=csr
-	// +kubebuilder:validation:Enum=csr;awsirsa;grpc
+	// +kubebuilder:validation:Enum=csr;awsirsa;grpc;spiffe
 	AuthType string `json:"authType,omitempty"`
 
 	// csr represents the configuration for csr driver.
@@ -188,6 +198,54 @@ type RegistrationDriverHub struct {
 	// grpc represents the configuration for gRPC driver.
 	// +optional
 	GRPC *GRPCRegistrationConfig `json:"grpc,omitempty"`
+
+	// spiffe represents the configuration for the spiffe driver. It is required when
+	// authType is spiffe. Effective only when the SPIFFERegistration feature gate is enabled.
+	// +optional
+	SPIFFE *SPIFFERegistrationConfig `json:"spiffe,omitempty"`
+}
+
+// SPIFFERegistrationConfig configures the spiffe registration driver on the hub. Agents
+// authenticate with SPIRE-issued X.509-SVIDs; nothing here is secret.
+type SPIFFERegistrationConfig struct {
+	// trustDomain is the SPIFFE trust domain of the hub and its agents, for example
+	// ocm-hub.example.org.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	// +kubebuilder:validation:Pattern=`^[a-z0-9._-]+$`
+	TrustDomain string `json:"trustDomain"`
+
+	// serverSPIFFEID is the SPIFFE ID the hub gRPC server presents to agents. It must be in
+	// trustDomain; the cluster-manager operator reports a Degraded condition otherwise.
+	// If it is not set, spiffe://<trustDomain>/ocm/hub/grpc-server is used.
+	// +optional
+	// +kubebuilder:validation:MaxLength=512
+	// +kubebuilder:validation:Pattern=`^spiffe://[a-z0-9._-]+(/[A-Za-z0-9._-]+)+$`
+	ServerSPIFFEID string `json:"serverSPIFFEID,omitempty"`
+
+	// workloadAPISocket is the address of the local SPIRE agent's Workload API, as mounted
+	// into the gRPC server pod by the SPIFFE CSI driver.
+	// +optional
+	// +kubebuilder:default:="unix:///spiffe-workload-api/spire-agent.sock"
+	WorkloadAPISocket string `json:"workloadAPISocket,omitempty"`
+
+	// maxSVIDLifetime must be at least the longest SVID TTL SPIRE issues to OCM agents.
+	// When a ManagedCluster is deleted, the hub keeps it terminating for this long plus
+	// maxClockSkew, so no SVID issued before the deletion can recreate it.
+	// +optional
+	// +kubebuilder:default:="24h"
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Pattern="^([0-9]+(s|m|h))+$"
+	MaxSVIDLifetime *metav1.Duration `json:"maxSVIDLifetime,omitempty"`
+
+	// maxClockSkew is the allowed clock difference between SPIRE and the hub. It is used by
+	// the SVID validity check and added to the delete guard's wait.
+	// +optional
+	// +kubebuilder:default:="5m"
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Pattern="^([0-9]+(s|m|h))+$"
+	MaxClockSkew *metav1.Duration `json:"maxClockSkew,omitempty"`
 }
 
 type ServerConfiguration struct {
@@ -208,13 +266,16 @@ type EndpointExposure struct {
 	// +optional
 	Usage string `json:"usage,omitempty"`
 
-	// protocol is the protocol used for the endpoint, could be https or grpc.
+	// protocol is the protocol used for the endpoint, could be https, grpc or grpc-spiffe.
+	// grpc-spiffe is the separate gRPC listener of the spiffe registration driver; its
+	// exposure is configured in the grpc field.
 	// +kubebuilder:default:=grpc
-	// +kubebuilder:validation:Enum=grpc;https
+	// +kubebuilder:validation:Enum=grpc;https;grpc-spiffe
 	// +required
 	Protocol string `json:"protocol"`
 
-	// grpc represents the configuration for grpc endpoint.
+	// grpc represents the configuration for grpc endpoint. It is also used for the
+	// grpc-spiffe endpoint.
 	GRPC *Endpoint `json:"grpc,omitempty"`
 
 	// https represents the configuration for https endpoint.
