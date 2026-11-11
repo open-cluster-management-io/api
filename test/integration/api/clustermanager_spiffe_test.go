@@ -4,6 +4,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -184,6 +185,113 @@ var _ = Describe("ClusterManager API test with the spiffe registration driver", 
 		cm, err := create(cm)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(cm.Spec.ServerConfiguration.EndpointsExposure[0].Protocol).Should(Equal("grpc-spiffe"))
+	})
+
+	spiffeConfig := func(mutate func(*operatorv1.SPIFFERegistrationConfig)) operatorv1.RegistrationDriverHub {
+		c := &operatorv1.SPIFFERegistrationConfig{TrustDomain: "ocm-hub.example.org"}
+		mutate(c)
+		return operatorv1.RegistrationDriverHub{AuthType: operatorv1.SPIFFEAuthType, SPIFFE: c}
+	}
+
+	// domainOfLength returns a valid trust domain name of exactly n characters.
+	domainOfLength := func(n int) string { return strings.Repeat("a", n-4) + ".org" }
+
+	Context("trustDomain", func() {
+		It("refuses a missing trust domain", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) { c.TrustDomain = "" })))
+			Expect(err).To(HaveOccurred())
+		})
+		It("accepts 255 characters", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.TrustDomain = domainOfLength(255)
+			})))
+			Expect(err).ToNot(HaveOccurred())
+		})
+		It("refuses 256 characters", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.TrustDomain = domainOfLength(256)
+			})))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("agentTrustDomains", func() {
+		It("is stored as the admin wrote it when it lists the hub's trust domain", func() {
+			cm, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AgentTrustDomains = []string{"ocm-hub.example.org", "east.example.org"}
+			})))
+			Expect(err).ToNot(HaveOccurred())
+			s := cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE
+			Expect(s.AgentTrustDomains).Should(Equal([]string{"ocm-hub.example.org", "east.example.org"}))
+			Expect(s.GetAgentTrustDomains()).Should(Equal([]string{"ocm-hub.example.org", "east.example.org"}))
+		})
+		It("adds the hub's trust domain when the admin leaves it out", func() {
+			cm, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AgentTrustDomains = []string{"east.example.org", "west.example.org"}
+			})))
+			Expect(err).ToNot(HaveOccurred())
+			s := cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE
+			// The stored spec is not rewritten; the accepted set always includes the hub's.
+			Expect(s.AgentTrustDomains).Should(Equal([]string{"east.example.org", "west.example.org"}))
+			Expect(s.GetAgentTrustDomains()).Should(Equal(
+				[]string{"ocm-hub.example.org", "east.example.org", "west.example.org"}))
+		})
+		It("uses only the hub's trust domain when the admin sets none", func() {
+			cm, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {})))
+			Expect(err).ToNot(HaveOccurred())
+			s := cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE
+			Expect(s.GetAgentTrustDomains()).Should(Equal([]string{"ocm-hub.example.org"}))
+		})
+		It("accepts 64 entries", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				for i := 0; i < 64; i++ {
+					c.AgentTrustDomains = append(c.AgentTrustDomains, fmt.Sprintf("td%d.example.org", i))
+				}
+			})))
+			Expect(err).ToNot(HaveOccurred())
+		})
+		It("refuses 65 entries", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				for i := 0; i < 65; i++ {
+					c.AgentTrustDomains = append(c.AgentTrustDomains, fmt.Sprintf("td%d.example.org", i))
+				}
+			})))
+			Expect(err).To(HaveOccurred())
+		})
+		It("refuses an empty entry", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AgentTrustDomains = []string{"east.example.org", ""}
+			})))
+			Expect(err).To(HaveOccurred())
+		})
+		It("refuses an entry of 256 characters", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AgentTrustDomains = []string{domainOfLength(256)}
+			})))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("serverSPIFFEID", func() {
+		It("refuses an ID without a path", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.ServerSPIFFEID = "spiffe://ocm-hub.example.org"
+			})))
+			Expect(err).To(HaveOccurred())
+		})
+		It("refuses more than 512 characters", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.ServerSPIFFEID = "spiffe://ocm-hub.example.org/" + strings.Repeat("a", 512)
+			})))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	It("refuses an invalid maxClockSkew", func() {
+		_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+			c.MaxClockSkew = &metav1.Duration{Duration: 500 * time.Millisecond}
+		})))
+		Expect(err).To(HaveOccurred())
 	})
 
 	It("refuses an unknown endpoint protocol", func() {

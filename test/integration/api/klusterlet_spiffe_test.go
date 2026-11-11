@@ -4,6 +4,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -89,6 +90,96 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
 		}))
 		Expect(err).To(HaveOccurred())
+	})
+
+	withDriver := func(mutate func(*operatorv1.KlusterletSPIFFEConfig)) *operatorv1.RegistrationConfiguration {
+		d := spiffeDriver()
+		mutate(d.SPIFFE)
+		return &operatorv1.RegistrationConfiguration{RegistrationDriver: d, AddOnKubeClientRegistrationDriver: spiffeAddOnDriver()}
+	}
+
+	It("refuses a hub endpoint over 512 characters", func() {
+		_, err := create(newKlusterlet(withDriver(func(s *operatorv1.KlusterletSPIFFEConfig) {
+			s.HubEndpoint = strings.Repeat("a", 509) + ":443"
+		})))
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("refuses a hub ID over 512 characters", func() {
+		_, err := create(newKlusterlet(withDriver(func(s *operatorv1.KlusterletSPIFFEConfig) {
+			s.HubSPIFFEID = "spiffe://ocm-hub.example.org/" + strings.Repeat("a", 512)
+		})))
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("refuses an agent trust domain over 255 characters", func() {
+		_, err := create(newKlusterlet(withDriver(func(s *operatorv1.KlusterletSPIFFEConfig) {
+			s.TrustDomain = strings.Repeat("a", 252) + ".org"
+		})))
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("leaves the agent trust domain empty when not set; the operator uses the hub ID's", func() {
+		k, err := create(newKlusterlet(withDriver(func(s *operatorv1.KlusterletSPIFFEConfig) {})))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE.TrustDomain).Should(BeEmpty())
+	})
+
+	It("refuses spiffe with an add-on driver that has no authType", func() {
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                spiffeDriver(),
+			AddOnKubeClientRegistrationDriver: &operatorv1.AddOnRegistrationDriver{},
+		}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("addOnKubeClientRegistrationDriver.authType must be spiffe"))
+	})
+
+	Context("spiffe status", func() {
+		// updateStatus sets status.spiffe on the test's Klusterlet, creating it on first use.
+		updateStatus := func(s *operatorv1.KlusterletSPIFFEStatus) error {
+			k, err := operatorClient.OperatorV1().Klusterlets().Get(context.TODO(), klusterletName, metav1.GetOptions{})
+			if err != nil {
+				k, err = create(newKlusterlet(nil))
+				Expect(err).ToNot(HaveOccurred())
+			}
+			k.Status.Conditions = []metav1.Condition{}
+			k.Status.SPIFFE = s
+			_, err = operatorClient.OperatorV1().Klusterlets().UpdateStatus(context.TODO(), k, metav1.UpdateOptions{})
+			return err
+		}
+		policy := func(name string) operatorv1.SPIFFEAdmissionPolicyStatus {
+			return operatorv1.SPIFFEAdmissionPolicyStatus{
+				PolicyName: name, PolicyUID: "a", PolicyGeneration: 1, BindingUID: "b", BindingGeneration: 1,
+			}
+		}
+
+		It("accepts 16 policies and refuses 17", func() {
+			var ps []operatorv1.SPIFFEAdmissionPolicyStatus
+			for i := 0; i < 16; i++ {
+				ps = append(ps, policy(fmt.Sprintf("p%d", i)))
+			}
+			Expect(updateStatus(&operatorv1.KlusterletSPIFFEStatus{AdmissionPolicies: ps})).To(Succeed())
+			ps = append(ps, policy("p16"))
+			Expect(updateStatus(&operatorv1.KlusterletSPIFFEStatus{AdmissionPolicies: ps})).ToNot(Succeed())
+		})
+
+		It("refuses an empty or over-long policy name", func() {
+			Expect(updateStatus(&operatorv1.KlusterletSPIFFEStatus{
+				AdmissionPolicies: []operatorv1.SPIFFEAdmissionPolicyStatus{policy("")},
+			})).ToNot(Succeed())
+			Expect(updateStatus(&operatorv1.KlusterletSPIFFEStatus{
+				AdmissionPolicies: []operatorv1.SPIFFEAdmissionPolicyStatus{policy(strings.Repeat("p", 254))},
+			})).ToNot(Succeed())
+		})
+
+		It("refuses an empty or over-long add-on namespace name", func() {
+			Expect(updateStatus(&operatorv1.KlusterletSPIFFEStatus{
+				AddOnNamespace: &operatorv1.SPIFFENamespaceRef{Name: "", UID: "u"},
+			})).ToNot(Succeed())
+			Expect(updateStatus(&operatorv1.KlusterletSPIFFEStatus{
+				AddOnNamespace: &operatorv1.SPIFFENamespaceRef{Name: strings.Repeat("n", 64), UID: "u"},
+			})).ToNot(Succeed())
+		})
 	})
 
 	It("refuses authType spiffe without the spiffe settings", func() {
