@@ -600,17 +600,16 @@ spec:
                               default: 5m
                               description: |-
                                 maxClockSkew is the allowed clock difference between the hub and the SPIRE servers of
-                                every trust domain. It is used by
-                                the SVID validity check and added to the delete guard's wait.
+                                every trust domain. It is used by the SVID validity check and added to the delete
+                                guard's wait.
                               pattern: ^([0-9]+(s|m|h))+$
                               type: string
                             maxSVIDLifetime:
                               default: 24h
                               description: |-
                                 maxSVIDLifetime must be at least the longest SVID TTL SPIRE issues to OCM agents, in any
-                                of agentTrustDomains.
-                                When a ManagedCluster is deleted, the hub keeps it terminating for this long plus
-                                maxClockSkew, so no SVID issued before the deletion can recreate it.
+                                of agentTrustDomains. When a ManagedCluster is deleted, the hub keeps it terminating for
+                                this long plus maxClockSkew, so no SVID issued before the deletion can recreate it.
                               pattern: ^([0-9]+(s|m|h))+$
                               type: string
                             serverSPIFFEID:
@@ -623,8 +622,9 @@ spec:
                               type: string
                             trustDomain:
                               description: |-
-                                trustDomain is the SPIFFE trust domain of the hub and its agents, for example
-                                ocm-hub.example.org.
+                                trustDomain is the hub's own SPIFFE trust domain, for example ocm-hub.example.org. The
+                                hub gRPC server's SVID is in it. Agents may be in other trust domains; see
+                                agentTrustDomains.
                               maxLength: 255
                               minLength: 1
                               pattern: ^[a-z0-9._-]+$

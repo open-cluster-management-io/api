@@ -208,8 +208,9 @@ type RegistrationDriverHub struct {
 // SPIFFERegistrationConfig configures the spiffe registration driver on the hub. Agents
 // authenticate with SPIRE-issued X.509-SVIDs; nothing here is secret.
 type SPIFFERegistrationConfig struct {
-	// trustDomain is the SPIFFE trust domain of the hub and its agents, for example
-	// ocm-hub.example.org.
+	// trustDomain is the hub's own SPIFFE trust domain, for example ocm-hub.example.org. The
+	// hub gRPC server's SVID is in it. Agents may be in other trust domains; see
+	// agentTrustDomains.
 	// +required
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=255
@@ -244,9 +245,8 @@ type SPIFFERegistrationConfig struct {
 	WorkloadAPISocket string `json:"workloadAPISocket,omitempty"`
 
 	// maxSVIDLifetime must be at least the longest SVID TTL SPIRE issues to OCM agents, in any
-	// of agentTrustDomains.
-	// When a ManagedCluster is deleted, the hub keeps it terminating for this long plus
-	// maxClockSkew, so no SVID issued before the deletion can recreate it.
+	// of agentTrustDomains. When a ManagedCluster is deleted, the hub keeps it terminating for
+	// this long plus maxClockSkew, so no SVID issued before the deletion can recreate it.
 	// +optional
 	// +kubebuilder:default:="24h"
 	// +kubebuilder:validation:Type=string
@@ -254,8 +254,8 @@ type SPIFFERegistrationConfig struct {
 	MaxSVIDLifetime *metav1.Duration `json:"maxSVIDLifetime,omitempty"`
 
 	// maxClockSkew is the allowed clock difference between the hub and the SPIRE servers of
-	// every trust domain. It is used by
-	// the SVID validity check and added to the delete guard's wait.
+	// every trust domain. It is used by the SVID validity check and added to the delete
+	// guard's wait.
 	// +optional
 	// +kubebuilder:default:="5m"
 	// +kubebuilder:validation:Type=string
