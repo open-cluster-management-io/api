@@ -168,7 +168,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: "",
+				AgentInstallNamespace: new(string),
 			},
 		}
 
@@ -187,7 +187,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: "my-custom-namespace",
+				AgentInstallNamespace: new("my-custom-namespace"),
 			},
 		}
 
@@ -206,7 +206,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: "-invalid",
+				AgentInstallNamespace: new("-invalid"),
 			},
 		}
 
@@ -225,7 +225,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: "Invalid-Namespace",
+				AgentInstallNamespace: new("Invalid-Namespace"),
 			},
 		}
 
@@ -244,7 +244,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: rand.String(64), // max is 63
+				AgentInstallNamespace: new(rand.String(64)), // max is 63
 			},
 		}
 
@@ -314,7 +314,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig v1beta1 API test", func() {
 						Value: "test_value",
 					},
 				},
-				AgentInstallNamespace: "test-namespace",
+				AgentInstallNamespace: new("test-namespace"),
 			},
 		}
 
@@ -353,7 +353,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig v1beta1 API test", func() {
 						Value: "alpha_value",
 					},
 				},
-				AgentInstallNamespace: "alpha-namespace",
+				AgentInstallNamespace: new("alpha-namespace"),
 			},
 		}
 
