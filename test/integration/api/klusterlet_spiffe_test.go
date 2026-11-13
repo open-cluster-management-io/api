@@ -301,6 +301,109 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 		_, err = operatorClient.OperatorV1().Klusterlets().UpdateStatus(context.TODO(), k, metav1.UpdateOptions{})
 		Expect(err).To(HaveOccurred())
 	})
+
+	Context("agent ID templates", func() {
+		It("fills both templates with the defaults", func() {
+			k, err := create(newKlusterlet(withDriver(func(s *operatorv1.KlusterletSPIFFEConfig) {})))
+			Expect(err).ToNot(HaveOccurred())
+			s := k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE
+			Expect(s.AgentIDTemplate).Should(Equal(operatorv1.DefaultSPIFFEAgentIDTemplate))
+			Expect(s.AddOnAgentIDTemplate).Should(Equal(operatorv1.DefaultSPIFFEAddOnAgentIDTemplate))
+		})
+
+		It("keeps a custom template with a namespace segment", func() {
+			k, err := create(newKlusterlet(withDriver(func(s *operatorv1.KlusterletSPIFFEConfig) {
+				s.AgentIDTemplate = "spiffe://{trustDomain}/k8s/{cluster}/ns/{namespace}/ocm/{role}"
+			})))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE.AgentIDTemplate).
+				Should(Equal("spiffe://{trustDomain}/k8s/{cluster}/ns/{namespace}/ocm/{role}"))
+		})
+
+		for _, c := range []struct{ name, agent, addOn, message string }{
+			{"agent without {role}", "spiffe://{trustDomain}/ocm/cluster/{cluster}/agent", "",
+				"agentIDTemplate must contain {cluster} and {role}"},
+			{"agent without {cluster}", "spiffe://{trustDomain}/ocm/agent/{role}", "",
+				"agentIDTemplate must contain {cluster} and {role}"},
+			{"add-on without {agent}", "", "spiffe://{trustDomain}/ocm/{cluster}/{addon}",
+				"addOnAgentIDTemplate must contain {cluster}, {addon} and {agent}"},
+			{"add-on without {addon}", "", "spiffe://{trustDomain}/ocm/{cluster}/x/{agent}",
+				"addOnAgentIDTemplate must contain {cluster}, {addon} and {agent}"},
+			{"fixed trust domain", "spiffe://east.example.org/ocm/{cluster}/{role}", "", "should match"},
+		} {
+			c := c
+			It("refuses a bad template: "+c.name, func() {
+				_, err := create(newKlusterlet(withDriver(func(s *operatorv1.KlusterletSPIFFEConfig) {
+					s.AgentIDTemplate = c.agent
+					s.AddOnAgentIDTemplate = c.addOn
+				})))
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(c.message))
+			})
+		}
+	})
+
+	Context("cluster name", func() {
+		It("refuses spiffe without a cluster name", func() {
+			k := newKlusterlet(withDriver(func(s *operatorv1.KlusterletSPIFFEConfig) {}))
+			k.Spec.ClusterName = ""
+			_, err := create(k)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("clusterName is required when registrationDriver.authType is spiffe"))
+		})
+
+		It("still allows other drivers without a cluster name", func() {
+			k := newKlusterlet(&operatorv1.RegistrationConfiguration{
+				RegistrationDriver: operatorv1.RegistrationDriver{AuthType: operatorv1.CSRAuthType},
+			})
+			k.Spec.ClusterName = ""
+			_, err := create(k)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("still allows no registration configuration without a cluster name", func() {
+			k := newKlusterlet(nil)
+			k.Spec.ClusterName = ""
+			_, err := create(k)
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Context("agent IDs in the status", func() {
+		updateAgentIDs := func(ids []operatorv1.SPIFFEAgentID) error {
+			k, err := operatorClient.OperatorV1().Klusterlets().Get(context.TODO(), klusterletName, metav1.GetOptions{})
+			if err != nil {
+				k, err = create(newKlusterlet(nil))
+				Expect(err).ToNot(HaveOccurred())
+			}
+			k.Status.Conditions = []metav1.Condition{}
+			k.Status.SPIFFE = &operatorv1.KlusterletSPIFFEStatus{AgentIDs: ids}
+			_, err = operatorClient.OperatorV1().Klusterlets().UpdateStatus(context.TODO(), k, metav1.UpdateOptions{})
+			return err
+		}
+		id := func(role string) operatorv1.SPIFFEAgentID {
+			return operatorv1.SPIFFEAgentID{
+				Role:     role,
+				SPIFFEID: "spiffe://ocm-hub.example.org/ocm/cluster/cluster1/agent/" + role,
+			}
+		}
+
+		It("accepts the registration and work IDs", func() {
+			Expect(updateAgentIDs([]operatorv1.SPIFFEAgentID{id("registration"), id("work")})).To(Succeed())
+		})
+
+		It("refuses an unknown role", func() {
+			Expect(updateAgentIDs([]operatorv1.SPIFFEAgentID{id("admin")})).ToNot(Succeed())
+		})
+
+		It("refuses the same role twice", func() {
+			Expect(updateAgentIDs([]operatorv1.SPIFFEAgentID{id("work"), id("work")})).ToNot(Succeed())
+		})
+
+		It("refuses an empty SPIFFE ID", func() {
+			Expect(updateAgentIDs([]operatorv1.SPIFFEAgentID{{Role: "work"}})).ToNot(Succeed())
+		})
+	})
 })
 
 var _ = Describe("ManagedClusterAddOn API test with the spiffe driver", func() {

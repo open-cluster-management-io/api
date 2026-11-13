@@ -29,6 +29,7 @@ type Klusterlet struct {
 }
 
 // KlusterletSpec represents the desired deployment configuration of Klusterlet agent.
+// +kubebuilder:validation:XValidation:rule="!has(self.registrationConfiguration) || !has(self.registrationConfiguration.registrationDriver) || !has(self.registrationConfiguration.registrationDriver.authType) || self.registrationConfiguration.registrationDriver.authType != 'spiffe' || (has(self.clusterName) && size(self.clusterName) > 0)",message="clusterName is required when registrationDriver.authType is spiffe"
 type KlusterletSpec struct {
 	// namespace is the namespace to deploy the agent on the managed cluster.
 	// The namespace must have a prefix of "open-cluster-management-", and if it is not set,
@@ -60,6 +61,8 @@ type KlusterletSpec struct {
 
 	// clusterName is the name of the managed cluster to be created on hub.
 	// The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on OpenShift.
+	// It is required when registrationConfiguration.registrationDriver.authType is spiffe, because the
+	// agents' SPIFFE IDs contain it.
 	// +optional
 	// +kubebuilder:validation:MaxLength=63
 	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
@@ -287,6 +290,8 @@ type RegistrationDriver struct {
 }
 
 // KlusterletSPIFFEConfig configures the spiffe registration driver on the managed cluster.
+// +kubebuilder:validation:XValidation:rule="!has(self.agentIDTemplate) || (self.agentIDTemplate.contains('/{cluster}') && self.agentIDTemplate.contains('/{role}'))",message="agentIDTemplate must contain {cluster} and {role}"
+// +kubebuilder:validation:XValidation:rule="!has(self.addOnAgentIDTemplate) || (self.addOnAgentIDTemplate.contains('/{cluster}') && self.addOnAgentIDTemplate.contains('/{addon}') && self.addOnAgentIDTemplate.contains('/{agent}'))",message="addOnAgentIDTemplate must contain {cluster}, {addon} and {agent}"
 type KlusterletSPIFFEConfig struct {
 	// hubEndpoint is host:port of the hub gRPC server's grpc-spiffe listener.
 	// +required
@@ -314,6 +319,27 @@ type KlusterletSPIFFEConfig struct {
 	// +optional
 	// +kubebuilder:default:="unix:///spiffe-workload-api/spire-agent.sock"
 	WorkloadAPISocket string `json:"workloadAPISocket,omitempty"`
+
+	// agentIDTemplate is the layout of this Klusterlet's agent SPIFFE IDs. It must equal the
+	// hub's ClusterManager agentIDTemplate, or the hub refuses the agents. The klusterlet
+	// operator fills it in for each agent and passes the result to the agent: {trustDomain} is
+	// trustDomain, {cluster} is clusterName, {role} is registration, work or klusterlet, and
+	// {namespace} is the namespace the agent runs in. Each placeholder fills a whole path
+	// segment.
+	// +optional
+	// +kubebuilder:default:="spiffe://{trustDomain}/ocm/cluster/{cluster}/agent/{role}"
+	// +kubebuilder:validation:MaxLength=512
+	// +kubebuilder:validation:Pattern=`^spiffe://\{trustDomain\}(/([A-Za-z0-9._-]+|\{[A-Za-z]+\}))+$`
+	AgentIDTemplate string `json:"agentIDTemplate,omitempty"`
+
+	// addOnAgentIDTemplate is the layout of add-on agent SPIFFE IDs on this cluster. It must
+	// equal the hub's ClusterManager addOnAgentIDTemplate. {addon} is the add-on name, {agent}
+	// the add-on agent name, and {namespace} the add-on's install namespace.
+	// +optional
+	// +kubebuilder:default:="spiffe://{trustDomain}/ocm/cluster/{cluster}/addon/{addon}/agent/{agent}"
+	// +kubebuilder:validation:MaxLength=512
+	// +kubebuilder:validation:Pattern=`^spiffe://\{trustDomain\}(/([A-Za-z0-9._-]+|\{[A-Za-z]+\}))+$`
+	AddOnAgentIDTemplate string `json:"addOnAgentIDTemplate,omitempty"`
 }
 
 type AwsIrsa struct {
@@ -568,6 +594,29 @@ type KlusterletSPIFFEStatus struct {
 	// UID so recovery only cleans that exact namespace.
 	// +optional
 	AddOnNamespace *SPIFFENamespaceRef `json:"addOnNamespace,omitempty"`
+
+	// agentIDs are the SPIFFE IDs the operator rendered for this Klusterlet's agents from
+	// agentIDTemplate, one per agent role the install mode runs. The platform's SPIRE
+	// registration entries must issue exactly these IDs.
+	// +optional
+	// +listType=map
+	// +listMapKey=role
+	// +kubebuilder:validation:MaxItems=3
+	AgentIDs []SPIFFEAgentID `json:"agentIDs,omitempty"`
+}
+
+// SPIFFEAgentID is the SPIFFE ID of one Klusterlet agent.
+type SPIFFEAgentID struct {
+	// role is the agent role: registration, work or klusterlet.
+	// +required
+	// +kubebuilder:validation:Enum=registration;work;klusterlet
+	Role string `json:"role"`
+
+	// spiffeID is the SPIFFE ID the agent expects from the Workload API.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=2048
+	SPIFFEID string `json:"spiffeID"`
 }
 
 // SPIFFEAdmissionPolicyStatus records one ValidatingAdmissionPolicy and its binding.

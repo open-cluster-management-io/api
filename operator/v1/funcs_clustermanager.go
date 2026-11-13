@@ -27,3 +27,21 @@ func (c *SPIFFERegistrationConfig) GetAgentTrustDomains() []string {
 	}
 	return domains
 }
+
+// GetAgentIDTemplate returns agentIDTemplate, or DefaultSPIFFEAgentIDTemplate when it is empty
+// or the config is nil.
+func (c *SPIFFERegistrationConfig) GetAgentIDTemplate() string {
+	if c == nil || c.AgentIDTemplate == "" {
+		return DefaultSPIFFEAgentIDTemplate
+	}
+	return c.AgentIDTemplate
+}
+
+// GetAddOnAgentIDTemplate returns addOnAgentIDTemplate, or DefaultSPIFFEAddOnAgentIDTemplate
+// when it is empty or the config is nil.
+func (c *SPIFFERegistrationConfig) GetAddOnAgentIDTemplate() string {
+	if c == nil || c.AddOnAgentIDTemplate == "" {
+		return DefaultSPIFFEAddOnAgentIDTemplate
+	}
+	return c.AddOnAgentIDTemplate
+}

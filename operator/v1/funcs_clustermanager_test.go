@@ -94,3 +94,27 @@ func TestGetAgentTrustDomainsDoesNotChangeTheSpec(t *testing.T) {
 		t.Errorf("AgentTrustDomains changed to %v, want %v", config.AgentTrustDomains, want)
 	}
 }
+
+func TestSPIFFERegistrationConfigIDTemplates(t *testing.T) {
+	custom := "spiffe://{trustDomain}/k8s/{cluster}/ns/{namespace}/ocm/{role}"
+	customAddOn := "spiffe://{trustDomain}/k8s/{cluster}/addon/{addon}/{agent}"
+	cases := []struct {
+		name                 string
+		config               *SPIFFERegistrationConfig
+		wantAgent, wantAddOn string
+	}{
+		{"nil config", nil, DefaultSPIFFEAgentIDTemplate, DefaultSPIFFEAddOnAgentIDTemplate},
+		{"empty", &SPIFFERegistrationConfig{}, DefaultSPIFFEAgentIDTemplate, DefaultSPIFFEAddOnAgentIDTemplate},
+		{"set", &SPIFFERegistrationConfig{AgentIDTemplate: custom, AddOnAgentIDTemplate: customAddOn}, custom, customAddOn},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := c.config.GetAgentIDTemplate(); got != c.wantAgent {
+				t.Errorf("GetAgentIDTemplate() = %q, want %q", got, c.wantAgent)
+			}
+			if got := c.config.GetAddOnAgentIDTemplate(); got != c.wantAddOn {
+				t.Errorf("GetAddOnAgentIDTemplate() = %q, want %q", got, c.wantAddOn)
+			}
+		})
+	}
+}

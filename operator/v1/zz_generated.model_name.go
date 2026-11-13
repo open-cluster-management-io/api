@@ -262,6 +262,11 @@ func (in SPIFFEAdmissionPolicyStatus) OpenAPIModelName() string {
 }
 
 // OpenAPIModelName returns the OpenAPI model name for this type.
+func (in SPIFFEAgentID) OpenAPIModelName() string {
+	return "io.open-cluster-management.api.operator.v1.SPIFFEAgentID"
+}
+
+// OpenAPIModelName returns the OpenAPI model name for this type.
 func (in SPIFFENamespaceRef) OpenAPIModelName() string {
 	return "io.open-cluster-management.api.operator.v1.SPIFFENamespaceRef"
 }

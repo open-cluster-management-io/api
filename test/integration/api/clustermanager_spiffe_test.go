@@ -302,4 +302,60 @@ var _ = Describe("ClusterManager API test with the spiffe registration driver", 
 		_, err := create(cm)
 		Expect(err).To(HaveOccurred())
 	})
+
+	Context("agent ID templates", func() {
+		It("fills both templates with the defaults", func() {
+			cm, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {})))
+			Expect(err).ToNot(HaveOccurred())
+			s := cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE
+			Expect(s.AgentIDTemplate).Should(Equal(operatorv1.DefaultSPIFFEAgentIDTemplate))
+			Expect(s.AddOnAgentIDTemplate).Should(Equal(operatorv1.DefaultSPIFFEAddOnAgentIDTemplate))
+		})
+
+		It("keeps custom templates with a namespace segment", func() {
+			cm, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AgentIDTemplate = "spiffe://{trustDomain}/k8s/{cluster}/ns/{namespace}/ocm/{role}"
+				c.AddOnAgentIDTemplate = "spiffe://{trustDomain}/k8s/{cluster}/ns/{namespace}/addon/{addon}/{agent}"
+			})))
+			Expect(err).ToNot(HaveOccurred())
+			s := cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE
+			Expect(s.AgentIDTemplate).Should(Equal("spiffe://{trustDomain}/k8s/{cluster}/ns/{namespace}/ocm/{role}"))
+			Expect(s.AddOnAgentIDTemplate).Should(Equal("spiffe://{trustDomain}/k8s/{cluster}/ns/{namespace}/addon/{addon}/{agent}"))
+		})
+
+		// The CRD checks only the shape. Unknown or missing placeholders, duplicates and overlap
+		// are checked by the cluster-manager operator, which reports Degraded.
+		It("leaves unknown placeholders to the operator", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AgentIDTemplate = "spiffe://{trustDomain}/ocm/{clutser}/{role}"
+			})))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		for _, c := range []struct{ name, agent, addOn string }{
+			{"fixed trust domain", "spiffe://ocm-hub.example.org/ocm/{cluster}/{role}", ""},
+			{"no path", "spiffe://{trustDomain}", ""},
+			{"placeholder inside a segment", "spiffe://{trustDomain}/ocm/cluster-{cluster}/{role}", ""},
+			{"empty segment", "spiffe://{trustDomain}/ocm//{cluster}/{role}", ""},
+			{"trailing slash", "spiffe://{trustDomain}/ocm/{cluster}/{role}/", ""},
+			{"query in add-on template", "", "spiffe://{trustDomain}/ocm/{cluster}/{addon}/{agent}?x"},
+		} {
+			c := c
+			It("refuses a malformed template: "+c.name, func() {
+				_, err := create(newClusterManager(spiffeConfig(func(s *operatorv1.SPIFFERegistrationConfig) {
+					s.AgentIDTemplate = c.agent
+					s.AddOnAgentIDTemplate = c.addOn
+				})))
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("should match"))
+			})
+		}
+
+		It("refuses a template over 512 characters", func() {
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AgentIDTemplate = "spiffe://{trustDomain}/{cluster}/{role}/" + strings.Repeat("a", 512)
+			})))
+			Expect(err).To(HaveOccurred())
+		})
+	})
 })
