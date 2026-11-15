@@ -82,6 +82,47 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 		Expect(k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE.HubSPIFFEID).Should(Equal(testHubSPIFFEID))
 	})
 
+	withMode := func(mode operatorv1.InstallMode, authType string) *operatorv1.Klusterlet {
+		rc := &operatorv1.RegistrationConfiguration{RegistrationDriver: operatorv1.RegistrationDriver{AuthType: authType}}
+		if authType == operatorv1.SPIFFEAuthType {
+			rc = &operatorv1.RegistrationConfiguration{RegistrationDriver: spiffeDriver(),
+				AddOnKubeClientRegistrationDriver: spiffeAddOnDriver()}
+		}
+		k := newKlusterlet(rc)
+		k.Spec.DeployOption.Mode = mode
+		return k
+	}
+
+	It("accepts spiffe in the Default and Singleton modes, also with the mode left empty", func() {
+		for i, mode := range []operatorv1.InstallMode{"", operatorv1.InstallModeDefault, operatorv1.InstallModeSingleton} {
+			k := withMode(mode, operatorv1.SPIFFEAuthType)
+			k.Name = fmt.Sprintf("%s-%d", klusterletName, i)
+			_, err := create(k)
+			Expect(err).ToNot(HaveOccurred(), "mode %q", mode)
+		}
+	})
+
+	It("refuses spiffe in the Hosted and SingletonHosted modes", func() {
+		for _, mode := range []operatorv1.InstallMode{operatorv1.InstallModeHosted, operatorv1.InstallModeSingletonHosted} {
+			_, err := create(withMode(mode, operatorv1.SPIFFEAuthType))
+			Expect(err).To(HaveOccurred(), "mode %q", mode)
+			Expect(err.Error()).To(ContainSubstring("supports only the Default and Singleton install modes"))
+		}
+	})
+
+	It("still accepts other drivers in the hosted modes", func() {
+		_, err := create(withMode(operatorv1.InstallModeHosted, "csr"))
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("refuses moving a spiffe Klusterlet to a hosted mode", func() {
+		k, err := create(withMode(operatorv1.InstallModeDefault, operatorv1.SPIFFEAuthType))
+		Expect(err).ToNot(HaveOccurred())
+		k.Spec.DeployOption.Mode = operatorv1.InstallModeHosted
+		_, err = operatorClient.OperatorV1().Klusterlets().Update(context.TODO(), k, metav1.UpdateOptions{})
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("refuses an invalid agent trust domain", func() {
 		d := spiffeDriver()
 		d.SPIFFE.TrustDomain = "East_Example"
