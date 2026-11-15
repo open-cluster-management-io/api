@@ -215,6 +215,34 @@ var _ = Describe("ClusterManager API test with the spiffe registration driver", 
 		})
 	})
 
+	Context("autoApprovedIdentities", func() {
+		It("accepts SPIFFE IDs, with * for whole path segments", func() {
+			ids := []string{"spiffe://ocm-hub.example.org/ocm/cluster/*/agent/registration",
+				"spiffe://east.example.org/ocm/cluster/cluster1/agent/klusterlet"}
+			cm, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AutoApprovedIdentities = ids
+			})))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE.AutoApprovedIdentities).Should(Equal(ids))
+		})
+		for _, bad := range []string{"ocm/cluster/*", "https://ocm-hub.example.org/x", "spiffe://ocm-hub.example.org",
+			"spiffe://Hub/x", "spiffe://ocm-hub.example.org/ocm/clu*ster"} {
+			It("refuses "+bad, func() {
+				_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+					c.AutoApprovedIdentities = []string{bad}
+				})))
+				Expect(err).To(HaveOccurred())
+			})
+		}
+		It("refuses a repeated entry", func() {
+			id := "spiffe://ocm-hub.example.org/ocm/cluster/*/agent/registration"
+			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.AutoApprovedIdentities = []string{id, id}
+			})))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
 	Context("agentTrustDomains", func() {
 		It("is stored as the admin wrote it when it lists the hub's trust domain", func() {
 			cm, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
