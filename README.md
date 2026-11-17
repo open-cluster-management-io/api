@@ -4,7 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/open-cluster-management.io/api.svg)](https://pkg.go.dev/open-cluster-management.io/api)
 [![Go Report Card](https://goreportcard.com/badge/open-cluster-management.io/api)](https://goreportcard.com/report/open-cluster-management.io/api)
 
-The official API definitions and client libraries for [Open Cluster Management (OCM)](https://open-cluster-management.io/), a CNCF sandbox project focused on multicluster and multicloud scenarios for Kubernetes.
+The official API definitions and client libraries for [Open Cluster Management (OCM)](https://open-cluster-management.io/), a CNCF incubating project focused on multicluster and multicloud scenarios for Kubernetes.
 
 ## Purpose
 
@@ -156,4 +156,4 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-**[Open Cluster Management](https://open-cluster-management.io/)** is a [Cloud Native Computing Foundation](https://cncf.io/) sandbox project.
+**[Open Cluster Management](https://open-cluster-management.io/)** is a [Cloud Native Computing Foundation](https://cncf.io/) incubating project.
