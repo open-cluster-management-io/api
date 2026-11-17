@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	variableNameMaxLength  = 255
-	variableValueMaxLength = 1024
+	variableNameMaxLength        = 255
+	variableValueMaxLength       = 1024
+	defaultAgentInstallNamespace = "open-cluster-management-agent-addon"
 )
 
 var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
@@ -168,16 +169,50 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: "",
+				AgentInstallNamespace: new(string),
 			},
 		}
 
-		_, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
+		created, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
 			context.TODO(),
 			addOnDeploymentConfig,
 			metav1.CreateOptions{},
 		)
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(created.Spec.AgentInstallNamespace).To(gomega.Equal(new(string)))
+
+		retrieved, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Get(
+			context.TODO(),
+			addOnDeploymentConfigName,
+			metav1.GetOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(retrieved.Spec.AgentInstallNamespace).To(gomega.Equal(new(string)))
+	})
+
+	ginkgo.It("Should default agentInstallNamespace when it is not set", func() {
+		addOnDeploymentConfig := &addonv1alpha1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+		}
+
+		created, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(created.Spec.AgentInstallNamespace).To(gomega.Equal(new(defaultAgentInstallNamespace)))
+
+		retrieved, err := hubAddonClient.AddonV1alpha1().AddOnDeploymentConfigs(testNamespace).Get(
+			context.TODO(),
+			addOnDeploymentConfigName,
+			metav1.GetOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(retrieved.Spec.AgentInstallNamespace).To(gomega.Equal(new(defaultAgentInstallNamespace)))
 	})
 
 	ginkgo.It("Should create a AddOnDeploymentConfig with valid agentInstallNamespace", func() {
@@ -187,7 +222,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: "my-custom-namespace",
+				AgentInstallNamespace: new("my-custom-namespace"),
 			},
 		}
 
@@ -206,7 +241,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: "-invalid",
+				AgentInstallNamespace: new("-invalid"),
 			},
 		}
 
@@ -225,7 +260,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: "Invalid-Namespace",
+				AgentInstallNamespace: new("Invalid-Namespace"),
 			},
 		}
 
@@ -244,7 +279,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig API test", func() {
 				Namespace: testNamespace,
 			},
 			Spec: addonv1alpha1.AddOnDeploymentConfigSpec{
-				AgentInstallNamespace: rand.String(64), // max is 63
+				AgentInstallNamespace: new(rand.String(64)), // max is 63
 			},
 		}
 
@@ -300,6 +335,59 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig v1beta1 API test", func() {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 	})
 
+	ginkgo.It("Should create a AddOnDeploymentConfig with empty agentInstallNamespace using v1beta1", func() {
+		addOnDeploymentConfig := &addonv1beta1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+			Spec: addonv1beta1.AddOnDeploymentConfigSpec{
+				AgentInstallNamespace: new(string),
+			},
+		}
+
+		created, err := hubAddonClient.AddonV1beta1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(created.Spec.AgentInstallNamespace).To(gomega.Equal(new(string)))
+
+		retrieved, err := hubAddonClient.AddonV1beta1().AddOnDeploymentConfigs(testNamespace).Get(
+			context.TODO(),
+			addOnDeploymentConfigName,
+			metav1.GetOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(retrieved.Spec.AgentInstallNamespace).To(gomega.Equal(new(string)))
+	})
+
+	ginkgo.It("Should default agentInstallNamespace when it is not set using v1beta1", func() {
+		addOnDeploymentConfig := &addonv1beta1.AddOnDeploymentConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addOnDeploymentConfigName,
+				Namespace: testNamespace,
+			},
+		}
+
+		created, err := hubAddonClient.AddonV1beta1().AddOnDeploymentConfigs(testNamespace).Create(
+			context.TODO(),
+			addOnDeploymentConfig,
+			metav1.CreateOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(created.Spec.AgentInstallNamespace).To(gomega.Equal(new(defaultAgentInstallNamespace)))
+
+		retrieved, err := hubAddonClient.AddonV1beta1().AddOnDeploymentConfigs(testNamespace).Get(
+			context.TODO(),
+			addOnDeploymentConfigName,
+			metav1.GetOptions{},
+		)
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		gomega.Expect(retrieved.Spec.AgentInstallNamespace).To(gomega.Equal(new(defaultAgentInstallNamespace)))
+	})
+
 	ginkgo.It("Should create v1beta1 and read as v1alpha1 (cross-version compatibility)", func() {
 		// Create using v1beta1
 		addOnDeploymentConfigV1beta1 := &addonv1beta1.AddOnDeploymentConfig{
@@ -314,7 +402,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig v1beta1 API test", func() {
 						Value: "test_value",
 					},
 				},
-				AgentInstallNamespace: "test-namespace",
+				AgentInstallNamespace: new("test-namespace"),
 			},
 		}
 
@@ -336,7 +424,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig v1beta1 API test", func() {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 		gomega.Expect(retrievedV1alpha1.Spec.CustomizedVariables).To(gomega.HaveLen(1))
 		gomega.Expect(retrievedV1alpha1.Spec.CustomizedVariables[0].Name).To(gomega.Equal("test_var"))
-		gomega.Expect(retrievedV1alpha1.Spec.AgentInstallNamespace).To(gomega.Equal("test-namespace"))
+		gomega.Expect(retrievedV1alpha1.Spec.AgentInstallNamespace).To(gomega.Equal(new("test-namespace")))
 	})
 
 	ginkgo.It("Should create v1alpha1 and read as v1beta1 (cross-version compatibility)", func() {
@@ -353,7 +441,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig v1beta1 API test", func() {
 						Value: "alpha_value",
 					},
 				},
-				AgentInstallNamespace: "alpha-namespace",
+				AgentInstallNamespace: new("alpha-namespace"),
 			},
 		}
 
@@ -374,7 +462,7 @@ var _ = ginkgo.Describe("AddOnDeploymentConfig v1beta1 API test", func() {
 		gomega.Expect(err).ToNot(gomega.HaveOccurred())
 		gomega.Expect(retrievedV1beta1.Spec.CustomizedVariables).To(gomega.HaveLen(1))
 		gomega.Expect(retrievedV1beta1.Spec.CustomizedVariables[0].Name).To(gomega.Equal("alpha_var"))
-		gomega.Expect(retrievedV1beta1.Spec.AgentInstallNamespace).To(gomega.Equal("alpha-namespace"))
+		gomega.Expect(retrievedV1beta1.Spec.AgentInstallNamespace).To(gomega.Equal(new("alpha-namespace")))
 	})
 
 	ginkgo.It("Should preserve node placement affinity when read as v1alpha1", func() {
