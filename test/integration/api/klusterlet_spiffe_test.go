@@ -297,6 +297,45 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 		Expect(err).To(HaveOccurred())
 	})
 
+	// SPIFFE forbids the path segments . and ..; other segments with dots stay valid.
+	It("refuses . and .. path segments in the hub ID and the ID templates", func() {
+		for _, mutate := range []func(*operatorv1.KlusterletSPIFFEConfig){
+			func(c *operatorv1.KlusterletSPIFFEConfig) {
+				c.HubSPIFFEID = "spiffe://ocm-hub.example.org/ocm/../server"
+			},
+			func(c *operatorv1.KlusterletSPIFFEConfig) {
+				c.HubSPIFFEID = "spiffe://ocm-hub.example.org/./grpc-server"
+			},
+			func(c *operatorv1.KlusterletSPIFFEConfig) {
+				c.AgentIDTemplate = "spiffe://{trustDomain}/ocm/./{cluster}/{role}"
+			},
+			func(c *operatorv1.KlusterletSPIFFEConfig) {
+				c.AddOnAgentIDTemplate = "spiffe://{trustDomain}/ocm/{cluster}/../{addon}/{agent}"
+			},
+		} {
+			klusterletName = fmt.Sprintf("klusterlet-%s", rand.String(5))
+			d := spiffeDriver()
+			mutate(d.SPIFFE)
+			_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+				RegistrationDriver:                d,
+				AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+			}))
+			Expect(err).To(HaveOccurred())
+		}
+	})
+
+	It("accepts hub ID segments with dots among other characters, and ...", func() {
+		d := spiffeDriver()
+		d.SPIFFE.HubSPIFFEID = "spiffe://ocm-hub.example.org/.hub/.../grpc.server"
+		k, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                d,
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE.HubSPIFFEID).
+			Should(Equal("spiffe://ocm-hub.example.org/.hub/.../grpc.server"))
+	})
+
 	It("refuses an empty hub endpoint", func() {
 		d := spiffeDriver()
 		d.SPIFFE.HubEndpoint = ""

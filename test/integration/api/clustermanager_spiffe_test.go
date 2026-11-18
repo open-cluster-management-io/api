@@ -196,6 +196,75 @@ var _ = Describe("ClusterManager API test with the spiffe registration driver", 
 	// domainOfLength returns a valid trust domain name of exactly n characters.
 	domainOfLength := func(n int) string { return strings.Repeat("a", n-4) + ".org" }
 
+	// A duration Go can't hold, such as 2562048h, would be stored but no client could read it back.
+	// Go clients can't send one, so it is posted as raw JSON.
+	Context("maxSVIDLifetime and maxClockSkew bounds", func() {
+		post := func(field, value string) error {
+			body := fmt.Sprintf(`{"apiVersion":"operator.open-cluster-management.io/v1","kind":"ClusterManager",`+
+				`"metadata":{"name":%q},"spec":{"registrationConfiguration":{"registrationDrivers":[`+
+				`{"authType":"spiffe","spiffe":{"trustDomain":"ocm-hub.example.org",%q:%q}}]}}}`,
+				fmt.Sprintf("cm-%s", rand.String(5)), field, value)
+			return operatorClient.OperatorV1().RESTClient().Post().Resource("clustermanagers").
+				Body([]byte(body)).Do(context.TODO()).Error()
+		}
+		for _, field := range []string{"maxSVIDLifetime", "maxClockSkew"} {
+			for _, good := range []string{"24h", "1h30m", "99999h"} {
+				It(field+" accepts "+good, func() {
+					Expect(post(field, good)).To(Succeed())
+				})
+			}
+			for _, bad := range []string{"2562048h", "999999h", "99999h99999h99999h99999h99999h"} {
+				It(field+" refuses "+bad, func() {
+					err := post(field, bad)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring(field))
+				})
+			}
+		}
+	})
+
+	// SPIFFE forbids the path segments . and ..; other segments with dots stay valid.
+	Context("dot path segments", func() {
+		for _, bad := range []struct{ name, value string }{
+			{"server ID with ..", "spiffe://ocm-hub.example.org/ocm/../server"},
+			{"server ID ending in .", "spiffe://ocm-hub.example.org/ocm/."},
+		} {
+			It("refuses a "+bad.name, func() {
+				_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+					c.ServerSPIFFEID = bad.value
+				})))
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("serverSPIFFEID"))
+			})
+		}
+		It("refuses . and .. in the ID templates and auto-approved identities", func() {
+			for _, mutate := range []func(*operatorv1.SPIFFERegistrationConfig){
+				func(c *operatorv1.SPIFFERegistrationConfig) {
+					c.AgentIDTemplate = "spiffe://{trustDomain}/ocm/./{cluster}/{role}"
+				},
+				func(c *operatorv1.SPIFFERegistrationConfig) {
+					c.AddOnAgentIDTemplate = "spiffe://{trustDomain}/ocm/../{cluster}/{addon}/{agent}"
+				},
+				func(c *operatorv1.SPIFFERegistrationConfig) {
+					c.AutoApprovedIdentities = []string{"spiffe://ocm-hub.example.org/ocm/../*/agent/registration"}
+				},
+			} {
+				clusterManagerName = fmt.Sprintf("cm-%s", rand.String(5))
+				_, err := create(newClusterManager(spiffeConfig(mutate)))
+				Expect(err).To(HaveOccurred())
+			}
+		})
+		It("accepts segments that only contain dots among other characters, and ...", func() {
+			cm, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) {
+				c.ServerSPIFFEID = "spiffe://ocm-hub.example.org/.well-known/.../grpc.server"
+				c.AgentIDTemplate = "spiffe://{trustDomain}/ocm.v1/cluster/{cluster}/agent/{role}"
+			})))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE.ServerSPIFFEID).
+				Should(Equal("spiffe://ocm-hub.example.org/.well-known/.../grpc.server"))
+		})
+	})
+
 	Context("trustDomain", func() {
 		It("refuses a missing trust domain", func() {
 			_, err := create(newClusterManager(spiffeConfig(func(c *operatorv1.SPIFFERegistrationConfig) { c.TrustDomain = "" })))
