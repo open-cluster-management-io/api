@@ -24,19 +24,16 @@ verify="${VERIFY:-}"
 ALL_FILES=$(git ls-files | 
  grep -v -f <(echo "$IGNORE_COPYRIGHT_FILES" | grep . | sed 's/\([.|]\)/\1/g; s/\?/./g ; s/\*/.*/g'))
 
-SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
+SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
 COMMUNITY_COPY_HEADER_FILE="${SCRIPT_ROOT}/hack/boilerplate.txt"
 
-if [ ! -f $COMMUNITY_COPY_HEADER_FILE ]; then
+if [ ! -f "$COMMUNITY_COPY_HEADER_FILE" ]; then
   echo "File $COMMUNITY_COPY_HEADER_FILE not found!"
   exit 1
 fi
 
-COMMUNITY_COPY_HEADER_STRING=$(cat $COMMUNITY_COPY_HEADER_FILE | sed 's#^// ##')
-
-# NOTE: Only use one newline or javascript and typescript linter/prettier will complain about the extra blank lines
-NEWLINE="\n"
+COMMUNITY_COPY_HEADER_STRING=$(cat "$COMMUNITY_COPY_HEADER_FILE" | sed 's#^// ##')
 
 ERROR=false
 
@@ -93,7 +90,7 @@ do
             echo "Adding copyright to $FILE"
                         (cat <<EOM
 $COMMUNITY_HEADER_AS_COMMENT
-$(cat $FILE)
+$(cat "$FILE")
 EOM
 ) > "$TMP_FILE" && mv "$TMP_FILE" "$FILE"
           fi

@@ -1,12 +1,16 @@
-# Copyright Contributors to the Open Cluster Management project
 #!/bin/bash
+# Copyright Contributors to the Open Cluster Management project
 
 # the path of this repo should be go/src/open-cluster-management.io/api which is set in kube-codegen.
 
-source "$(dirname "${BASH_SOURCE}")/lib/init.sh"
+# shellcheck source=hack/lib/init.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/init.sh"
 
-SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
-CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../../../k8s.io/code-generator)}
+SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
+CODEGEN_PKG=${CODEGEN_PKG:-$(
+    cd "${SCRIPT_ROOT}"
+    ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../../../k8s.io/code-generator
+)}
 
 source "${CODEGEN_PKG}/kube_codegen.sh"
 
