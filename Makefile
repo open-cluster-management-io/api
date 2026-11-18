@@ -42,7 +42,7 @@ RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator
 
 verify-gocilint:
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
 	go vet ./...
 	${GOPATH}/bin/golangci-lint run --timeout=3m ./...
 
