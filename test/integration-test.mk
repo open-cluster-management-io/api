@@ -21,5 +21,5 @@ test-integration: test-api-integration
 
 test-api-integration: envtest-setup
 	go test -c ./test/integration/api 
-	./api.test -ginkgo.slowSpecThreshold=15 -ginkgo.v -ginkgo.failFast
+	./api.test -ginkgo.v
 .PHONY: test-api-integration

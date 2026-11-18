@@ -4,10 +4,11 @@ package api
 import (
 	"context"
 	"fmt"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"time"
 
-	"github.com/onsi/ginkgo"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
+	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
