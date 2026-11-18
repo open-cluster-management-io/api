@@ -22,6 +22,7 @@ GO_LD_FLAGS:=
 # controller-gen setup
 CONTROLLER_GEN_VERSION :=v0.23.0
 CONTROLLER_GEN :=$(GOBIN)/controller-gen
+GOLANGCI_VERSION ?= v2.15.0
 
 # go-get-tool will 'go install' any package $1 and install it to LOCAL_BIN.
 define go-get-tool
@@ -48,9 +49,9 @@ RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator
 
 verify-gocilint:
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
+	$(call go-get-tool,github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION))
 	go vet ./...
-	${GOPATH}/bin/golangci-lint run --timeout=3m ./...
+	$(GOBIN)/golangci-lint run --timeout=3m ./...
 
 verify-scripts:
 	bash -x hack/verify-deepcopy.sh
