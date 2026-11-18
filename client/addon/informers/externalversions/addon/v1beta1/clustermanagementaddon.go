@@ -19,11 +19,39 @@ import (
 )
 
 // ClusterManagementAddOnInformer provides access to a shared informer and lister for
-// ClusterManagementAddOns.
+// ClusterManagementAddOns. Prefer using the type-safe variant (see [TypedClusterManagementAddOnInformer]).
 type ClusterManagementAddOnInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() addonv1beta1.ClusterManagementAddOnLister
 }
+
+// TypedClusterManagementAddOnInformer provides access to a shared informer and lister for
+// ClusterManagementAddOns, including the type-safe TypedInformer variant.
+// It is a superset of ClusterManagementAddOnInformer.
+type TypedClusterManagementAddOnInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() ClusterManagementAddOnIndexInformer
+	Lister() addonv1beta1.ClusterManagementAddOnLister
+}
+
+// ClusterManagementAddOnIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type ClusterManagementAddOnIndexInformer cache.TypedSharedIndexInformer[*apiaddonv1beta1.ClusterManagementAddOn]
+
+// ClusterManagementAddOnHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for ClusterManagementAddOn.
+type ClusterManagementAddOnHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apiaddonv1beta1.ClusterManagementAddOn]
+
+// ClusterManagementAddOnDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for ClusterManagementAddOn.
+type ClusterManagementAddOnDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apiaddonv1beta1.ClusterManagementAddOn]
+
+// ClusterManagementAddOnFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for ClusterManagementAddOn.
+type ClusterManagementAddOnFilteringHandler = cache.TypedFilteringResourceEventHandler[*apiaddonv1beta1.ClusterManagementAddOn]
+
+// ClusterManagementAddOnIndexers is a specialization of [cache.TypedIndexers] for ClusterManagementAddOn.
+type ClusterManagementAddOnIndexers = cache.TypedIndexers[*apiaddonv1beta1.ClusterManagementAddOn]
+
+// DeletedClusterManagementAddOn is a specialization of [cache.DeletedObject] for ClusterManagementAddOn.
+type DeletedClusterManagementAddOn = cache.DeletedObject[*apiaddonv1beta1.ClusterManagementAddOn]
 
 type clusterManagementAddOnInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -33,25 +61,49 @@ type clusterManagementAddOnInformer struct {
 // NewClusterManagementAddOnInformer constructs a new informer for ClusterManagementAddOn type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedClusterManagementAddOnInformer]).
 func NewClusterManagementAddOnInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewClusterManagementAddOnInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedClusterManagementAddOnInformer constructs a new informer for ClusterManagementAddOn type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedClusterManagementAddOnInformer(client versioned.Interface, resyncPeriod time.Duration, indexers ClusterManagementAddOnIndexers) ClusterManagementAddOnIndexInformer {
+	return NewTypedClusterManagementAddOnInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredClusterManagementAddOnInformer constructs a new informer for ClusterManagementAddOn type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredClusterManagementAddOnInformer]).
 func NewFilteredClusterManagementAddOnInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewClusterManagementAddOnInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedClusterManagementAddOnInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredClusterManagementAddOnInformer constructs a new informer for ClusterManagementAddOn type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredClusterManagementAddOnInformer(client versioned.Interface, resyncPeriod time.Duration, indexers ClusterManagementAddOnIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) ClusterManagementAddOnIndexInformer {
+	return NewTypedClusterManagementAddOnInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewClusterManagementAddOnInformerWithOptions constructs a new informer for ClusterManagementAddOn type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedClusterManagementAddOnInformerWithOptions]).
 func NewClusterManagementAddOnInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedClusterManagementAddOnInformerWithOptions(client, options)
+}
+
+// NewTypedClusterManagementAddOnInformerWithOptions constructs a new informer for ClusterManagementAddOn type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedClusterManagementAddOnInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) ClusterManagementAddOnIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "addon.open-cluster-management.io", Version: "v1beta1", Resource: "clustermanagementaddons"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1beta1.ClusterManagementAddOn](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -84,17 +136,57 @@ func NewClusterManagementAddOnInformerWithOptions(client versioned.Interface, op
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *clusterManagementAddOnInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewClusterManagementAddOnInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedClusterManagementAddOnInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *clusterManagementAddOnInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiaddonv1beta1.ClusterManagementAddOn{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *clusterManagementAddOnInformer) TypedInformer() ClusterManagementAddOnIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1beta1.ClusterManagementAddOn](f.factory.InformerFor(&apiaddonv1beta1.ClusterManagementAddOn{}, f.defaultInformer))
 }
 
 func (f *clusterManagementAddOnInformer) Lister() addonv1beta1.ClusterManagementAddOnLister {
 	return addonv1beta1.NewClusterManagementAddOnLister(f.Informer().GetIndexer())
+}
+
+// ToTypedClusterManagementAddOnInformer converts an untyped informer into a TypedClusterManagementAddOnInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ClusterManagementAddOn. If that is not the case, calling type-safe methods of the returned
+// TypedClusterManagementAddOnInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedClusterManagementAddOnInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedClusterManagementAddOnInformer(informer ClusterManagementAddOnInformer) TypedClusterManagementAddOnInformer {
+	if informer, ok := informer.(TypedClusterManagementAddOnInformer); ok {
+		return informer
+	}
+	return &clusterManagementAddOnTypedInformerAdapter{informer}
+}
+
+type clusterManagementAddOnTypedInformerAdapter struct {
+	ClusterManagementAddOnInformer
+}
+
+func (a *clusterManagementAddOnTypedInformerAdapter) TypedInformer() ClusterManagementAddOnIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1beta1.ClusterManagementAddOn](a.Informer())
+}
+
+// ToClusterManagementAddOnIndexInformer converts an untyped informer into a ClusterManagementAddOnIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ClusterManagementAddOn. If that is not the case, calling type-safe methods of the returned
+// ClusterManagementAddOnIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a ClusterManagementAddOnIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToClusterManagementAddOnIndexInformer(informer cache.SharedIndexInformer) ClusterManagementAddOnIndexInformer {
+	if informer, ok := informer.(ClusterManagementAddOnIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1beta1.ClusterManagementAddOn](informer)
 }

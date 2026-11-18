@@ -19,11 +19,39 @@ import (
 )
 
 // KlusterletInformer provides access to a shared informer and lister for
-// Klusterlets.
+// Klusterlets. Prefer using the type-safe variant (see [TypedKlusterletInformer]).
 type KlusterletInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() operatorv1.KlusterletLister
 }
+
+// TypedKlusterletInformer provides access to a shared informer and lister for
+// Klusterlets, including the type-safe TypedInformer variant.
+// It is a superset of KlusterletInformer.
+type TypedKlusterletInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() KlusterletIndexInformer
+	Lister() operatorv1.KlusterletLister
+}
+
+// KlusterletIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type KlusterletIndexInformer cache.TypedSharedIndexInformer[*apioperatorv1.Klusterlet]
+
+// KlusterletHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for Klusterlet.
+type KlusterletHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apioperatorv1.Klusterlet]
+
+// KlusterletDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for Klusterlet.
+type KlusterletDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apioperatorv1.Klusterlet]
+
+// KlusterletFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for Klusterlet.
+type KlusterletFilteringHandler = cache.TypedFilteringResourceEventHandler[*apioperatorv1.Klusterlet]
+
+// KlusterletIndexers is a specialization of [cache.TypedIndexers] for Klusterlet.
+type KlusterletIndexers = cache.TypedIndexers[*apioperatorv1.Klusterlet]
+
+// DeletedKlusterlet is a specialization of [cache.DeletedObject] for Klusterlet.
+type DeletedKlusterlet = cache.DeletedObject[*apioperatorv1.Klusterlet]
 
 type klusterletInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -33,25 +61,49 @@ type klusterletInformer struct {
 // NewKlusterletInformer constructs a new informer for Klusterlet type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedKlusterletInformer]).
 func NewKlusterletInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewKlusterletInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedKlusterletInformer constructs a new informer for Klusterlet type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedKlusterletInformer(client versioned.Interface, resyncPeriod time.Duration, indexers KlusterletIndexers) KlusterletIndexInformer {
+	return NewTypedKlusterletInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredKlusterletInformer constructs a new informer for Klusterlet type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredKlusterletInformer]).
 func NewFilteredKlusterletInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewKlusterletInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedKlusterletInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredKlusterletInformer constructs a new informer for Klusterlet type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredKlusterletInformer(client versioned.Interface, resyncPeriod time.Duration, indexers KlusterletIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) KlusterletIndexInformer {
+	return NewTypedKlusterletInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewKlusterletInformerWithOptions constructs a new informer for Klusterlet type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedKlusterletInformerWithOptions]).
 func NewKlusterletInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedKlusterletInformerWithOptions(client, options)
+}
+
+// NewTypedKlusterletInformerWithOptions constructs a new informer for Klusterlet type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedKlusterletInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) KlusterletIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "operator.open-cluster-management.io", Version: "v1", Resource: "klusterlets"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apioperatorv1.Klusterlet](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -84,17 +136,57 @@ func NewKlusterletInformerWithOptions(client versioned.Interface, options intern
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *klusterletInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewKlusterletInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedKlusterletInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *klusterletInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apioperatorv1.Klusterlet{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *klusterletInformer) TypedInformer() KlusterletIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apioperatorv1.Klusterlet](f.factory.InformerFor(&apioperatorv1.Klusterlet{}, f.defaultInformer))
 }
 
 func (f *klusterletInformer) Lister() operatorv1.KlusterletLister {
 	return operatorv1.NewKlusterletLister(f.Informer().GetIndexer())
+}
+
+// ToTypedKlusterletInformer converts an untyped informer into a TypedKlusterletInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *Klusterlet. If that is not the case, calling type-safe methods of the returned
+// TypedKlusterletInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedKlusterletInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedKlusterletInformer(informer KlusterletInformer) TypedKlusterletInformer {
+	if informer, ok := informer.(TypedKlusterletInformer); ok {
+		return informer
+	}
+	return &klusterletTypedInformerAdapter{informer}
+}
+
+type klusterletTypedInformerAdapter struct {
+	KlusterletInformer
+}
+
+func (a *klusterletTypedInformerAdapter) TypedInformer() KlusterletIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apioperatorv1.Klusterlet](a.Informer())
+}
+
+// ToKlusterletIndexInformer converts an untyped informer into a KlusterletIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *Klusterlet. If that is not the case, calling type-safe methods of the returned
+// KlusterletIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a KlusterletIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToKlusterletIndexInformer(informer cache.SharedIndexInformer) KlusterletIndexInformer {
+	if informer, ok := informer.(KlusterletIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apioperatorv1.Klusterlet](informer)
 }

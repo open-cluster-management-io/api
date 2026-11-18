@@ -19,11 +19,39 @@ import (
 )
 
 // PlacementDecisionInformer provides access to a shared informer and lister for
-// PlacementDecisions.
+// PlacementDecisions. Prefer using the type-safe variant (see [TypedPlacementDecisionInformer]).
 type PlacementDecisionInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() clusterv1beta1.PlacementDecisionLister
 }
+
+// TypedPlacementDecisionInformer provides access to a shared informer and lister for
+// PlacementDecisions, including the type-safe TypedInformer variant.
+// It is a superset of PlacementDecisionInformer.
+type TypedPlacementDecisionInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() PlacementDecisionIndexInformer
+	Lister() clusterv1beta1.PlacementDecisionLister
+}
+
+// PlacementDecisionIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type PlacementDecisionIndexInformer cache.TypedSharedIndexInformer[*apiclusterv1beta1.PlacementDecision]
+
+// PlacementDecisionHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for PlacementDecision.
+type PlacementDecisionHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apiclusterv1beta1.PlacementDecision]
+
+// PlacementDecisionDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for PlacementDecision.
+type PlacementDecisionDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apiclusterv1beta1.PlacementDecision]
+
+// PlacementDecisionFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for PlacementDecision.
+type PlacementDecisionFilteringHandler = cache.TypedFilteringResourceEventHandler[*apiclusterv1beta1.PlacementDecision]
+
+// PlacementDecisionIndexers is a specialization of [cache.TypedIndexers] for PlacementDecision.
+type PlacementDecisionIndexers = cache.TypedIndexers[*apiclusterv1beta1.PlacementDecision]
+
+// DeletedPlacementDecision is a specialization of [cache.DeletedObject] for PlacementDecision.
+type DeletedPlacementDecision = cache.DeletedObject[*apiclusterv1beta1.PlacementDecision]
 
 type placementDecisionInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -34,25 +62,49 @@ type placementDecisionInformer struct {
 // NewPlacementDecisionInformer constructs a new informer for PlacementDecision type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedPlacementDecisionInformer]).
 func NewPlacementDecisionInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewPlacementDecisionInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedPlacementDecisionInformer constructs a new informer for PlacementDecision type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedPlacementDecisionInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers PlacementDecisionIndexers) PlacementDecisionIndexInformer {
+	return NewTypedPlacementDecisionInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredPlacementDecisionInformer constructs a new informer for PlacementDecision type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredPlacementDecisionInformer]).
 func NewFilteredPlacementDecisionInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewPlacementDecisionInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedPlacementDecisionInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredPlacementDecisionInformer constructs a new informer for PlacementDecision type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredPlacementDecisionInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers PlacementDecisionIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) PlacementDecisionIndexInformer {
+	return NewTypedPlacementDecisionInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewPlacementDecisionInformerWithOptions constructs a new informer for PlacementDecision type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedPlacementDecisionInformerWithOptions]).
 func NewPlacementDecisionInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedPlacementDecisionInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedPlacementDecisionInformerWithOptions constructs a new informer for PlacementDecision type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedPlacementDecisionInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) PlacementDecisionIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "cluster.open-cluster-management.io", Version: "v1beta1", Resource: "placementdecisions"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apiclusterv1beta1.PlacementDecision](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -85,17 +137,57 @@ func NewPlacementDecisionInformerWithOptions(client versioned.Interface, namespa
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *placementDecisionInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewPlacementDecisionInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedPlacementDecisionInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *placementDecisionInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiclusterv1beta1.PlacementDecision{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *placementDecisionInformer) TypedInformer() PlacementDecisionIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiclusterv1beta1.PlacementDecision](f.factory.InformerFor(&apiclusterv1beta1.PlacementDecision{}, f.defaultInformer))
 }
 
 func (f *placementDecisionInformer) Lister() clusterv1beta1.PlacementDecisionLister {
 	return clusterv1beta1.NewPlacementDecisionLister(f.Informer().GetIndexer())
+}
+
+// ToTypedPlacementDecisionInformer converts an untyped informer into a TypedPlacementDecisionInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *PlacementDecision. If that is not the case, calling type-safe methods of the returned
+// TypedPlacementDecisionInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedPlacementDecisionInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedPlacementDecisionInformer(informer PlacementDecisionInformer) TypedPlacementDecisionInformer {
+	if informer, ok := informer.(TypedPlacementDecisionInformer); ok {
+		return informer
+	}
+	return &placementDecisionTypedInformerAdapter{informer}
+}
+
+type placementDecisionTypedInformerAdapter struct {
+	PlacementDecisionInformer
+}
+
+func (a *placementDecisionTypedInformerAdapter) TypedInformer() PlacementDecisionIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiclusterv1beta1.PlacementDecision](a.Informer())
+}
+
+// ToPlacementDecisionIndexInformer converts an untyped informer into a PlacementDecisionIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *PlacementDecision. If that is not the case, calling type-safe methods of the returned
+// PlacementDecisionIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a PlacementDecisionIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToPlacementDecisionIndexInformer(informer cache.SharedIndexInformer) PlacementDecisionIndexInformer {
+	if informer, ok := informer.(PlacementDecisionIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apiclusterv1beta1.PlacementDecision](informer)
 }

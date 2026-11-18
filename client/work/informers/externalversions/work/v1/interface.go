@@ -10,9 +10,9 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// AppliedManifestWorks returns a AppliedManifestWorkInformer.
-	AppliedManifestWorks() AppliedManifestWorkInformer
+	AppliedManifestWorks() TypedAppliedManifestWorkInformer
 	// ManifestWorks returns a ManifestWorkInformer.
-	ManifestWorks() ManifestWorkInformer
+	ManifestWorks() TypedManifestWorkInformer
 }
 
 type version struct {
@@ -26,12 +26,12 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// AppliedManifestWorks returns a AppliedManifestWorkInformer.
-func (v *version) AppliedManifestWorks() AppliedManifestWorkInformer {
+// AppliedManifestWorks returns a TypedAppliedManifestWorkInformer.
+func (v *version) AppliedManifestWorks() TypedAppliedManifestWorkInformer {
 	return &appliedManifestWorkInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
-// ManifestWorks returns a ManifestWorkInformer.
-func (v *version) ManifestWorks() ManifestWorkInformer {
+// ManifestWorks returns a TypedManifestWorkInformer.
+func (v *version) ManifestWorks() TypedManifestWorkInformer {
 	return &manifestWorkInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

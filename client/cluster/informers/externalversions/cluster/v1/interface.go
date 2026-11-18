@@ -10,7 +10,7 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// ManagedClusters returns a ManagedClusterInformer.
-	ManagedClusters() ManagedClusterInformer
+	ManagedClusters() TypedManagedClusterInformer
 }
 
 type version struct {
@@ -24,7 +24,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// ManagedClusters returns a ManagedClusterInformer.
-func (v *version) ManagedClusters() ManagedClusterInformer {
+// ManagedClusters returns a TypedManagedClusterInformer.
+func (v *version) ManagedClusters() TypedManagedClusterInformer {
 	return &managedClusterInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }

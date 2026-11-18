@@ -19,11 +19,39 @@ import (
 )
 
 // AppliedManifestWorkInformer provides access to a shared informer and lister for
-// AppliedManifestWorks.
+// AppliedManifestWorks. Prefer using the type-safe variant (see [TypedAppliedManifestWorkInformer]).
 type AppliedManifestWorkInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() workv1.AppliedManifestWorkLister
 }
+
+// TypedAppliedManifestWorkInformer provides access to a shared informer and lister for
+// AppliedManifestWorks, including the type-safe TypedInformer variant.
+// It is a superset of AppliedManifestWorkInformer.
+type TypedAppliedManifestWorkInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() AppliedManifestWorkIndexInformer
+	Lister() workv1.AppliedManifestWorkLister
+}
+
+// AppliedManifestWorkIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type AppliedManifestWorkIndexInformer cache.TypedSharedIndexInformer[*apiworkv1.AppliedManifestWork]
+
+// AppliedManifestWorkHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for AppliedManifestWork.
+type AppliedManifestWorkHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apiworkv1.AppliedManifestWork]
+
+// AppliedManifestWorkDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for AppliedManifestWork.
+type AppliedManifestWorkDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apiworkv1.AppliedManifestWork]
+
+// AppliedManifestWorkFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for AppliedManifestWork.
+type AppliedManifestWorkFilteringHandler = cache.TypedFilteringResourceEventHandler[*apiworkv1.AppliedManifestWork]
+
+// AppliedManifestWorkIndexers is a specialization of [cache.TypedIndexers] for AppliedManifestWork.
+type AppliedManifestWorkIndexers = cache.TypedIndexers[*apiworkv1.AppliedManifestWork]
+
+// DeletedAppliedManifestWork is a specialization of [cache.DeletedObject] for AppliedManifestWork.
+type DeletedAppliedManifestWork = cache.DeletedObject[*apiworkv1.AppliedManifestWork]
 
 type appliedManifestWorkInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -33,25 +61,49 @@ type appliedManifestWorkInformer struct {
 // NewAppliedManifestWorkInformer constructs a new informer for AppliedManifestWork type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedAppliedManifestWorkInformer]).
 func NewAppliedManifestWorkInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewAppliedManifestWorkInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedAppliedManifestWorkInformer constructs a new informer for AppliedManifestWork type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedAppliedManifestWorkInformer(client versioned.Interface, resyncPeriod time.Duration, indexers AppliedManifestWorkIndexers) AppliedManifestWorkIndexInformer {
+	return NewTypedAppliedManifestWorkInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredAppliedManifestWorkInformer constructs a new informer for AppliedManifestWork type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredAppliedManifestWorkInformer]).
 func NewFilteredAppliedManifestWorkInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewAppliedManifestWorkInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedAppliedManifestWorkInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredAppliedManifestWorkInformer constructs a new informer for AppliedManifestWork type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredAppliedManifestWorkInformer(client versioned.Interface, resyncPeriod time.Duration, indexers AppliedManifestWorkIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) AppliedManifestWorkIndexInformer {
+	return NewTypedAppliedManifestWorkInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewAppliedManifestWorkInformerWithOptions constructs a new informer for AppliedManifestWork type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedAppliedManifestWorkInformerWithOptions]).
 func NewAppliedManifestWorkInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedAppliedManifestWorkInformerWithOptions(client, options)
+}
+
+// NewTypedAppliedManifestWorkInformerWithOptions constructs a new informer for AppliedManifestWork type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedAppliedManifestWorkInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) AppliedManifestWorkIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "work.open-cluster-management.io", Version: "v1", Resource: "appliedmanifestworks"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apiworkv1.AppliedManifestWork](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -84,17 +136,57 @@ func NewAppliedManifestWorkInformerWithOptions(client versioned.Interface, optio
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *appliedManifestWorkInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewAppliedManifestWorkInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedAppliedManifestWorkInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *appliedManifestWorkInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiworkv1.AppliedManifestWork{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *appliedManifestWorkInformer) TypedInformer() AppliedManifestWorkIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiworkv1.AppliedManifestWork](f.factory.InformerFor(&apiworkv1.AppliedManifestWork{}, f.defaultInformer))
 }
 
 func (f *appliedManifestWorkInformer) Lister() workv1.AppliedManifestWorkLister {
 	return workv1.NewAppliedManifestWorkLister(f.Informer().GetIndexer())
+}
+
+// ToTypedAppliedManifestWorkInformer converts an untyped informer into a TypedAppliedManifestWorkInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *AppliedManifestWork. If that is not the case, calling type-safe methods of the returned
+// TypedAppliedManifestWorkInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedAppliedManifestWorkInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedAppliedManifestWorkInformer(informer AppliedManifestWorkInformer) TypedAppliedManifestWorkInformer {
+	if informer, ok := informer.(TypedAppliedManifestWorkInformer); ok {
+		return informer
+	}
+	return &appliedManifestWorkTypedInformerAdapter{informer}
+}
+
+type appliedManifestWorkTypedInformerAdapter struct {
+	AppliedManifestWorkInformer
+}
+
+func (a *appliedManifestWorkTypedInformerAdapter) TypedInformer() AppliedManifestWorkIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiworkv1.AppliedManifestWork](a.Informer())
+}
+
+// ToAppliedManifestWorkIndexInformer converts an untyped informer into a AppliedManifestWorkIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *AppliedManifestWork. If that is not the case, calling type-safe methods of the returned
+// AppliedManifestWorkIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a AppliedManifestWorkIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToAppliedManifestWorkIndexInformer(informer cache.SharedIndexInformer) AppliedManifestWorkIndexInformer {
+	if informer, ok := informer.(AppliedManifestWorkIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apiworkv1.AppliedManifestWork](informer)
 }

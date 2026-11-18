@@ -19,11 +19,39 @@ import (
 )
 
 // AddOnTemplateInformer provides access to a shared informer and lister for
-// AddOnTemplates.
+// AddOnTemplates. Prefer using the type-safe variant (see [TypedAddOnTemplateInformer]).
 type AddOnTemplateInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() addonv1alpha1.AddOnTemplateLister
 }
+
+// TypedAddOnTemplateInformer provides access to a shared informer and lister for
+// AddOnTemplates, including the type-safe TypedInformer variant.
+// It is a superset of AddOnTemplateInformer.
+type TypedAddOnTemplateInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() AddOnTemplateIndexInformer
+	Lister() addonv1alpha1.AddOnTemplateLister
+}
+
+// AddOnTemplateIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type AddOnTemplateIndexInformer cache.TypedSharedIndexInformer[*apiaddonv1alpha1.AddOnTemplate]
+
+// AddOnTemplateHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for AddOnTemplate.
+type AddOnTemplateHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apiaddonv1alpha1.AddOnTemplate]
+
+// AddOnTemplateDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for AddOnTemplate.
+type AddOnTemplateDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apiaddonv1alpha1.AddOnTemplate]
+
+// AddOnTemplateFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for AddOnTemplate.
+type AddOnTemplateFilteringHandler = cache.TypedFilteringResourceEventHandler[*apiaddonv1alpha1.AddOnTemplate]
+
+// AddOnTemplateIndexers is a specialization of [cache.TypedIndexers] for AddOnTemplate.
+type AddOnTemplateIndexers = cache.TypedIndexers[*apiaddonv1alpha1.AddOnTemplate]
+
+// DeletedAddOnTemplate is a specialization of [cache.DeletedObject] for AddOnTemplate.
+type DeletedAddOnTemplate = cache.DeletedObject[*apiaddonv1alpha1.AddOnTemplate]
 
 type addOnTemplateInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -33,25 +61,49 @@ type addOnTemplateInformer struct {
 // NewAddOnTemplateInformer constructs a new informer for AddOnTemplate type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedAddOnTemplateInformer]).
 func NewAddOnTemplateInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewAddOnTemplateInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedAddOnTemplateInformer constructs a new informer for AddOnTemplate type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedAddOnTemplateInformer(client versioned.Interface, resyncPeriod time.Duration, indexers AddOnTemplateIndexers) AddOnTemplateIndexInformer {
+	return NewTypedAddOnTemplateInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredAddOnTemplateInformer constructs a new informer for AddOnTemplate type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredAddOnTemplateInformer]).
 func NewFilteredAddOnTemplateInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewAddOnTemplateInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedAddOnTemplateInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredAddOnTemplateInformer constructs a new informer for AddOnTemplate type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredAddOnTemplateInformer(client versioned.Interface, resyncPeriod time.Duration, indexers AddOnTemplateIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) AddOnTemplateIndexInformer {
+	return NewTypedAddOnTemplateInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewAddOnTemplateInformerWithOptions constructs a new informer for AddOnTemplate type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedAddOnTemplateInformerWithOptions]).
 func NewAddOnTemplateInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedAddOnTemplateInformerWithOptions(client, options)
+}
+
+// NewTypedAddOnTemplateInformerWithOptions constructs a new informer for AddOnTemplate type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedAddOnTemplateInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) AddOnTemplateIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "addon.open-cluster-management.io", Version: "v1alpha1", Resource: "addontemplates"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1alpha1.AddOnTemplate](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -84,17 +136,57 @@ func NewAddOnTemplateInformerWithOptions(client versioned.Interface, options int
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *addOnTemplateInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewAddOnTemplateInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedAddOnTemplateInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *addOnTemplateInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiaddonv1alpha1.AddOnTemplate{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *addOnTemplateInformer) TypedInformer() AddOnTemplateIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1alpha1.AddOnTemplate](f.factory.InformerFor(&apiaddonv1alpha1.AddOnTemplate{}, f.defaultInformer))
 }
 
 func (f *addOnTemplateInformer) Lister() addonv1alpha1.AddOnTemplateLister {
 	return addonv1alpha1.NewAddOnTemplateLister(f.Informer().GetIndexer())
+}
+
+// ToTypedAddOnTemplateInformer converts an untyped informer into a TypedAddOnTemplateInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *AddOnTemplate. If that is not the case, calling type-safe methods of the returned
+// TypedAddOnTemplateInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedAddOnTemplateInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedAddOnTemplateInformer(informer AddOnTemplateInformer) TypedAddOnTemplateInformer {
+	if informer, ok := informer.(TypedAddOnTemplateInformer); ok {
+		return informer
+	}
+	return &addOnTemplateTypedInformerAdapter{informer}
+}
+
+type addOnTemplateTypedInformerAdapter struct {
+	AddOnTemplateInformer
+}
+
+func (a *addOnTemplateTypedInformerAdapter) TypedInformer() AddOnTemplateIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1alpha1.AddOnTemplate](a.Informer())
+}
+
+// ToAddOnTemplateIndexInformer converts an untyped informer into a AddOnTemplateIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *AddOnTemplate. If that is not the case, calling type-safe methods of the returned
+// AddOnTemplateIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a AddOnTemplateIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToAddOnTemplateIndexInformer(informer cache.SharedIndexInformer) AddOnTemplateIndexInformer {
+	if informer, ok := informer.(AddOnTemplateIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1alpha1.AddOnTemplate](informer)
 }

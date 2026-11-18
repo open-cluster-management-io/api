@@ -10,13 +10,13 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// AddOnDeploymentConfigs returns a AddOnDeploymentConfigInformer.
-	AddOnDeploymentConfigs() AddOnDeploymentConfigInformer
+	AddOnDeploymentConfigs() TypedAddOnDeploymentConfigInformer
 	// AddOnTemplates returns a AddOnTemplateInformer.
-	AddOnTemplates() AddOnTemplateInformer
+	AddOnTemplates() TypedAddOnTemplateInformer
 	// ClusterManagementAddOns returns a ClusterManagementAddOnInformer.
-	ClusterManagementAddOns() ClusterManagementAddOnInformer
+	ClusterManagementAddOns() TypedClusterManagementAddOnInformer
 	// ManagedClusterAddOns returns a ManagedClusterAddOnInformer.
-	ManagedClusterAddOns() ManagedClusterAddOnInformer
+	ManagedClusterAddOns() TypedManagedClusterAddOnInformer
 }
 
 type version struct {
@@ -30,22 +30,22 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// AddOnDeploymentConfigs returns a AddOnDeploymentConfigInformer.
-func (v *version) AddOnDeploymentConfigs() AddOnDeploymentConfigInformer {
+// AddOnDeploymentConfigs returns a TypedAddOnDeploymentConfigInformer.
+func (v *version) AddOnDeploymentConfigs() TypedAddOnDeploymentConfigInformer {
 	return &addOnDeploymentConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// AddOnTemplates returns a AddOnTemplateInformer.
-func (v *version) AddOnTemplates() AddOnTemplateInformer {
+// AddOnTemplates returns a TypedAddOnTemplateInformer.
+func (v *version) AddOnTemplates() TypedAddOnTemplateInformer {
 	return &addOnTemplateInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
-// ClusterManagementAddOns returns a ClusterManagementAddOnInformer.
-func (v *version) ClusterManagementAddOns() ClusterManagementAddOnInformer {
+// ClusterManagementAddOns returns a TypedClusterManagementAddOnInformer.
+func (v *version) ClusterManagementAddOns() TypedClusterManagementAddOnInformer {
 	return &clusterManagementAddOnInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
-// ManagedClusterAddOns returns a ManagedClusterAddOnInformer.
-func (v *version) ManagedClusterAddOns() ManagedClusterAddOnInformer {
+// ManagedClusterAddOns returns a TypedManagedClusterAddOnInformer.
+func (v *version) ManagedClusterAddOns() TypedManagedClusterAddOnInformer {
 	return &managedClusterAddOnInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

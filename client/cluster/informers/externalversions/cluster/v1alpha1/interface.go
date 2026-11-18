@@ -10,9 +10,9 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// AddOnPlacementScores returns a AddOnPlacementScoreInformer.
-	AddOnPlacementScores() AddOnPlacementScoreInformer
+	AddOnPlacementScores() TypedAddOnPlacementScoreInformer
 	// ClusterClaims returns a ClusterClaimInformer.
-	ClusterClaims() ClusterClaimInformer
+	ClusterClaims() TypedClusterClaimInformer
 }
 
 type version struct {
@@ -26,12 +26,12 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// AddOnPlacementScores returns a AddOnPlacementScoreInformer.
-func (v *version) AddOnPlacementScores() AddOnPlacementScoreInformer {
+// AddOnPlacementScores returns a TypedAddOnPlacementScoreInformer.
+func (v *version) AddOnPlacementScores() TypedAddOnPlacementScoreInformer {
 	return &addOnPlacementScoreInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// ClusterClaims returns a ClusterClaimInformer.
-func (v *version) ClusterClaims() ClusterClaimInformer {
+// ClusterClaims returns a TypedClusterClaimInformer.
+func (v *version) ClusterClaims() TypedClusterClaimInformer {
 	return &clusterClaimInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
