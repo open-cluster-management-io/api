@@ -7,7 +7,7 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/onsi/ginkgo/v2 v2.34.0
 	github.com/onsi/gomega v1.44.0
-	github.com/openshift/build-machinery-go v0.0.0-20250602125535-1b6d00b8c37c
+	github.com/openshift/build-machinery-go v0.0.0-20260902143904-520f675c892b
 	github.com/spf13/pflag v1.0.9
 	github.com/stretchr/testify v1.12.1
 	k8s.io/api v0.35.2
