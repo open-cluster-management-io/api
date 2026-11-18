@@ -42,8 +42,9 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 		return operatorv1.RegistrationDriver{
 			AuthType: operatorv1.SPIFFEAuthType,
 			SPIFFE: &operatorv1.KlusterletSPIFFEConfig{
-				HubEndpoint: testHubEndpoint,
-				HubSPIFFEID: testHubSPIFFEID,
+				HubEndpoint:          testHubEndpoint,
+				HubSPIFFEID:          testHubSPIFFEID,
+				AdmissionEnforcement: operatorv1.SPIFFEAdmissionValidatingAdmissionPolicy,
 			},
 		}
 	}
@@ -68,6 +69,42 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 		Expect(s.HubSPIFFEID).Should(Equal(testHubSPIFFEID))
 		Expect(s.WorkloadAPISocket).Should(Equal("unix:///spiffe-workload-api/spire-agent.sock"))
 		Expect(k.Spec.RegistrationConfiguration.AddOnKubeClientRegistrationDriver.AuthType).Should(Equal("spiffe"))
+	})
+
+	It("requires the admission enforcement", func() {
+		d := spiffeDriver()
+		d.SPIFFE.AdmissionEnforcement = ""
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                d,
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("admissionEnforcement"))
+	})
+
+	It("accepts both admission enforcements and refuses others", func() {
+		for _, e := range []operatorv1.SPIFFEAdmissionEnforcement{
+			operatorv1.SPIFFEAdmissionValidatingAdmissionPolicy, operatorv1.SPIFFEAdmissionValidatingWebhook} {
+			klusterletName = fmt.Sprintf("klusterlet-%s", rand.String(5))
+			d := spiffeDriver()
+			d.SPIFFE.AdmissionEnforcement = e
+			k, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+				RegistrationDriver:                d,
+				AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+			}))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(k.Spec.RegistrationConfiguration.RegistrationDriver.SPIFFE.AdmissionEnforcement).Should(Equal(e))
+		}
+
+		klusterletName = fmt.Sprintf("klusterlet-%s", rand.String(5))
+		d := spiffeDriver()
+		d.SPIFFE.AdmissionEnforcement = "None"
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                d,
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("admissionEnforcement"))
 	})
 
 	It("accepts agents in a trust domain other than the hub's", func() {
@@ -325,6 +362,30 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 		got, err := operatorClient.OperatorV1().Klusterlets().Get(context.TODO(), klusterletName, metav1.GetOptions{})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(got.Status.SPIFFE).Should(Equal(k.Status.SPIFFE))
+	})
+
+	It("stores and returns the webhook enforcement status, and refuses an unknown enforcement", func() {
+		k, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                spiffeDriver(),
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).ToNot(HaveOccurred())
+		k.Status.SPIFFE = &operatorv1.KlusterletSPIFFEStatus{
+			AdmissionEnforcement: operatorv1.SPIFFEAdmissionValidatingWebhook,
+			AdmissionWebhooks: []operatorv1.SPIFFEAdmissionWebhookStatus{
+				{Name: "ocm-spiffe-agents-klusterlet", UID: "6f1c2d0e-0b5e-4c4f-9a57-3d1f0c8e2a11", Generation: 2},
+				{Name: "ocm-spiffe-addon-namespace-label", UID: "9a2e7b44-5c1d-4e0a-8f3b-2c6d9e1f7a05", Generation: 1},
+			},
+			WebhookDNSName:  "klusterlet-spiffe-webhook.open-cluster-management.svc",
+			WebhookSPIFFEID: "spiffe://ocm-hub.example.org/ocm/cluster/cluster1/agent/operator",
+		}
+		updated, err := operatorClient.OperatorV1().Klusterlets().UpdateStatus(context.TODO(), k, metav1.UpdateOptions{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(updated.Status.SPIFFE).Should(Equal(k.Status.SPIFFE))
+
+		updated.Status.SPIFFE.AdmissionEnforcement = "None"
+		_, err = operatorClient.OperatorV1().Klusterlets().UpdateStatus(context.TODO(), updated, metav1.UpdateOptions{})
+		Expect(err).To(HaveOccurred())
 	})
 
 	It("refuses two status entries for the same policy", func() {
