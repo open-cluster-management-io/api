@@ -34,6 +34,7 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 					DisplayName: "test",
 					Description: "for test",
 				},
+				// nolint:staticcheck
 				SupportedConfigs: []addonv1alpha1.ConfigMeta{
 					{
 						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
@@ -85,6 +86,7 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 				InstallStrategy: addonv1alpha1.InstallStrategy{
 					Type: addonv1alpha1.AddonInstallStrategyManual,
 				},
+				// nolint:staticcheck
 				SupportedConfigs: []addonv1alpha1.ConfigMeta{
 					{
 						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{Group: "test.addon"},
@@ -110,6 +112,7 @@ var _ = ginkgo.Describe("ClusterManagementAddOn API test", func() {
 				InstallStrategy: addonv1alpha1.InstallStrategy{
 					Type: addonv1alpha1.AddonInstallStrategyManual,
 				},
+				// nolint:staticcheck
 				SupportedConfigs: []addonv1alpha1.ConfigMeta{
 					{
 						ConfigGroupResource: addonv1alpha1.ConfigGroupResource{
