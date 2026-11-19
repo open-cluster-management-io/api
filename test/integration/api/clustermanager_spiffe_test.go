@@ -197,25 +197,42 @@ var _ = Describe("ClusterManager API test with the spiffe registration driver", 
 	domainOfLength := func(n int) string { return strings.Repeat("a", n-4) + ".org" }
 
 	// A duration Go can't hold, such as 2562048h, would be stored but no client could read it back.
-	// Go clients can't send one, so it is posted as raw JSON.
+	// Go clients can't send one, so it is posted as raw JSON. Go writes a duration back as
+	// <hours>h<minutes>m<seconds>s, so every accepted value must still pass once rewritten that way:
+	// 99999h60m would come back as 100000h0m0s.
 	Context("maxSVIDLifetime and maxClockSkew bounds", func() {
-		post := func(field, value string) error {
+		post := func(name, field, value string) error {
 			body := fmt.Sprintf(`{"apiVersion":"operator.open-cluster-management.io/v1","kind":"ClusterManager",`+
 				`"metadata":{"name":%q},"spec":{"registrationConfiguration":{"registrationDrivers":[`+
 				`{"authType":"spiffe","spiffe":{"trustDomain":"ocm-hub.example.org",%q:%q}}]}}}`,
-				fmt.Sprintf("cm-%s", rand.String(5)), field, value)
+				name, field, value)
 			return operatorClient.OperatorV1().RESTClient().Post().Resource("clustermanagers").
 				Body([]byte(body)).Do(context.TODO()).Error()
 		}
 		for _, field := range []string{"maxSVIDLifetime", "maxClockSkew"} {
-			for _, good := range []string{"24h", "1h30m", "99999h"} {
-				It(field+" accepts "+good, func() {
-					Expect(post(field, good)).To(Succeed())
+			for _, good := range []string{"24h", "1h30m", "99999h", "99998h60m", "59m3600s"} {
+				It(field+" accepts "+good+", and the object can be read and updated through the typed client", func() {
+					Expect(post(clusterManagerName, field, good)).To(Succeed())
+					cms := operatorClient.OperatorV1().ClusterManagers()
+					cm, err := cms.Get(context.TODO(), clusterManagerName, metav1.GetOptions{})
+					Expect(err).NotTo(HaveOccurred())
+					want, err := time.ParseDuration(good)
+					Expect(err).NotTo(HaveOccurred())
+					s := cm.Spec.RegistrationConfiguration.RegistrationDrivers[0].SPIFFE
+					got := s.MaxSVIDLifetime
+					if field == "maxClockSkew" {
+						got = s.MaxClockSkew
+					}
+					Expect(got.Duration).To(Equal(want))
+					cm.Labels = map[string]string{"updated": "true"}
+					_, err = cms.Update(context.TODO(), cm, metav1.UpdateOptions{})
+					Expect(err).NotTo(HaveOccurred())
 				})
 			}
-			for _, bad := range []string{"2562048h", "999999h", "99999h99999h99999h99999h99999h"} {
+			for _, bad := range []string{"2562048h", "999999h", "99999h99999h99999h99999h99999h", "99999h60m",
+				"99999h99999m", "99999h1s"} {
 				It(field+" refuses "+bad, func() {
-					err := post(field, bad)
+					err := post(clusterManagerName, field, bad)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring(field))
 				})
