@@ -115,6 +115,10 @@ const (
 	// When enabled, a debug-server container will be added to the placement pod, providing
 	// /debug/placements/* endpoints for placement scheduling simulation and debugging.
 	PlacementDebugServer featuregate.Feature = "PlacementDebugServer"
+
+	// PlacementDecisionScoreStatus enables recording computed cluster scores in placement decisions.
+	// When enabled, the placement may optionally be configured to sort decisions by Score, instead of the default ClusterName.
+	PlacementDecisionScoreStatus featuregate.Feature = "PlacementDecisionScoreStatus"
 )
 
 // DefaultSpokeRegistrationFeatureGates consists of all known ocm-registration
@@ -147,8 +151,9 @@ var DefaultHubAddonManagerFeatureGates = map[featuregate.Feature]featuregate.Fea
 // DefaultHubPlacementFeatureGates consists of all known placement feature keys.
 // To add a new feature, define a key for it above and add it here.
 var DefaultHubPlacementFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
-	SIGPlacementDecision: {Default: false, PreRelease: featuregate.Alpha},
-	PlacementDebugServer: {Default: false, PreRelease: featuregate.Alpha},
+	SIGPlacementDecision:         {Default: false, PreRelease: featuregate.Alpha},
+	PlacementDebugServer:         {Default: false, PreRelease: featuregate.Alpha},
+	PlacementDecisionScoreStatus: {Default: false, PreRelease: featuregate.Alpha},
 }
 
 // DefaultHubWorkFeatureGates consists of all known acm work wehbook feature keys.
