@@ -16,6 +16,7 @@ import (
 // ManagedClusterSet if both have a RBAC rules to CREATE on the virtual subresource of managedclustersets/bind.
 // Workloads that you create in the same namespace can only be distributed to ManagedClusters
 // in ManagedClusterSets that are bound in this namespace by higher-level controllers.
+// +kubebuilder:validation:XValidation:rule="self.metadata.name == self.spec.clusterSet",message="The ManagedClusterSetBinding must have the same name as the target ManagedClusterSet"
 type ManagedClusterSetBinding struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
