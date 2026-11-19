@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "# Open Cluster Management API $RELEASE_VERSION" > /home/runner/work/changelog.txt
       - name: publish release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
