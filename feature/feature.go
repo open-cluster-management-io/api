@@ -119,6 +119,11 @@ const (
 	// PlacementDecisionScoreStatus enables recording computed cluster scores in placement decisions.
 	// When enabled, the placement may optionally be configured to sort decisions by Score, instead of the default ClusterName.
 	PlacementDecisionScoreStatus featuregate.Feature = "PlacementDecisionScoreStatus"
+
+	// SPIFFERegistration enables the spiffe registration driver. Agents and add-on agents
+	// authenticate to the hub gRPC server only with SPIRE-issued X.509-SVIDs, for registration,
+	// renewal and revocation. OCM issues no certificate or token in this mode.
+	SPIFFERegistration featuregate.Feature = "SPIFFERegistration"
 )
 
 // DefaultSpokeRegistrationFeatureGates consists of all known ocm-registration
@@ -130,6 +135,7 @@ var DefaultSpokeRegistrationFeatureGates = map[featuregate.Feature]featuregate.F
 	AddonManagement:            {Default: true, PreRelease: featuregate.Beta},
 	V1beta1CSRAPICompatibility: {Default: false, PreRelease: featuregate.Alpha},
 	MultipleHubs:               {Default: false, PreRelease: featuregate.Alpha},
+	SPIFFERegistration:         {Default: false, PreRelease: featuregate.Alpha},
 }
 
 // DefaultHubRegistrationFeatureGates consists of all known ocm-registration
@@ -142,10 +148,12 @@ var DefaultHubRegistrationFeatureGates = map[featuregate.Feature]featuregate.Fea
 	ResourceCleanup:            {Default: true, PreRelease: featuregate.Beta},
 	ClusterProfile:             {Default: false, PreRelease: featuregate.Alpha},
 	ClusterImporter:            {Default: false, PreRelease: featuregate.Alpha},
+	SPIFFERegistration:         {Default: false, PreRelease: featuregate.Alpha},
 }
 
 var DefaultHubAddonManagerFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
-	AddonManagement: {Default: true, PreRelease: featuregate.Beta},
+	AddonManagement:    {Default: true, PreRelease: featuregate.Beta},
+	SPIFFERegistration: {Default: false, PreRelease: featuregate.Alpha},
 }
 
 // DefaultHubPlacementFeatureGates consists of all known placement feature keys.
@@ -172,4 +180,5 @@ var DefaultSpokeWorkFeatureGates = map[featuregate.Feature]featuregate.FeatureSp
 	RawFeedbackJsonString:    {Default: false, PreRelease: featuregate.Alpha},
 	ManifestWorkApplyLogs:    {Default: false, PreRelease: featuregate.Alpha},
 	ManifestWorkApplyMetrics: {Default: false, PreRelease: featuregate.Alpha},
+	SPIFFERegistration:       {Default: false, PreRelease: featuregate.Alpha},
 }
