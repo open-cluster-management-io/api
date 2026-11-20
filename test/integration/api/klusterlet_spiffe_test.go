@@ -212,6 +212,31 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 		Expect(err.Error()).To(ContainSubstring("addOnKubeClientRegistrationDriver.authType must be spiffe"))
 	})
 
+	It("refuses the spiffe add-on driver with the csr registration driver", func() {
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                operatorv1.RegistrationDriver{AuthType: "csr"},
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("registrationDriver.authType must be spiffe when addOnKubeClientRegistrationDriver.authType is spiffe"))
+	})
+
+	It("refuses the spiffe add-on driver without a registration driver", func() {
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
+		}))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("registrationDriver.authType must be spiffe"))
+	})
+
+	It("accepts the csr registration driver with the token add-on driver", func() {
+		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
+			RegistrationDriver:                operatorv1.RegistrationDriver{AuthType: "csr"},
+			AddOnKubeClientRegistrationDriver: &operatorv1.AddOnRegistrationDriver{AuthType: "token"},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+	})
+
 	Context("spiffe status", func() {
 		// updateStatus sets status.spiffe on the test's Klusterlet, creating it on first use.
 		updateStatus := func(s *operatorv1.KlusterletSPIFFEStatus) error {
@@ -344,14 +369,6 @@ var _ = Describe("Klusterlet API test with the spiffe registration driver", func
 			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
 		}))
 		Expect(err).To(HaveOccurred())
-	})
-
-	It("accepts the spiffe add-on driver with another registration driver", func() {
-		_, err := create(newKlusterlet(&operatorv1.RegistrationConfiguration{
-			RegistrationDriver:                operatorv1.RegistrationDriver{AuthType: operatorv1.CSRAuthType},
-			AddOnKubeClientRegistrationDriver: spiffeAddOnDriver(),
-		}))
-		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("still accepts a Klusterlet without a registration configuration", func() {
