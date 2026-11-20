@@ -558,7 +558,6 @@ spec:
                                           being referenced
                                         type: string
                                     required:
-                                    - apiGroup
                                     - kind
                                     - name
                                     type: object
