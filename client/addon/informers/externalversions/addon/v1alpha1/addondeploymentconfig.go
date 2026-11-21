@@ -9,6 +9,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
 	apiaddonv1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
@@ -18,11 +19,39 @@ import (
 )
 
 // AddOnDeploymentConfigInformer provides access to a shared informer and lister for
-// AddOnDeploymentConfigs.
+// AddOnDeploymentConfigs. Prefer using the type-safe variant (see [TypedAddOnDeploymentConfigInformer]).
 type AddOnDeploymentConfigInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() addonv1alpha1.AddOnDeploymentConfigLister
 }
+
+// TypedAddOnDeploymentConfigInformer provides access to a shared informer and lister for
+// AddOnDeploymentConfigs, including the type-safe TypedInformer variant.
+// It is a superset of AddOnDeploymentConfigInformer.
+type TypedAddOnDeploymentConfigInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() AddOnDeploymentConfigIndexInformer
+	Lister() addonv1alpha1.AddOnDeploymentConfigLister
+}
+
+// AddOnDeploymentConfigIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type AddOnDeploymentConfigIndexInformer cache.TypedSharedIndexInformer[*apiaddonv1alpha1.AddOnDeploymentConfig]
+
+// AddOnDeploymentConfigHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for AddOnDeploymentConfig.
+type AddOnDeploymentConfigHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apiaddonv1alpha1.AddOnDeploymentConfig]
+
+// AddOnDeploymentConfigDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for AddOnDeploymentConfig.
+type AddOnDeploymentConfigDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apiaddonv1alpha1.AddOnDeploymentConfig]
+
+// AddOnDeploymentConfigFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for AddOnDeploymentConfig.
+type AddOnDeploymentConfigFilteringHandler = cache.TypedFilteringResourceEventHandler[*apiaddonv1alpha1.AddOnDeploymentConfig]
+
+// AddOnDeploymentConfigIndexers is a specialization of [cache.TypedIndexers] for AddOnDeploymentConfig.
+type AddOnDeploymentConfigIndexers = cache.TypedIndexers[*apiaddonv1alpha1.AddOnDeploymentConfig]
+
+// DeletedAddOnDeploymentConfig is a specialization of [cache.DeletedObject] for AddOnDeploymentConfig.
+type DeletedAddOnDeploymentConfig = cache.DeletedObject[*apiaddonv1alpha1.AddOnDeploymentConfig]
 
 type addOnDeploymentConfigInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -33,55 +62,132 @@ type addOnDeploymentConfigInformer struct {
 // NewAddOnDeploymentConfigInformer constructs a new informer for AddOnDeploymentConfig type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedAddOnDeploymentConfigInformer]).
 func NewAddOnDeploymentConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredAddOnDeploymentConfigInformer(client, namespace, resyncPeriod, indexers, nil)
+	return NewAddOnDeploymentConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedAddOnDeploymentConfigInformer constructs a new informer for AddOnDeploymentConfig type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedAddOnDeploymentConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers AddOnDeploymentConfigIndexers) AddOnDeploymentConfigIndexInformer {
+	return NewTypedAddOnDeploymentConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredAddOnDeploymentConfigInformer constructs a new informer for AddOnDeploymentConfig type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredAddOnDeploymentConfigInformer]).
 func NewFilteredAddOnDeploymentConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return cache.NewSharedIndexInformer(
+	return NewTypedAddOnDeploymentConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredAddOnDeploymentConfigInformer constructs a new informer for AddOnDeploymentConfig type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredAddOnDeploymentConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers AddOnDeploymentConfigIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) AddOnDeploymentConfigIndexInformer {
+	return NewTypedAddOnDeploymentConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
+}
+
+// NewAddOnDeploymentConfigInformerWithOptions constructs a new informer for AddOnDeploymentConfig type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedAddOnDeploymentConfigInformerWithOptions]).
+func NewAddOnDeploymentConfigInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedAddOnDeploymentConfigInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedAddOnDeploymentConfigInformerWithOptions constructs a new informer for AddOnDeploymentConfig type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedAddOnDeploymentConfigInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) AddOnDeploymentConfigIndexInformer {
+	gvr := schema.GroupVersionResource{Group: "addon.open-cluster-management.io", Version: "v1alpha1", Resource: "addondeploymentconfigs"}
+	identifier := options.InformerName.WithResource(gvr)
+	tweakListOptions := options.TweakListOptions
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1alpha1.AddOnDeploymentConfig](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
-			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).List(context.Background(), options)
+				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).List(context.Background(), opts)
 			},
-			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(opts v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).Watch(context.Background(), options)
+				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).Watch(context.Background(), opts)
 			},
-			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+			ListWithContextFunc: func(ctx context.Context, opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).List(ctx, options)
+				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).List(ctx, opts)
 			},
-			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+			WatchFuncWithContext: func(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).Watch(ctx, options)
+				return client.AddonV1alpha1().AddOnDeploymentConfigs(namespace).Watch(ctx, opts)
 			},
 		}, client),
 		&apiaddonv1alpha1.AddOnDeploymentConfig{},
-		resyncPeriod,
-		indexers,
-	)
+		cache.SharedIndexInformerOptions{
+			ResyncPeriod: options.ResyncPeriod,
+			Indexers:     options.Indexers,
+			Identifier:   identifier,
+		},
+	))
 }
 
 func (f *addOnDeploymentConfigInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredAddOnDeploymentConfigInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+	return NewTypedAddOnDeploymentConfigInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *addOnDeploymentConfigInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiaddonv1alpha1.AddOnDeploymentConfig{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *addOnDeploymentConfigInformer) TypedInformer() AddOnDeploymentConfigIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1alpha1.AddOnDeploymentConfig](f.factory.InformerFor(&apiaddonv1alpha1.AddOnDeploymentConfig{}, f.defaultInformer))
 }
 
 func (f *addOnDeploymentConfigInformer) Lister() addonv1alpha1.AddOnDeploymentConfigLister {
 	return addonv1alpha1.NewAddOnDeploymentConfigLister(f.Informer().GetIndexer())
+}
+
+// ToTypedAddOnDeploymentConfigInformer converts an untyped informer into a TypedAddOnDeploymentConfigInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *AddOnDeploymentConfig. If that is not the case, calling type-safe methods of the returned
+// TypedAddOnDeploymentConfigInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedAddOnDeploymentConfigInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedAddOnDeploymentConfigInformer(informer AddOnDeploymentConfigInformer) TypedAddOnDeploymentConfigInformer {
+	if informer, ok := informer.(TypedAddOnDeploymentConfigInformer); ok {
+		return informer
+	}
+	return &addOnDeploymentConfigTypedInformerAdapter{informer}
+}
+
+type addOnDeploymentConfigTypedInformerAdapter struct {
+	AddOnDeploymentConfigInformer
+}
+
+func (a *addOnDeploymentConfigTypedInformerAdapter) TypedInformer() AddOnDeploymentConfigIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1alpha1.AddOnDeploymentConfig](a.Informer())
+}
+
+// ToAddOnDeploymentConfigIndexInformer converts an untyped informer into a AddOnDeploymentConfigIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *AddOnDeploymentConfig. If that is not the case, calling type-safe methods of the returned
+// AddOnDeploymentConfigIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a AddOnDeploymentConfigIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToAddOnDeploymentConfigIndexInformer(informer cache.SharedIndexInformer) AddOnDeploymentConfigIndexInformer {
+	if informer, ok := informer.(AddOnDeploymentConfigIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apiaddonv1alpha1.AddOnDeploymentConfig](informer)
 }

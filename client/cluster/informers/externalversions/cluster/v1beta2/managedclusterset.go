@@ -9,6 +9,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
 	versioned "open-cluster-management.io/api/client/cluster/clientset/versioned"
@@ -18,11 +19,39 @@ import (
 )
 
 // ManagedClusterSetInformer provides access to a shared informer and lister for
-// ManagedClusterSets.
+// ManagedClusterSets. Prefer using the type-safe variant (see [TypedManagedClusterSetInformer]).
 type ManagedClusterSetInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() clusterv1beta2.ManagedClusterSetLister
 }
+
+// TypedManagedClusterSetInformer provides access to a shared informer and lister for
+// ManagedClusterSets, including the type-safe TypedInformer variant.
+// It is a superset of ManagedClusterSetInformer.
+type TypedManagedClusterSetInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() ManagedClusterSetIndexInformer
+	Lister() clusterv1beta2.ManagedClusterSetLister
+}
+
+// ManagedClusterSetIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type ManagedClusterSetIndexInformer cache.TypedSharedIndexInformer[*apiclusterv1beta2.ManagedClusterSet]
+
+// ManagedClusterSetHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for ManagedClusterSet.
+type ManagedClusterSetHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apiclusterv1beta2.ManagedClusterSet]
+
+// ManagedClusterSetDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for ManagedClusterSet.
+type ManagedClusterSetDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apiclusterv1beta2.ManagedClusterSet]
+
+// ManagedClusterSetFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for ManagedClusterSet.
+type ManagedClusterSetFilteringHandler = cache.TypedFilteringResourceEventHandler[*apiclusterv1beta2.ManagedClusterSet]
+
+// ManagedClusterSetIndexers is a specialization of [cache.TypedIndexers] for ManagedClusterSet.
+type ManagedClusterSetIndexers = cache.TypedIndexers[*apiclusterv1beta2.ManagedClusterSet]
+
+// DeletedManagedClusterSet is a specialization of [cache.DeletedObject] for ManagedClusterSet.
+type DeletedManagedClusterSet = cache.DeletedObject[*apiclusterv1beta2.ManagedClusterSet]
 
 type managedClusterSetInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -32,55 +61,132 @@ type managedClusterSetInformer struct {
 // NewManagedClusterSetInformer constructs a new informer for ManagedClusterSet type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedManagedClusterSetInformer]).
 func NewManagedClusterSetInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredManagedClusterSetInformer(client, resyncPeriod, indexers, nil)
+	return NewManagedClusterSetInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedManagedClusterSetInformer constructs a new informer for ManagedClusterSet type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedManagedClusterSetInformer(client versioned.Interface, resyncPeriod time.Duration, indexers ManagedClusterSetIndexers) ManagedClusterSetIndexInformer {
+	return NewTypedManagedClusterSetInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredManagedClusterSetInformer constructs a new informer for ManagedClusterSet type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredManagedClusterSetInformer]).
 func NewFilteredManagedClusterSetInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return cache.NewSharedIndexInformer(
+	return NewTypedManagedClusterSetInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredManagedClusterSetInformer constructs a new informer for ManagedClusterSet type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredManagedClusterSetInformer(client versioned.Interface, resyncPeriod time.Duration, indexers ManagedClusterSetIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) ManagedClusterSetIndexInformer {
+	return NewTypedManagedClusterSetInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
+}
+
+// NewManagedClusterSetInformerWithOptions constructs a new informer for ManagedClusterSet type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedManagedClusterSetInformerWithOptions]).
+func NewManagedClusterSetInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedManagedClusterSetInformerWithOptions(client, options)
+}
+
+// NewTypedManagedClusterSetInformerWithOptions constructs a new informer for ManagedClusterSet type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedManagedClusterSetInformerWithOptions(client versioned.Interface, options internalinterfaces.InformerOptions) ManagedClusterSetIndexInformer {
+	gvr := schema.GroupVersionResource{Group: "cluster.open-cluster-management.io", Version: "v1beta2", Resource: "managedclustersets"}
+	identifier := options.InformerName.WithResource(gvr)
+	tweakListOptions := options.TweakListOptions
+	return cache.NewTypedSharedIndexInformer[*apiclusterv1beta2.ManagedClusterSet](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
-			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.ClusterV1beta2().ManagedClusterSets().List(context.Background(), options)
+				return client.ClusterV1beta2().ManagedClusterSets().List(context.Background(), opts)
 			},
-			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(opts v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.ClusterV1beta2().ManagedClusterSets().Watch(context.Background(), options)
+				return client.ClusterV1beta2().ManagedClusterSets().Watch(context.Background(), opts)
 			},
-			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+			ListWithContextFunc: func(ctx context.Context, opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.ClusterV1beta2().ManagedClusterSets().List(ctx, options)
+				return client.ClusterV1beta2().ManagedClusterSets().List(ctx, opts)
 			},
-			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+			WatchFuncWithContext: func(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.ClusterV1beta2().ManagedClusterSets().Watch(ctx, options)
+				return client.ClusterV1beta2().ManagedClusterSets().Watch(ctx, opts)
 			},
 		}, client),
 		&apiclusterv1beta2.ManagedClusterSet{},
-		resyncPeriod,
-		indexers,
-	)
+		cache.SharedIndexInformerOptions{
+			ResyncPeriod: options.ResyncPeriod,
+			Indexers:     options.Indexers,
+			Identifier:   identifier,
+		},
+	))
 }
 
 func (f *managedClusterSetInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredManagedClusterSetInformer(client, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+	return NewTypedManagedClusterSetInformerWithOptions(client, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *managedClusterSetInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiclusterv1beta2.ManagedClusterSet{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *managedClusterSetInformer) TypedInformer() ManagedClusterSetIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiclusterv1beta2.ManagedClusterSet](f.factory.InformerFor(&apiclusterv1beta2.ManagedClusterSet{}, f.defaultInformer))
 }
 
 func (f *managedClusterSetInformer) Lister() clusterv1beta2.ManagedClusterSetLister {
 	return clusterv1beta2.NewManagedClusterSetLister(f.Informer().GetIndexer())
+}
+
+// ToTypedManagedClusterSetInformer converts an untyped informer into a TypedManagedClusterSetInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ManagedClusterSet. If that is not the case, calling type-safe methods of the returned
+// TypedManagedClusterSetInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedManagedClusterSetInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedManagedClusterSetInformer(informer ManagedClusterSetInformer) TypedManagedClusterSetInformer {
+	if informer, ok := informer.(TypedManagedClusterSetInformer); ok {
+		return informer
+	}
+	return &managedClusterSetTypedInformerAdapter{informer}
+}
+
+type managedClusterSetTypedInformerAdapter struct {
+	ManagedClusterSetInformer
+}
+
+func (a *managedClusterSetTypedInformerAdapter) TypedInformer() ManagedClusterSetIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apiclusterv1beta2.ManagedClusterSet](a.Informer())
+}
+
+// ToManagedClusterSetIndexInformer converts an untyped informer into a ManagedClusterSetIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ManagedClusterSet. If that is not the case, calling type-safe methods of the returned
+// ManagedClusterSetIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a ManagedClusterSetIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToManagedClusterSetIndexInformer(informer cache.SharedIndexInformer) ManagedClusterSetIndexInformer {
+	if informer, ok := informer.(ManagedClusterSetIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apiclusterv1beta2.ManagedClusterSet](informer)
 }

@@ -30,6 +30,7 @@ func TestConvert_v1alpha1_ClusterManagementAddOn_To_v1beta1_ClusterManagementAdd
 						DisplayName: "Test Addon",
 						Description: "Test Description",
 					},
+					// nolint:staticcheck
 					SupportedConfigs: []v1alpha1.ConfigMeta{
 						{
 							ConfigGroupResource: v1alpha1.ConfigGroupResource{
@@ -82,6 +83,7 @@ func TestConvert_v1alpha1_ClusterManagementAddOn_To_v1beta1_ClusterManagementAdd
 					Name: "test-addon",
 				},
 				Spec: v1alpha1.ClusterManagementAddOnSpec{
+					// nolint:staticcheck
 					SupportedConfigs: []v1alpha1.ConfigMeta{
 						{
 							ConfigGroupResource: v1alpha1.ConfigGroupResource{
@@ -120,6 +122,7 @@ func TestConvert_v1alpha1_ClusterManagementAddOn_To_v1beta1_ClusterManagementAdd
 					Name: "test-addon",
 				},
 				Spec: v1alpha1.ClusterManagementAddOnSpec{
+					// nolint:staticcheck
 					SupportedConfigs: []v1alpha1.ConfigMeta{},
 				},
 			},
@@ -397,6 +400,7 @@ func TestConvert_v1alpha1_ManagedClusterAddOn_To_v1beta1_ManagedClusterAddOn(t *
 					Namespace: "test-cluster",
 				},
 				Spec: v1alpha1.ManagedClusterAddOnSpec{
+					// nolint:staticcheck
 					InstallNamespace: "test-install-ns",
 					Configs: []v1alpha1.AddOnConfig{
 						{

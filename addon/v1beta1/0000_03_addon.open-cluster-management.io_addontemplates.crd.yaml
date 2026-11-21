@@ -546,19 +546,18 @@ spec:
                                       the user must make sure it exist on the hub cluster.
                                     properties:
                                       apiGroup:
-                                        description: APIGroup is the group for the
+                                        description: apiGroup is the group for the
                                           resource being referenced
                                         type: string
                                       kind:
-                                        description: Kind is the type of resource
+                                        description: kind is the type of resource
                                           being referenced
                                         type: string
                                       name:
-                                        description: Name is the name of resource
+                                        description: name is the name of resource
                                           being referenced
                                         type: string
                                     required:
-                                    - apiGroup
                                     - kind
                                     - name
                                     type: object
@@ -1142,19 +1141,18 @@ spec:
                                       the user must make sure it exist on the hub cluster.
                                     properties:
                                       apiGroup:
-                                        description: APIGroup is the group for the
+                                        description: apiGroup is the group for the
                                           resource being referenced
                                         type: string
                                       kind:
-                                        description: Kind is the type of resource
+                                        description: kind is the type of resource
                                           being referenced
                                         type: string
                                       name:
-                                        description: Name is the name of resource
+                                        description: name is the name of resource
                                           being referenced
                                         type: string
                                     required:
-                                    - apiGroup
                                     - kind
                                     - name
                                     type: object

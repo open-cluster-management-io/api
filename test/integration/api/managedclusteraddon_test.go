@@ -29,6 +29,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 				Name: managedClusterAddOnName,
 			},
 			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
+				// nolint:staticcheck
 				InstallNamespace: testNamespace,
 				Configs: []addonv1alpha1.AddOnConfig{
 					{
@@ -245,6 +246,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 				Name: managedClusterAddOnName,
 			},
 			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
+				// nolint:staticcheck
 				InstallNamespace: testNamespace,
 				Configs: []addonv1alpha1.AddOnConfig{
 					{
@@ -305,6 +307,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 				Name: managedClusterAddOnName,
 			},
 			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
+				// nolint:staticcheck
 				InstallNamespace: rand.String(installNamespaceMaxLength),
 			},
 		}
@@ -323,6 +326,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 				Name: managedClusterAddOnName,
 			},
 			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
+				// nolint:staticcheck
 				InstallNamespace: "#test",
 			},
 		}
@@ -341,6 +345,7 @@ var _ = ginkgo.Describe("ManagedClusterAddOn API test", func() {
 				Name: managedClusterAddOnName,
 			},
 			Spec: addonv1alpha1.ManagedClusterAddOnSpec{
+				// nolint:staticcheck
 				InstallNamespace: rand.String(installNamespaceMaxLength + 1),
 			},
 		}

@@ -9,7 +9,6 @@ package v1beta1
 import (
 	unsafe "unsafe"
 
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -447,12 +446,7 @@ func RegisterConversions(s *runtime.Scheme) error {
 }
 
 func autoConvert_v1beta1_AddOnConfig_To_v1alpha1_AddOnConfig(in *AddOnConfig, out *v1alpha1.AddOnConfig, s conversion.Scope) error {
-	if err := Convert_v1beta1_ConfigGroupResource_To_v1alpha1_ConfigGroupResource(&in.ConfigGroupResource, &out.ConfigGroupResource, s); err != nil {
-		return err
-	}
-	if err := Convert_v1beta1_ConfigReferent_To_v1alpha1_ConfigReferent(&in.ConfigReferent, &out.ConfigReferent, s); err != nil {
-		return err
-	}
+	*out = *(*v1alpha1.AddOnConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -462,12 +456,7 @@ func Convert_v1beta1_AddOnConfig_To_v1alpha1_AddOnConfig(in *AddOnConfig, out *v
 }
 
 func autoConvert_v1alpha1_AddOnConfig_To_v1beta1_AddOnConfig(in *v1alpha1.AddOnConfig, out *AddOnConfig, s conversion.Scope) error {
-	if err := Convert_v1alpha1_ConfigGroupResource_To_v1beta1_ConfigGroupResource(&in.ConfigGroupResource, &out.ConfigGroupResource, s); err != nil {
-		return err
-	}
-	if err := Convert_v1alpha1_ConfigReferent_To_v1beta1_ConfigReferent(&in.ConfigReferent, &out.ConfigReferent, s); err != nil {
-		return err
-	}
+	*out = *(*AddOnConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -525,14 +514,7 @@ func Convert_v1alpha1_AddOnDeploymentConfigList_To_v1beta1_AddOnDeploymentConfig
 }
 
 func autoConvert_v1beta1_AddOnDeploymentConfigSpec_To_v1alpha1_AddOnDeploymentConfigSpec(in *AddOnDeploymentConfigSpec, out *v1alpha1.AddOnDeploymentConfigSpec, s conversion.Scope) error {
-	out.CustomizedVariables = *(*[]v1alpha1.CustomizedVariable)(unsafe.Pointer(&in.CustomizedVariables))
-	out.NodePlacement = (*v1alpha1.NodePlacement)(unsafe.Pointer(in.NodePlacement))
-	out.Registries = *(*[]v1alpha1.ImageMirror)(unsafe.Pointer(&in.Registries))
-	if err := Convert_v1beta1_ProxyConfig_To_v1alpha1_ProxyConfig(&in.ProxyConfig, &out.ProxyConfig, s); err != nil {
-		return err
-	}
-	out.AgentInstallNamespace = (*string)(unsafe.Pointer(in.AgentInstallNamespace))
-	out.ResourceRequirements = *(*[]v1alpha1.ContainerResourceRequirements)(unsafe.Pointer(&in.ResourceRequirements))
+	*out = *(*v1alpha1.AddOnDeploymentConfigSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -542,14 +524,7 @@ func Convert_v1beta1_AddOnDeploymentConfigSpec_To_v1alpha1_AddOnDeploymentConfig
 }
 
 func autoConvert_v1alpha1_AddOnDeploymentConfigSpec_To_v1beta1_AddOnDeploymentConfigSpec(in *v1alpha1.AddOnDeploymentConfigSpec, out *AddOnDeploymentConfigSpec, s conversion.Scope) error {
-	out.CustomizedVariables = *(*[]CustomizedVariable)(unsafe.Pointer(&in.CustomizedVariables))
-	out.NodePlacement = (*NodePlacement)(unsafe.Pointer(in.NodePlacement))
-	out.Registries = *(*[]ImageMirror)(unsafe.Pointer(&in.Registries))
-	if err := Convert_v1alpha1_ProxyConfig_To_v1beta1_ProxyConfig(&in.ProxyConfig, &out.ProxyConfig, s); err != nil {
-		return err
-	}
-	out.AgentInstallNamespace = (*string)(unsafe.Pointer(in.AgentInstallNamespace))
-	out.ResourceRequirements = *(*[]ContainerResourceRequirements)(unsafe.Pointer(&in.ResourceRequirements))
+	*out = *(*AddOnDeploymentConfigSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -559,8 +534,7 @@ func Convert_v1alpha1_AddOnDeploymentConfigSpec_To_v1beta1_AddOnDeploymentConfig
 }
 
 func autoConvert_v1beta1_AddOnMeta_To_v1alpha1_AddOnMeta(in *AddOnMeta, out *v1alpha1.AddOnMeta, s conversion.Scope) error {
-	out.DisplayName = in.DisplayName
-	out.Description = in.Description
+	*out = *(*v1alpha1.AddOnMeta)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -570,8 +544,7 @@ func Convert_v1beta1_AddOnMeta_To_v1alpha1_AddOnMeta(in *AddOnMeta, out *v1alpha
 }
 
 func autoConvert_v1alpha1_AddOnMeta_To_v1beta1_AddOnMeta(in *v1alpha1.AddOnMeta, out *AddOnMeta, s conversion.Scope) error {
-	out.DisplayName = in.DisplayName
-	out.Description = in.Description
+	*out = *(*AddOnMeta)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -629,9 +602,7 @@ func Convert_v1alpha1_AddOnTemplateList_To_v1beta1_AddOnTemplateList(in *v1alpha
 }
 
 func autoConvert_v1beta1_AddOnTemplateSpec_To_v1alpha1_AddOnTemplateSpec(in *AddOnTemplateSpec, out *v1alpha1.AddOnTemplateSpec, s conversion.Scope) error {
-	out.AddonName = in.AddonName
-	out.AgentSpec = in.AgentSpec
-	out.Registration = *(*[]v1alpha1.RegistrationSpec)(unsafe.Pointer(&in.Registration))
+	*out = *(*v1alpha1.AddOnTemplateSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -641,9 +612,7 @@ func Convert_v1beta1_AddOnTemplateSpec_To_v1alpha1_AddOnTemplateSpec(in *AddOnTe
 }
 
 func autoConvert_v1alpha1_AddOnTemplateSpec_To_v1beta1_AddOnTemplateSpec(in *v1alpha1.AddOnTemplateSpec, out *AddOnTemplateSpec, s conversion.Scope) error {
-	out.AddonName = in.AddonName
-	out.AgentSpec = in.AgentSpec
-	out.Registration = *(*[]RegistrationSpec)(unsafe.Pointer(&in.Registration))
+	*out = *(*AddOnTemplateSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -741,8 +710,7 @@ func autoConvert_v1alpha1_ClusterManagementAddOnSpec_To_v1beta1_ClusterManagemen
 }
 
 func autoConvert_v1beta1_ClusterManagementAddOnStatus_To_v1alpha1_ClusterManagementAddOnStatus(in *ClusterManagementAddOnStatus, out *v1alpha1.ClusterManagementAddOnStatus, s conversion.Scope) error {
-	out.DefaultConfigReferences = *(*[]v1alpha1.DefaultConfigReference)(unsafe.Pointer(&in.DefaultConfigReferences))
-	out.InstallProgressions = *(*[]v1alpha1.InstallProgression)(unsafe.Pointer(&in.InstallProgressions))
+	*out = *(*v1alpha1.ClusterManagementAddOnStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -752,8 +720,7 @@ func Convert_v1beta1_ClusterManagementAddOnStatus_To_v1alpha1_ClusterManagementA
 }
 
 func autoConvert_v1alpha1_ClusterManagementAddOnStatus_To_v1beta1_ClusterManagementAddOnStatus(in *v1alpha1.ClusterManagementAddOnStatus, out *ClusterManagementAddOnStatus, s conversion.Scope) error {
-	out.DefaultConfigReferences = *(*[]DefaultConfigReference)(unsafe.Pointer(&in.DefaultConfigReferences))
-	out.InstallProgressions = *(*[]InstallProgression)(unsafe.Pointer(&in.InstallProgressions))
+	*out = *(*ClusterManagementAddOnStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -763,8 +730,7 @@ func Convert_v1alpha1_ClusterManagementAddOnStatus_To_v1beta1_ClusterManagementA
 }
 
 func autoConvert_v1beta1_ConfigGroupResource_To_v1alpha1_ConfigGroupResource(in *ConfigGroupResource, out *v1alpha1.ConfigGroupResource, s conversion.Scope) error {
-	out.Group = in.Group
-	out.Resource = in.Resource
+	*out = *(*v1alpha1.ConfigGroupResource)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -774,8 +740,7 @@ func Convert_v1beta1_ConfigGroupResource_To_v1alpha1_ConfigGroupResource(in *Con
 }
 
 func autoConvert_v1alpha1_ConfigGroupResource_To_v1beta1_ConfigGroupResource(in *v1alpha1.ConfigGroupResource, out *ConfigGroupResource, s conversion.Scope) error {
-	out.Group = in.Group
-	out.Resource = in.Resource
+	*out = *(*ConfigGroupResource)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -811,8 +776,7 @@ func autoConvert_v1alpha1_ConfigReference_To_v1beta1_ConfigReference(in *v1alpha
 }
 
 func autoConvert_v1beta1_ConfigReferent_To_v1alpha1_ConfigReferent(in *ConfigReferent, out *v1alpha1.ConfigReferent, s conversion.Scope) error {
-	out.Namespace = in.Namespace
-	out.Name = in.Name
+	*out = *(*v1alpha1.ConfigReferent)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -822,8 +786,7 @@ func Convert_v1beta1_ConfigReferent_To_v1alpha1_ConfigReferent(in *ConfigReferen
 }
 
 func autoConvert_v1alpha1_ConfigReferent_To_v1beta1_ConfigReferent(in *v1alpha1.ConfigReferent, out *ConfigReferent, s conversion.Scope) error {
-	out.Namespace = in.Namespace
-	out.Name = in.Name
+	*out = *(*ConfigReferent)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -833,10 +796,7 @@ func Convert_v1alpha1_ConfigReferent_To_v1beta1_ConfigReferent(in *v1alpha1.Conf
 }
 
 func autoConvert_v1beta1_ConfigSpecHash_To_v1alpha1_ConfigSpecHash(in *ConfigSpecHash, out *v1alpha1.ConfigSpecHash, s conversion.Scope) error {
-	if err := Convert_v1beta1_ConfigReferent_To_v1alpha1_ConfigReferent(&in.ConfigReferent, &out.ConfigReferent, s); err != nil {
-		return err
-	}
-	out.SpecHash = in.SpecHash
+	*out = *(*v1alpha1.ConfigSpecHash)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -846,10 +806,7 @@ func Convert_v1beta1_ConfigSpecHash_To_v1alpha1_ConfigSpecHash(in *ConfigSpecHas
 }
 
 func autoConvert_v1alpha1_ConfigSpecHash_To_v1beta1_ConfigSpecHash(in *v1alpha1.ConfigSpecHash, out *ConfigSpecHash, s conversion.Scope) error {
-	if err := Convert_v1alpha1_ConfigReferent_To_v1beta1_ConfigReferent(&in.ConfigReferent, &out.ConfigReferent, s); err != nil {
-		return err
-	}
-	out.SpecHash = in.SpecHash
+	*out = *(*ConfigSpecHash)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -859,8 +816,7 @@ func Convert_v1alpha1_ConfigSpecHash_To_v1beta1_ConfigSpecHash(in *v1alpha1.Conf
 }
 
 func autoConvert_v1beta1_ContainerResourceRequirements_To_v1alpha1_ContainerResourceRequirements(in *ContainerResourceRequirements, out *v1alpha1.ContainerResourceRequirements, s conversion.Scope) error {
-	out.ContainerID = in.ContainerID
-	out.Resources = in.Resources
+	*out = *(*v1alpha1.ContainerResourceRequirements)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -870,8 +826,7 @@ func Convert_v1beta1_ContainerResourceRequirements_To_v1alpha1_ContainerResource
 }
 
 func autoConvert_v1alpha1_ContainerResourceRequirements_To_v1beta1_ContainerResourceRequirements(in *v1alpha1.ContainerResourceRequirements, out *ContainerResourceRequirements, s conversion.Scope) error {
-	out.ContainerID = in.ContainerID
-	out.Resources = in.Resources
+	*out = *(*ContainerResourceRequirements)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -881,7 +836,7 @@ func Convert_v1alpha1_ContainerResourceRequirements_To_v1beta1_ContainerResource
 }
 
 func autoConvert_v1beta1_CurrentClusterBindingConfig_To_v1alpha1_CurrentClusterBindingConfig(in *CurrentClusterBindingConfig, out *v1alpha1.CurrentClusterBindingConfig, s conversion.Scope) error {
-	out.ClusterRoleName = in.ClusterRoleName
+	*out = *(*v1alpha1.CurrentClusterBindingConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -891,7 +846,7 @@ func Convert_v1beta1_CurrentClusterBindingConfig_To_v1alpha1_CurrentClusterBindi
 }
 
 func autoConvert_v1alpha1_CurrentClusterBindingConfig_To_v1beta1_CurrentClusterBindingConfig(in *v1alpha1.CurrentClusterBindingConfig, out *CurrentClusterBindingConfig, s conversion.Scope) error {
-	out.ClusterRoleName = in.ClusterRoleName
+	*out = *(*CurrentClusterBindingConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -901,11 +856,7 @@ func Convert_v1alpha1_CurrentClusterBindingConfig_To_v1beta1_CurrentClusterBindi
 }
 
 func autoConvert_v1beta1_CustomSignerRegistrationConfig_To_v1alpha1_CustomSignerRegistrationConfig(in *CustomSignerRegistrationConfig, out *v1alpha1.CustomSignerRegistrationConfig, s conversion.Scope) error {
-	out.SignerName = in.SignerName
-	out.Subject = (*v1alpha1.Subject)(unsafe.Pointer(in.Subject))
-	if err := Convert_v1beta1_SigningCARef_To_v1alpha1_SigningCARef(&in.SigningCA, &out.SigningCA, s); err != nil {
-		return err
-	}
+	*out = *(*v1alpha1.CustomSignerRegistrationConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -915,11 +866,7 @@ func Convert_v1beta1_CustomSignerRegistrationConfig_To_v1alpha1_CustomSignerRegi
 }
 
 func autoConvert_v1alpha1_CustomSignerRegistrationConfig_To_v1beta1_CustomSignerRegistrationConfig(in *v1alpha1.CustomSignerRegistrationConfig, out *CustomSignerRegistrationConfig, s conversion.Scope) error {
-	out.SignerName = in.SignerName
-	out.Subject = (*AddOnTemplateSubject)(unsafe.Pointer(in.Subject))
-	if err := Convert_v1alpha1_SigningCARef_To_v1beta1_SigningCARef(&in.SigningCA, &out.SigningCA, s); err != nil {
-		return err
-	}
+	*out = *(*CustomSignerRegistrationConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -929,8 +876,7 @@ func Convert_v1alpha1_CustomSignerRegistrationConfig_To_v1beta1_CustomSignerRegi
 }
 
 func autoConvert_v1beta1_CustomizedVariable_To_v1alpha1_CustomizedVariable(in *CustomizedVariable, out *v1alpha1.CustomizedVariable, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Value = in.Value
+	*out = *(*v1alpha1.CustomizedVariable)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -940,8 +886,7 @@ func Convert_v1beta1_CustomizedVariable_To_v1alpha1_CustomizedVariable(in *Custo
 }
 
 func autoConvert_v1alpha1_CustomizedVariable_To_v1beta1_CustomizedVariable(in *v1alpha1.CustomizedVariable, out *CustomizedVariable, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Value = in.Value
+	*out = *(*CustomizedVariable)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -951,10 +896,7 @@ func Convert_v1alpha1_CustomizedVariable_To_v1beta1_CustomizedVariable(in *v1alp
 }
 
 func autoConvert_v1beta1_DefaultConfigReference_To_v1alpha1_DefaultConfigReference(in *DefaultConfigReference, out *v1alpha1.DefaultConfigReference, s conversion.Scope) error {
-	if err := Convert_v1beta1_ConfigGroupResource_To_v1alpha1_ConfigGroupResource(&in.ConfigGroupResource, &out.ConfigGroupResource, s); err != nil {
-		return err
-	}
-	out.DesiredConfig = (*v1alpha1.ConfigSpecHash)(unsafe.Pointer(in.DesiredConfig))
+	*out = *(*v1alpha1.DefaultConfigReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -964,10 +906,7 @@ func Convert_v1beta1_DefaultConfigReference_To_v1alpha1_DefaultConfigReference(i
 }
 
 func autoConvert_v1alpha1_DefaultConfigReference_To_v1beta1_DefaultConfigReference(in *v1alpha1.DefaultConfigReference, out *DefaultConfigReference, s conversion.Scope) error {
-	if err := Convert_v1alpha1_ConfigGroupResource_To_v1beta1_ConfigGroupResource(&in.ConfigGroupResource, &out.ConfigGroupResource, s); err != nil {
-		return err
-	}
-	out.DesiredConfig = (*ConfigSpecHash)(unsafe.Pointer(in.DesiredConfig))
+	*out = *(*DefaultConfigReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -977,7 +916,7 @@ func Convert_v1alpha1_DefaultConfigReference_To_v1beta1_DefaultConfigReference(i
 }
 
 func autoConvert_v1beta1_HealthCheck_To_v1alpha1_HealthCheck(in *HealthCheck, out *v1alpha1.HealthCheck, s conversion.Scope) error {
-	out.Mode = v1alpha1.HealthCheckMode(in.Mode)
+	*out = *(*v1alpha1.HealthCheck)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -987,7 +926,7 @@ func Convert_v1beta1_HealthCheck_To_v1alpha1_HealthCheck(in *HealthCheck, out *v
 }
 
 func autoConvert_v1alpha1_HealthCheck_To_v1beta1_HealthCheck(in *v1alpha1.HealthCheck, out *HealthCheck, s conversion.Scope) error {
-	out.Mode = HealthCheckMode(in.Mode)
+	*out = *(*HealthCheck)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -997,9 +936,7 @@ func Convert_v1alpha1_HealthCheck_To_v1beta1_HealthCheck(in *v1alpha1.HealthChec
 }
 
 func autoConvert_v1beta1_HubPermissionConfig_To_v1alpha1_HubPermissionConfig(in *HubPermissionConfig, out *v1alpha1.HubPermissionConfig, s conversion.Scope) error {
-	out.Type = v1alpha1.HubPermissionsBindingType(in.Type)
-	out.CurrentCluster = (*v1alpha1.CurrentClusterBindingConfig)(unsafe.Pointer(in.CurrentCluster))
-	out.SingleNamespace = (*v1alpha1.SingleNamespaceBindingConfig)(unsafe.Pointer(in.SingleNamespace))
+	*out = *(*v1alpha1.HubPermissionConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1009,9 +946,7 @@ func Convert_v1beta1_HubPermissionConfig_To_v1alpha1_HubPermissionConfig(in *Hub
 }
 
 func autoConvert_v1alpha1_HubPermissionConfig_To_v1beta1_HubPermissionConfig(in *v1alpha1.HubPermissionConfig, out *HubPermissionConfig, s conversion.Scope) error {
-	out.Type = HubPermissionsBindingType(in.Type)
-	out.CurrentCluster = (*CurrentClusterBindingConfig)(unsafe.Pointer(in.CurrentCluster))
-	out.SingleNamespace = (*SingleNamespaceBindingConfig)(unsafe.Pointer(in.SingleNamespace))
+	*out = *(*HubPermissionConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1021,8 +956,7 @@ func Convert_v1alpha1_HubPermissionConfig_To_v1beta1_HubPermissionConfig(in *v1a
 }
 
 func autoConvert_v1beta1_ImageMirror_To_v1alpha1_ImageMirror(in *ImageMirror, out *v1alpha1.ImageMirror, s conversion.Scope) error {
-	out.Mirror = in.Mirror
-	out.Source = in.Source
+	*out = *(*v1alpha1.ImageMirror)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1032,8 +966,7 @@ func Convert_v1beta1_ImageMirror_To_v1alpha1_ImageMirror(in *ImageMirror, out *v
 }
 
 func autoConvert_v1alpha1_ImageMirror_To_v1beta1_ImageMirror(in *v1alpha1.ImageMirror, out *ImageMirror, s conversion.Scope) error {
-	out.Mirror = in.Mirror
-	out.Source = in.Source
+	*out = *(*ImageMirror)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1043,12 +976,7 @@ func Convert_v1alpha1_ImageMirror_To_v1beta1_ImageMirror(in *v1alpha1.ImageMirro
 }
 
 func autoConvert_v1beta1_InstallConfigReference_To_v1alpha1_InstallConfigReference(in *InstallConfigReference, out *v1alpha1.InstallConfigReference, s conversion.Scope) error {
-	if err := Convert_v1beta1_ConfigGroupResource_To_v1alpha1_ConfigGroupResource(&in.ConfigGroupResource, &out.ConfigGroupResource, s); err != nil {
-		return err
-	}
-	out.DesiredConfig = (*v1alpha1.ConfigSpecHash)(unsafe.Pointer(in.DesiredConfig))
-	out.LastKnownGoodConfig = (*v1alpha1.ConfigSpecHash)(unsafe.Pointer(in.LastKnownGoodConfig))
-	out.LastAppliedConfig = (*v1alpha1.ConfigSpecHash)(unsafe.Pointer(in.LastAppliedConfig))
+	*out = *(*v1alpha1.InstallConfigReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1058,12 +986,7 @@ func Convert_v1beta1_InstallConfigReference_To_v1alpha1_InstallConfigReference(i
 }
 
 func autoConvert_v1alpha1_InstallConfigReference_To_v1beta1_InstallConfigReference(in *v1alpha1.InstallConfigReference, out *InstallConfigReference, s conversion.Scope) error {
-	if err := Convert_v1alpha1_ConfigGroupResource_To_v1beta1_ConfigGroupResource(&in.ConfigGroupResource, &out.ConfigGroupResource, s); err != nil {
-		return err
-	}
-	out.DesiredConfig = (*ConfigSpecHash)(unsafe.Pointer(in.DesiredConfig))
-	out.LastKnownGoodConfig = (*ConfigSpecHash)(unsafe.Pointer(in.LastKnownGoodConfig))
-	out.LastAppliedConfig = (*ConfigSpecHash)(unsafe.Pointer(in.LastAppliedConfig))
+	*out = *(*InstallConfigReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1073,11 +996,7 @@ func Convert_v1alpha1_InstallConfigReference_To_v1beta1_InstallConfigReference(i
 }
 
 func autoConvert_v1beta1_InstallProgression_To_v1alpha1_InstallProgression(in *InstallProgression, out *v1alpha1.InstallProgression, s conversion.Scope) error {
-	if err := Convert_v1beta1_PlacementRef_To_v1alpha1_PlacementRef(&in.PlacementRef, &out.PlacementRef, s); err != nil {
-		return err
-	}
-	out.ConfigReferences = *(*[]v1alpha1.InstallConfigReference)(unsafe.Pointer(&in.ConfigReferences))
-	out.Conditions = *(*[]v1.Condition)(unsafe.Pointer(&in.Conditions))
+	*out = *(*v1alpha1.InstallProgression)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1087,11 +1006,7 @@ func Convert_v1beta1_InstallProgression_To_v1alpha1_InstallProgression(in *Insta
 }
 
 func autoConvert_v1alpha1_InstallProgression_To_v1beta1_InstallProgression(in *v1alpha1.InstallProgression, out *InstallProgression, s conversion.Scope) error {
-	if err := Convert_v1alpha1_PlacementRef_To_v1beta1_PlacementRef(&in.PlacementRef, &out.PlacementRef, s); err != nil {
-		return err
-	}
-	out.ConfigReferences = *(*[]InstallConfigReference)(unsafe.Pointer(&in.ConfigReferences))
-	out.Conditions = *(*[]v1.Condition)(unsafe.Pointer(&in.Conditions))
+	*out = *(*InstallProgression)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1101,8 +1016,7 @@ func Convert_v1alpha1_InstallProgression_To_v1beta1_InstallProgression(in *v1alp
 }
 
 func autoConvert_v1beta1_InstallStrategy_To_v1alpha1_InstallStrategy(in *InstallStrategy, out *v1alpha1.InstallStrategy, s conversion.Scope) error {
-	out.Type = in.Type
-	out.Placements = *(*[]v1alpha1.PlacementStrategy)(unsafe.Pointer(&in.Placements))
+	*out = *(*v1alpha1.InstallStrategy)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1112,8 +1026,7 @@ func Convert_v1beta1_InstallStrategy_To_v1alpha1_InstallStrategy(in *InstallStra
 }
 
 func autoConvert_v1alpha1_InstallStrategy_To_v1beta1_InstallStrategy(in *v1alpha1.InstallStrategy, out *InstallStrategy, s conversion.Scope) error {
-	out.Type = in.Type
-	out.Placements = *(*[]PlacementStrategy)(unsafe.Pointer(&in.Placements))
+	*out = *(*InstallStrategy)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1123,7 +1036,7 @@ func Convert_v1alpha1_InstallStrategy_To_v1beta1_InstallStrategy(in *v1alpha1.In
 }
 
 func autoConvert_v1beta1_KubeClientRegistrationConfig_To_v1alpha1_KubeClientRegistrationConfig(in *KubeClientRegistrationConfig, out *v1alpha1.KubeClientRegistrationConfig, s conversion.Scope) error {
-	out.HubPermissions = *(*[]v1alpha1.HubPermissionConfig)(unsafe.Pointer(&in.HubPermissions))
+	*out = *(*v1alpha1.KubeClientRegistrationConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1133,7 +1046,7 @@ func Convert_v1beta1_KubeClientRegistrationConfig_To_v1alpha1_KubeClientRegistra
 }
 
 func autoConvert_v1alpha1_KubeClientRegistrationConfig_To_v1beta1_KubeClientRegistrationConfig(in *v1alpha1.KubeClientRegistrationConfig, out *KubeClientRegistrationConfig, s conversion.Scope) error {
-	out.HubPermissions = *(*[]HubPermissionConfig)(unsafe.Pointer(&in.HubPermissions))
+	*out = *(*KubeClientRegistrationConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1307,9 +1220,7 @@ func autoConvert_v1alpha1_ManagedClusterAddOnStatus_To_v1beta1_ManagedClusterAdd
 }
 
 func autoConvert_v1beta1_NodePlacement_To_v1alpha1_NodePlacement(in *NodePlacement, out *v1alpha1.NodePlacement, s conversion.Scope) error {
-	out.NodeSelector = *(*map[string]string)(unsafe.Pointer(&in.NodeSelector))
-	out.Tolerations = *(*[]corev1.Toleration)(unsafe.Pointer(&in.Tolerations))
-	out.Affinity = (*corev1.Affinity)(unsafe.Pointer(in.Affinity))
+	*out = *(*v1alpha1.NodePlacement)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1319,9 +1230,7 @@ func Convert_v1beta1_NodePlacement_To_v1alpha1_NodePlacement(in *NodePlacement, 
 }
 
 func autoConvert_v1alpha1_NodePlacement_To_v1beta1_NodePlacement(in *v1alpha1.NodePlacement, out *NodePlacement, s conversion.Scope) error {
-	out.NodeSelector = *(*map[string]string)(unsafe.Pointer(&in.NodeSelector))
-	out.Tolerations = *(*[]corev1.Toleration)(unsafe.Pointer(&in.Tolerations))
-	out.Affinity = (*corev1.Affinity)(unsafe.Pointer(in.Affinity))
+	*out = *(*NodePlacement)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1331,10 +1240,7 @@ func Convert_v1alpha1_NodePlacement_To_v1beta1_NodePlacement(in *v1alpha1.NodePl
 }
 
 func autoConvert_v1beta1_ObjectReference_To_v1alpha1_ObjectReference(in *ObjectReference, out *v1alpha1.ObjectReference, s conversion.Scope) error {
-	out.Group = in.Group
-	out.Resource = in.Resource
-	out.Namespace = in.Namespace
-	out.Name = in.Name
+	*out = *(*v1alpha1.ObjectReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1344,10 +1250,7 @@ func Convert_v1beta1_ObjectReference_To_v1alpha1_ObjectReference(in *ObjectRefer
 }
 
 func autoConvert_v1alpha1_ObjectReference_To_v1beta1_ObjectReference(in *v1alpha1.ObjectReference, out *ObjectReference, s conversion.Scope) error {
-	out.Group = in.Group
-	out.Resource = in.Resource
-	out.Namespace = in.Namespace
-	out.Name = in.Name
+	*out = *(*ObjectReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1357,8 +1260,7 @@ func Convert_v1alpha1_ObjectReference_To_v1beta1_ObjectReference(in *v1alpha1.Ob
 }
 
 func autoConvert_v1beta1_PlacementRef_To_v1alpha1_PlacementRef(in *PlacementRef, out *v1alpha1.PlacementRef, s conversion.Scope) error {
-	out.Namespace = in.Namespace
-	out.Name = in.Name
+	*out = *(*v1alpha1.PlacementRef)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1368,8 +1270,7 @@ func Convert_v1beta1_PlacementRef_To_v1alpha1_PlacementRef(in *PlacementRef, out
 }
 
 func autoConvert_v1alpha1_PlacementRef_To_v1beta1_PlacementRef(in *v1alpha1.PlacementRef, out *PlacementRef, s conversion.Scope) error {
-	out.Namespace = in.Namespace
-	out.Name = in.Name
+	*out = *(*PlacementRef)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1379,11 +1280,7 @@ func Convert_v1alpha1_PlacementRef_To_v1beta1_PlacementRef(in *v1alpha1.Placemen
 }
 
 func autoConvert_v1beta1_PlacementStrategy_To_v1alpha1_PlacementStrategy(in *PlacementStrategy, out *v1alpha1.PlacementStrategy, s conversion.Scope) error {
-	if err := Convert_v1beta1_PlacementRef_To_v1alpha1_PlacementRef(&in.PlacementRef, &out.PlacementRef, s); err != nil {
-		return err
-	}
-	out.Configs = *(*[]v1alpha1.AddOnConfig)(unsafe.Pointer(&in.Configs))
-	out.RolloutStrategy = in.RolloutStrategy
+	*out = *(*v1alpha1.PlacementStrategy)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1393,11 +1290,7 @@ func Convert_v1beta1_PlacementStrategy_To_v1alpha1_PlacementStrategy(in *Placeme
 }
 
 func autoConvert_v1alpha1_PlacementStrategy_To_v1beta1_PlacementStrategy(in *v1alpha1.PlacementStrategy, out *PlacementStrategy, s conversion.Scope) error {
-	if err := Convert_v1alpha1_PlacementRef_To_v1beta1_PlacementRef(&in.PlacementRef, &out.PlacementRef, s); err != nil {
-		return err
-	}
-	out.Configs = *(*[]AddOnConfig)(unsafe.Pointer(&in.Configs))
-	out.RolloutStrategy = in.RolloutStrategy
+	*out = *(*PlacementStrategy)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1446,9 +1339,7 @@ func autoConvert_v1alpha1_RegistrationConfig_To_v1beta1_RegistrationConfig(in *v
 }
 
 func autoConvert_v1beta1_RegistrationSpec_To_v1alpha1_RegistrationSpec(in *RegistrationSpec, out *v1alpha1.RegistrationSpec, s conversion.Scope) error {
-	out.Type = v1alpha1.RegistrationType(in.Type)
-	out.KubeClient = (*v1alpha1.KubeClientRegistrationConfig)(unsafe.Pointer(in.KubeClient))
-	out.CustomSigner = (*v1alpha1.CustomSignerRegistrationConfig)(unsafe.Pointer(in.CustomSigner))
+	*out = *(*v1alpha1.RegistrationSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1458,9 +1349,7 @@ func Convert_v1beta1_RegistrationSpec_To_v1alpha1_RegistrationSpec(in *Registrat
 }
 
 func autoConvert_v1alpha1_RegistrationSpec_To_v1beta1_RegistrationSpec(in *v1alpha1.RegistrationSpec, out *RegistrationSpec, s conversion.Scope) error {
-	out.Type = AddOnTemplateRegistrationType(in.Type)
-	out.KubeClient = (*KubeClientRegistrationConfig)(unsafe.Pointer(in.KubeClient))
-	out.CustomSigner = (*CustomSignerRegistrationConfig)(unsafe.Pointer(in.CustomSigner))
+	*out = *(*RegistrationSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1470,8 +1359,7 @@ func Convert_v1alpha1_RegistrationSpec_To_v1beta1_RegistrationSpec(in *v1alpha1.
 }
 
 func autoConvert_v1beta1_SigningCARef_To_v1alpha1_SigningCARef(in *SigningCARef, out *v1alpha1.SigningCARef, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Namespace = in.Namespace
+	*out = *(*v1alpha1.SigningCARef)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1481,8 +1369,7 @@ func Convert_v1beta1_SigningCARef_To_v1alpha1_SigningCARef(in *SigningCARef, out
 }
 
 func autoConvert_v1alpha1_SigningCARef_To_v1beta1_SigningCARef(in *v1alpha1.SigningCARef, out *SigningCARef, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Namespace = in.Namespace
+	*out = *(*SigningCARef)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1492,8 +1379,7 @@ func Convert_v1alpha1_SigningCARef_To_v1beta1_SigningCARef(in *v1alpha1.SigningC
 }
 
 func autoConvert_v1beta1_SingleNamespaceBindingConfig_To_v1alpha1_SingleNamespaceBindingConfig(in *SingleNamespaceBindingConfig, out *v1alpha1.SingleNamespaceBindingConfig, s conversion.Scope) error {
-	out.Namespace = in.Namespace
-	out.RoleRef = in.RoleRef
+	*out = *(*v1alpha1.SingleNamespaceBindingConfig)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1503,8 +1389,7 @@ func Convert_v1beta1_SingleNamespaceBindingConfig_To_v1alpha1_SingleNamespaceBin
 }
 
 func autoConvert_v1alpha1_SingleNamespaceBindingConfig_To_v1beta1_SingleNamespaceBindingConfig(in *v1alpha1.SingleNamespaceBindingConfig, out *SingleNamespaceBindingConfig, s conversion.Scope) error {
-	out.Namespace = in.Namespace
-	out.RoleRef = in.RoleRef
+	*out = *(*SingleNamespaceBindingConfig)(unsafe.Pointer(in))
 	return nil
 }
 

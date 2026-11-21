@@ -11,18 +11,25 @@ include $(addprefix ./vendor/github.com/openshift/build-machinery-go/make/, \
 	targets/openshift/crd-schema-gen.mk \
 )
 
-GO_PACKAGES :=$(addsuffix ...,$(addprefix ./,$(filter-out test/, $(filter-out vendor/,$(filter-out hack/,$(wildcard */))))))
+export GOPATH := $(abspath $(PERMANENT_TMP_GOPATH))
+export GOBIN := $(abspath $(GOPATH)/bin)
+GO_PACKAGES := $(addsuffix ...,$(addprefix ./,$(filter-out test/, $(filter-out vendor/,$(filter-out hack/,$(wildcard */))))))
 GO_BUILD_PACKAGES :=$(GO_PACKAGES)
 GO_BUILD_PACKAGES_EXPANDED :=$(GO_BUILD_PACKAGES)
 # LDFLAGS are not needed for dummy builds (saving time on calling git commands)
 GO_LD_FLAGS:=
+
 # controller-gen setup
-CONTROLLER_GEN_VERSION :=v0.20.1
-CONTROLLER_GEN :=$(PERMANENT_TMP_GOPATH)/bin/controller-gen
-ifneq "" "$(wildcard $(CONTROLLER_GEN))"
-_controller_gen_installed_version = $(shell $(CONTROLLER_GEN) --version | awk '{print $$2}')
-endif
-controller_gen_dir :=$(abspath $(PERMANENT_TMP_GOPATH)/bin)
+CONTROLLER_GEN_VERSION :=v0.23.0
+CONTROLLER_GEN :=$(GOBIN)/controller-gen
+GOLANGCI_VERSION ?= v2.15.0
+
+# go-get-tool will 'go install' any package $1 and install it to LOCAL_BIN.
+define go-get-tool
+  @set -e ;\
+  echo "Checking installation of $(1)" ;\
+  GOBIN=$(GOBIN) go install $(1)
+endef
 
 # $1 - target name
 # $2 - apis
@@ -42,9 +49,9 @@ RUNTIME ?= podman
 RUNTIME_IMAGE_NAME ?= openshift-api-generator
 
 verify-gocilint:
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0
+	$(call go-get-tool,github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION))
 	go vet ./...
-	${GOPATH}/bin/golangci-lint run --timeout=3m ./...
+	$(GOBIN)/golangci-lint run --timeout=3m ./...
 
 verify-scripts:
 	bash -x hack/verify-deepcopy.sh
@@ -52,14 +59,14 @@ verify-scripts:
 	bash -x hack/verify-codegen.sh
 	bash -x hack/verify-copyright.sh
 .PHONY: verify-scripts
-verify: check-env verify-scripts verify-codegen-crds verify-gocilint
+verify: verify-scripts verify-codegen-crds verify-gocilint
 
 update-scripts:
 	hack/update-deepcopy.sh
 	hack/update-codegen.sh
 	hack/update-copyright.sh
 .PHONY: update-scripts
-update: check-env update-scripts update-codegen-crds
+update: update-scripts update-codegen-crds
 
 build-runtime-image: Dockerfile.build
 	$(RUNTIME) build -t $(RUNTIME_IMAGE_NAME) -f Dockerfile.build .
@@ -69,22 +76,7 @@ update-with-container: build-runtime-image
 
 include ./test/integration-test.mk
 
-check-env:
-ifeq ($(GOPATH),)
-	$(warning "environment variable GOPATH is empty, auto set from go env GOPATH")
-export GOPATH=$(shell go env GOPATH)
-endif
-.PHONY: check-env
-
 # override ensure-controller-gen
+.PHONY: ensure-controller-gen
 ensure-controller-gen:
-ifeq "" "$(wildcard $(CONTROLLER_GEN))"
-	$(info Installing controller-gen into '$(CONTROLLER_GEN)')
-	mkdir -p '$(controller_gen_dir)'
-	GOBIN='$(controller_gen_dir)' go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
-	chmod +x '$(CONTROLLER_GEN)';
-else
-	$(info Using existing controller-gen from "$(CONTROLLER_GEN)")
-	@[[ "$(_controller_gen_installed_version)" == $(CONTROLLER_GEN_VERSION) ]] || \
-	echo "Warning: Installed controller-gen version $(_controller_gen_installed_version) does not match expected version $(CONTROLLER_GEN_VERSION)."
-endif
+	$(call go-get-tool,sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION))

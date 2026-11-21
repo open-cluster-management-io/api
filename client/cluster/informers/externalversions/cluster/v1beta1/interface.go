@@ -10,9 +10,9 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// Placements returns a PlacementInformer.
-	Placements() PlacementInformer
+	Placements() TypedPlacementInformer
 	// PlacementDecisions returns a PlacementDecisionInformer.
-	PlacementDecisions() PlacementDecisionInformer
+	PlacementDecisions() TypedPlacementDecisionInformer
 }
 
 type version struct {
@@ -26,12 +26,12 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// Placements returns a PlacementInformer.
-func (v *version) Placements() PlacementInformer {
+// Placements returns a TypedPlacementInformer.
+func (v *version) Placements() TypedPlacementInformer {
 	return &placementInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// PlacementDecisions returns a PlacementDecisionInformer.
-func (v *version) PlacementDecisions() PlacementDecisionInformer {
+// PlacementDecisions returns a TypedPlacementDecisionInformer.
+func (v *version) PlacementDecisions() TypedPlacementDecisionInformer {
 	return &placementDecisionInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

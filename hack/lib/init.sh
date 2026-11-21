@@ -1,5 +1,5 @@
-# Copyright Contributors to the Open Cluster Management project
 #!/bin/bash
+# Copyright Contributors to the Open Cluster Management project
 
 # This script is meant to be the entrypoint for OpenShift Bash scripts to import all of the support
 # libraries at once in order to make Bash script preambles as minimal as possible. This script recur-
@@ -10,7 +10,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-API_GROUP_VERSIONS="\
+export API_GROUP_VERSIONS="\
 cluster/v1 \
 cluster/v1alpha1 \
 cluster/v1beta1 \
@@ -22,7 +22,7 @@ addon/v1alpha1 \
 addon/v1beta1 \
 "
 
-API_PACKAGES="\
+export API_PACKAGES="\
 open-cluster-management.io/api/cluster/v1,\
 open-cluster-management.io/api/cluster/v1alpha1,\
 open-cluster-management.io/api/cluster/v1beta1,\
@@ -36,7 +36,7 @@ open-cluster-management.io/api/addon/v1beta1\
 
 set -x
 
-SED_CMD=sed
-if [[ `uname` == 'Darwin' ]]; then
+export SED_CMD=sed
+if [[ $(uname) == 'Darwin' ]]; then
     SED_CMD=gsed
 fi

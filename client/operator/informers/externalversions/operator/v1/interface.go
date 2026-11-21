@@ -10,9 +10,9 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// ClusterManagers returns a ClusterManagerInformer.
-	ClusterManagers() ClusterManagerInformer
+	ClusterManagers() TypedClusterManagerInformer
 	// Klusterlets returns a KlusterletInformer.
-	Klusterlets() KlusterletInformer
+	Klusterlets() TypedKlusterletInformer
 }
 
 type version struct {
@@ -26,12 +26,12 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// ClusterManagers returns a ClusterManagerInformer.
-func (v *version) ClusterManagers() ClusterManagerInformer {
+// ClusterManagers returns a TypedClusterManagerInformer.
+func (v *version) ClusterManagers() TypedClusterManagerInformer {
 	return &clusterManagerInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
-// Klusterlets returns a KlusterletInformer.
-func (v *version) Klusterlets() KlusterletInformer {
+// Klusterlets returns a TypedKlusterletInformer.
+func (v *version) Klusterlets() TypedKlusterletInformer {
 	return &klusterletInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }

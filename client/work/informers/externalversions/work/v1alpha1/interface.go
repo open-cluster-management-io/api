@@ -10,7 +10,7 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// ManifestWorkReplicaSets returns a ManifestWorkReplicaSetInformer.
-	ManifestWorkReplicaSets() ManifestWorkReplicaSetInformer
+	ManifestWorkReplicaSets() TypedManifestWorkReplicaSetInformer
 }
 
 type version struct {
@@ -24,7 +24,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// ManifestWorkReplicaSets returns a ManifestWorkReplicaSetInformer.
-func (v *version) ManifestWorkReplicaSets() ManifestWorkReplicaSetInformer {
+// ManifestWorkReplicaSets returns a TypedManifestWorkReplicaSetInformer.
+func (v *version) ManifestWorkReplicaSets() TypedManifestWorkReplicaSetInformer {
 	return &manifestWorkReplicaSetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
